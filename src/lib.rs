@@ -7,6 +7,7 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs, clippy::all, clippy::pedantic)]
 
+pub mod client;
 pub mod error;
 pub mod proto;
 pub mod server;

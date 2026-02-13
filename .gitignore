@@ -1,7 +1,65 @@
-/target
-Cargo.lock
+# ── OS ────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
 
-# Python artifacts
+# ── IDE / Editor ──────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ── Environment ───────────────────────────────────────────────────────
+.env
+
+# ── Rust / Cargo ──────────────────────────────────────────────────────
+debug/
+target/
+**/*.rs.bk
+*.pdb
+
+# ── Python ──────────────────────────────────────────────────────────
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+*.egg-info/
+*.egg
+dist/
+build/
+.venv/
+venv/
 .mypy_cache/
-*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# ── Node.js / npm ───────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+*.node
+
+# ── Java ────────────────────────────────────────────────────────────
+*.class
+*.jar
+*.war
+*.ear
+.gradle/
+build/
+.settings/
+.classpath
+.project
+hs_err_pid*
+
+# ── Coverage & profiling ─────────────────────────────────────────────
+.coverage
+htmlcov/
+coverage/
+*.profraw
+*.profdata
+lcov.info
+tarpaulin-report.html

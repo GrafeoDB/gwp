@@ -6,3 +6,9 @@
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs, clippy::all, clippy::pedantic)]
+
+pub mod error;
+pub mod proto;
+pub mod server;
+pub mod status;
+pub mod types;

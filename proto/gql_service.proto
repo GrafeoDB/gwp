@@ -1,0 +1,5 @@
+syntax = "proto3";
+
+package gql;
+
+import "gql_types.proto";

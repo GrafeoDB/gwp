@@ -1,0 +1,29 @@
+[package]
+name = "gql-wire-protocol"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85.0"
+description = "A standalone, pure Rust gRPC wire protocol for GQL (ISO/IEC 39075)"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+prost = "0.13"
+thiserror = "2"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"] }
+tokio-stream = "0.1"
+tonic = "0.12"
+
+[build-dependencies]
+prost-build = "0.13"
+tonic-build = "0.12"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "test-util"] }
+
+[lints.clippy]
+all = "warn"
+pedantic = "warn"
+module_name_repetitions = "allow"
+
+[profile.release]
+lto = true

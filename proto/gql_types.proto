@@ -1,0 +1,289 @@
+syntax = "proto3";
+
+package gql;
+
+// ============================================================================
+// GQL Value Type System
+// Faithfully represents all GQL value types from ISO/IEC 39075 Chapter 18.
+// ============================================================================
+
+// Discriminated union of all GQL value types.
+message Value {
+  oneof kind {
+    // Null
+    NullValue null_value = 1;
+
+    // Boolean
+    bool boolean_value = 2;
+
+    // Signed integer (INT8 through INT64)
+    int64 integer_value = 3;
+
+    // Unsigned integer (UINT8 through UINT64)
+    uint64 unsigned_integer_value = 4;
+
+    // Extended-precision integer (INT128/256, UINT128/256)
+    BigInteger big_integer_value = 5;
+
+    // Floating point (FLOAT32/64)
+    double float_value = 6;
+
+    // Extended-precision float (FLOAT128/256)
+    BigFloat big_float_value = 7;
+
+    // Decimal with arbitrary precision
+    Decimal decimal_value = 8;
+
+    // String
+    string string_value = 9;
+
+    // Byte string
+    bytes bytes_value = 10;
+
+    // Temporal types
+    Date date_value = 11;
+    LocalTime local_time_value = 12;
+    ZonedTime zoned_time_value = 13;
+    LocalDateTime local_datetime_value = 14;
+    ZonedDateTime zoned_datetime_value = 15;
+    Duration duration_value = 16;
+
+    // Constructed types
+    GqlList list_value = 17;
+    Record record_value = 18;
+
+    // Graph element types
+    Node node_value = 19;
+    Edge edge_value = 20;
+    Path path_value = 21;
+  }
+}
+
+// Explicit null marker (GQL NULL).
+message NullValue {}
+
+// ============================================================================
+// Extended Numeric Types
+// ============================================================================
+
+// Extended-precision integer (INT128/256, UINT128/256).
+message BigInteger {
+  bytes value = 1;    // Big-endian two's complement
+  bool is_signed = 2;
+}
+
+// Extended-precision float (FLOAT128/256).
+message BigFloat {
+  bytes value = 1;    // IEEE 754 encoding
+  uint32 width = 2;   // 128 or 256
+}
+
+// Arbitrary-precision decimal.
+message Decimal {
+  bytes unscaled = 1;  // Big-endian two's complement of unscaled value
+  int32 scale = 2;     // Number of digits after the decimal point
+}
+
+// ============================================================================
+// Temporal Types (ISO/IEC 39075 Chapter 18)
+// ============================================================================
+
+// Calendar date.
+message Date {
+  int32 year = 1;
+  uint32 month = 2;    // 1-12
+  uint32 day = 3;      // 1-31
+}
+
+// Time without timezone.
+message LocalTime {
+  uint32 hour = 1;        // 0-23
+  uint32 minute = 2;      // 0-59
+  uint32 second = 3;      // 0-59
+  uint32 nanosecond = 4;  // 0-999999999
+}
+
+// Time with UTC offset.
+message ZonedTime {
+  LocalTime time = 1;
+  int32 offset_minutes = 2;  // UTC offset in minutes
+}
+
+// Date and time without timezone.
+message LocalDateTime {
+  Date date = 1;
+  LocalTime time = 2;
+}
+
+// Date and time with UTC offset.
+message ZonedDateTime {
+  Date date = 1;
+  LocalTime time = 2;
+  int32 offset_minutes = 3;
+}
+
+// Temporal duration with two components per ISO/IEC 39075.
+message Duration {
+  int64 months = 1;       // Year-to-month component
+  int64 nanoseconds = 2;  // Day-to-second component
+}
+
+// ============================================================================
+// Graph Element Types
+// ============================================================================
+
+// Property graph node.
+message Node {
+  bytes id = 1;                        // Opaque element identifier
+  repeated string labels = 2;         // Label set (unordered)
+  map<string, Value> properties = 3;  // Property map
+}
+
+// Property graph edge (directed or undirected).
+message Edge {
+  bytes id = 1;                        // Opaque element identifier
+  repeated string labels = 2;         // Label set
+  bytes source_node_id = 3;           // Source node (directed) or endpoint A
+  bytes target_node_id = 4;           // Target node (directed) or endpoint B
+  bool undirected = 5;                // true = undirected edge
+  map<string, Value> properties = 6;  // Property map
+}
+
+// Alternating sequence of nodes and edges.
+// nodes[i] and nodes[i+1] are connected by edges[i].
+message Path {
+  repeated Node nodes = 1;
+  repeated Edge edges = 2;
+}
+
+// ============================================================================
+// Constructed Types
+// ============================================================================
+
+// Ordered list of values.
+message GqlList {
+  repeated Value elements = 1;
+}
+
+// Named collection of fields (open or closed record).
+message Record {
+  repeated Field fields = 1;
+}
+
+// Single field within a record.
+message Field {
+  string name = 1;
+  Value value = 2;
+}
+
+// ============================================================================
+// Type Descriptors
+// Column metadata carrying the declared GQL type, not just wire encoding.
+// ============================================================================
+
+message TypeDescriptor {
+  GqlType type = 1;
+  bool nullable = 2;
+  TypeDescriptor element_type = 3;        // For LIST: element type
+  repeated FieldDescriptor fields = 4;    // For RECORD: field types
+}
+
+message FieldDescriptor {
+  string name = 1;
+  TypeDescriptor type = 2;
+}
+
+// GQL type enumeration covering all types from ISO/IEC 39075.
+enum GqlType {
+  TYPE_UNKNOWN = 0;
+  TYPE_NULL = 1;
+  TYPE_BOOLEAN = 2;
+
+  // Signed integers
+  TYPE_INT8 = 10;
+  TYPE_INT16 = 11;
+  TYPE_INT32 = 12;
+  TYPE_INT64 = 13;
+  TYPE_INT128 = 14;
+  TYPE_INT256 = 15;
+
+  // Unsigned integers
+  TYPE_UINT8 = 20;
+  TYPE_UINT16 = 21;
+  TYPE_UINT32 = 22;
+  TYPE_UINT64 = 23;
+  TYPE_UINT128 = 24;
+  TYPE_UINT256 = 25;
+
+  // Floating point
+  TYPE_FLOAT16 = 30;
+  TYPE_FLOAT32 = 31;
+  TYPE_FLOAT64 = 32;
+  TYPE_FLOAT128 = 33;
+  TYPE_FLOAT256 = 34;
+
+  // Decimal
+  TYPE_DECIMAL = 40;
+
+  // String / bytes
+  TYPE_STRING = 50;
+  TYPE_BYTES = 60;
+
+  // Temporal
+  TYPE_DATE = 70;
+  TYPE_LOCAL_TIME = 71;
+  TYPE_ZONED_TIME = 72;
+  TYPE_LOCAL_DATETIME = 73;
+  TYPE_ZONED_DATETIME = 74;
+  TYPE_DURATION = 75;
+
+  // Constructed
+  TYPE_LIST = 80;
+  TYPE_RECORD = 81;
+  TYPE_PATH = 82;
+
+  // Graph elements
+  TYPE_NODE = 90;
+  TYPE_EDGE = 91;
+
+  // Dynamic
+  TYPE_ANY = 110;
+  TYPE_PROPERTY_VALUE = 111;
+}
+
+// ============================================================================
+// GQLSTATUS and Diagnostics (ISO/IEC 39075 Chapter 23)
+// ============================================================================
+
+// Status code from a GQL operation.
+message GqlStatus {
+  string code = 1;                         // 5-char GQLSTATUS code
+  string message = 2;                      // Human-readable description
+  DiagnosticRecord diagnostic = 3;         // Optional diagnostic context
+  GqlStatus cause = 4;                     // Optional chained cause
+}
+
+// Diagnostic context for error reporting.
+message DiagnosticRecord {
+  string operation = 1;                    // e.g. "MATCH STATEMENT"
+  int32 operation_code = 2;               // e.g. 600
+  string current_schema = 3;              // Schema context
+}
+
+// ============================================================================
+// Authentication
+// ============================================================================
+
+// Credentials provided at handshake.
+message AuthCredentials {
+  oneof method {
+    string bearer_token = 1;
+    BasicAuth basic = 2;
+  }
+}
+
+// Username/password credentials.
+message BasicAuth {
+  string username = 1;
+  string password = 2;
+}

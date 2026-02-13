@@ -21,6 +21,10 @@ impl GqlServer {
     ///
     /// Returns a configured `tonic::transport::Server` ready to serve
     /// both `SessionService` and `GqlService`.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the server fails to bind or start.
     pub async fn serve<B: GqlBackend>(
         backend: B,
         addr: SocketAddr,
@@ -29,17 +33,10 @@ impl GqlServer {
         let sessions = SessionManager::new();
         let transactions = TransactionManager::new();
 
-        let session_service = SessionServiceImpl::new(
-            Arc::clone(&backend),
-            sessions.clone(),
-            transactions.clone(),
-        );
+        let session_service =
+            SessionServiceImpl::new(Arc::clone(&backend), sessions.clone(), transactions.clone());
 
-        let gql_service = GqlServiceImpl::new(
-            Arc::clone(&backend),
-            sessions,
-            transactions,
-        );
+        let gql_service = GqlServiceImpl::new(Arc::clone(&backend), sessions, transactions);
 
         Server::builder()
             .add_service(SessionServiceServer::new(session_service))

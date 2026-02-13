@@ -1,7 +1,7 @@
 //! Record type - named collection of fields.
 
-use crate::proto;
 use super::Value;
+use crate::proto;
 
 /// A single field within a record.
 #[derive(Debug, Clone, PartialEq)]

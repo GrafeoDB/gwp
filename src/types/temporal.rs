@@ -1,4 +1,4 @@
-//! Temporal types: Date, LocalTime, ZonedTime, LocalDateTime, ZonedDateTime, Duration.
+//! Temporal types: `Date`, `LocalTime`, `ZonedTime`, `LocalDateTime`, `ZonedDateTime`, `Duration`.
 
 use crate::proto;
 

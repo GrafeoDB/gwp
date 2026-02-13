@@ -76,9 +76,7 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
         let session_id = &req.session_id;
 
         if !self.sessions.exists(session_id).await {
-            return Err(Status::not_found(format!(
-                "session {session_id} not found"
-            )));
+            return Err(Status::not_found(format!("session {session_id} not found")));
         }
 
         let property = match req.property {
@@ -89,16 +87,15 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
             }
             Some(proto::configure_request::Property::Parameter(p)) => SessionProperty::Parameter {
                 name: p.name,
-                value: p.value.map_or(crate::types::Value::Null, crate::types::Value::from),
+                value: p
+                    .value
+                    .map_or(crate::types::Value::Null, crate::types::Value::from),
             },
             None => return Err(Status::invalid_argument("no property specified")),
         };
 
         self.backend
-            .configure_session(
-                &super::SessionHandle(session_id.clone()),
-                property.clone(),
-            )
+            .configure_session(&super::SessionHandle(session_id.clone()), property.clone())
             .await
             .map_err(|e| e.to_grpc_status())?;
 
@@ -118,9 +115,7 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
         let session_id = &req.session_id;
 
         if !self.sessions.exists(session_id).await {
-            return Err(Status::not_found(format!(
-                "session {session_id} not found"
-            )));
+            return Err(Status::not_found(format!("session {session_id} not found")));
         }
 
         let target = match proto::ResetTarget::try_from(req.target) {
@@ -153,9 +148,7 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
         let session_id = &req.session_id;
 
         if !self.sessions.exists(session_id).await {
-            return Err(Status::not_found(format!(
-                "session {session_id} not found"
-            )));
+            return Err(Status::not_found(format!("session {session_id} not found")));
         }
 
         // Roll back any active transactions
@@ -195,7 +188,7 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
 
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .map_or(0, |d| d.as_millis() as i64);
+            .map_or(0, |d| i64::try_from(d.as_millis()).unwrap_or(i64::MAX));
 
         Ok(Response::new(proto::PongResponse { timestamp }))
     }

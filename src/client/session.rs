@@ -53,6 +53,10 @@ impl GqlSession {
     }
 
     /// Execute a GQL statement and return a cursor over the results.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the server rejects the request.
     pub async fn execute(
         &mut self,
         statement: &str,
@@ -78,6 +82,10 @@ impl GqlSession {
     }
 
     /// Begin an explicit transaction.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the transaction cannot be started.
     pub async fn begin_transaction(&mut self) -> Result<Transaction, GqlError> {
         Transaction::begin(
             self.session_id.clone(),
@@ -88,6 +96,10 @@ impl GqlSession {
     }
 
     /// Begin a read-only transaction.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the transaction cannot be started.
     pub async fn begin_read_only_transaction(&mut self) -> Result<Transaction, GqlError> {
         Transaction::begin(
             self.session_id.clone(),
@@ -98,19 +110,25 @@ impl GqlSession {
     }
 
     /// Set the current graph for this session.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the server rejects the configuration.
     pub async fn set_graph(&mut self, graph: &str) -> Result<(), GqlError> {
         self.session_client
             .configure(proto::ConfigureRequest {
                 session_id: self.session_id.clone(),
-                property: Some(proto::configure_request::Property::Graph(
-                    graph.to_owned(),
-                )),
+                property: Some(proto::configure_request::Property::Graph(graph.to_owned())),
             })
             .await?;
         Ok(())
     }
 
     /// Set the current schema for this session.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the server rejects the configuration.
     pub async fn set_schema(&mut self, schema: &str) -> Result<(), GqlError> {
         self.session_client
             .configure(proto::ConfigureRequest {
@@ -124,19 +142,27 @@ impl GqlSession {
     }
 
     /// Set the timezone offset for this session.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the server rejects the configuration.
     pub async fn set_time_zone(&mut self, offset_minutes: i32) -> Result<(), GqlError> {
         self.session_client
             .configure(proto::ConfigureRequest {
                 session_id: self.session_id.clone(),
-                property: Some(
-                    proto::configure_request::Property::TimeZoneOffsetMinutes(offset_minutes),
-                ),
+                property: Some(proto::configure_request::Property::TimeZoneOffsetMinutes(
+                    offset_minutes,
+                )),
             })
             .await?;
         Ok(())
     }
 
     /// Reset all session state to defaults.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the server rejects the request.
     pub async fn reset(&mut self) -> Result<(), GqlError> {
         self.session_client
             .reset(proto::ResetRequest {
@@ -148,6 +174,10 @@ impl GqlSession {
     }
 
     /// Ping the server to check connectivity.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the server is unreachable.
     pub async fn ping(&mut self) -> Result<i64, GqlError> {
         let resp = self
             .session_client
@@ -161,6 +191,10 @@ impl GqlSession {
     }
 
     /// Close this session.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the server rejects the request.
     pub async fn close(mut self) -> Result<(), GqlError> {
         self.session_client
             .close(proto::CloseRequest {

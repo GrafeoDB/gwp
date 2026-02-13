@@ -2,7 +2,9 @@
 
 use crate::proto;
 
-use super::{Date, Duration, Edge, LocalDateTime, LocalTime, Node, Path, Record, ZonedDateTime, ZonedTime};
+use super::{
+    Date, Duration, Edge, LocalDateTime, LocalTime, Node, Path, Record, ZonedDateTime, ZonedTime,
+};
 
 /// A GQL value - the discriminated union of all types that can appear
 /// in query results, parameters, or property maps.
@@ -156,9 +158,11 @@ impl From<proto::Value> for Value {
             Some(proto::value::Kind::EdgeValue(v)) => Self::Edge(v.into()),
             Some(proto::value::Kind::PathValue(v)) => Self::Path(v.into()),
             // Extended numeric types - store as-is for now (future: native Rust types)
-            Some(proto::value::Kind::BigIntegerValue(_))
-            | Some(proto::value::Kind::BigFloatValue(_))
-            | Some(proto::value::Kind::DecimalValue(_)) => {
+            Some(
+                proto::value::Kind::BigIntegerValue(_)
+                | proto::value::Kind::BigFloatValue(_)
+                | proto::value::Kind::DecimalValue(_),
+            ) => {
                 // TODO: Add native Rust representations for extended numerics
                 Self::Null
             }
@@ -198,61 +202,61 @@ impl From<Value> for proto::Value {
 mod tests {
     use super::*;
 
-    fn round_trip(value: Value) {
+    fn round_trip(value: &Value) {
         let proto_value: proto::Value = value.clone().into();
         let back: Value = proto_value.into();
-        assert_eq!(value, back);
+        assert_eq!(*value, back);
     }
 
     #[test]
     fn round_trip_null() {
-        round_trip(Value::Null);
+        round_trip(&Value::Null);
     }
 
     #[test]
     fn round_trip_boolean() {
-        round_trip(Value::Boolean(true));
-        round_trip(Value::Boolean(false));
+        round_trip(&Value::Boolean(true));
+        round_trip(&Value::Boolean(false));
     }
 
     #[test]
     fn round_trip_integer() {
-        round_trip(Value::Integer(0));
-        round_trip(Value::Integer(42));
-        round_trip(Value::Integer(-1));
-        round_trip(Value::Integer(i64::MAX));
-        round_trip(Value::Integer(i64::MIN));
+        round_trip(&Value::Integer(0));
+        round_trip(&Value::Integer(42));
+        round_trip(&Value::Integer(-1));
+        round_trip(&Value::Integer(i64::MAX));
+        round_trip(&Value::Integer(i64::MIN));
     }
 
     #[test]
     fn round_trip_unsigned() {
-        round_trip(Value::UnsignedInteger(0));
-        round_trip(Value::UnsignedInteger(u64::MAX));
+        round_trip(&Value::UnsignedInteger(0));
+        round_trip(&Value::UnsignedInteger(u64::MAX));
     }
 
     #[test]
     fn round_trip_float() {
-        round_trip(Value::Float(0.0));
-        round_trip(Value::Float(3.14));
-        round_trip(Value::Float(-1.0));
+        round_trip(&Value::Float(0.0));
+        round_trip(&Value::Float(1.5));
+        round_trip(&Value::Float(-1.0));
     }
 
     #[test]
     fn round_trip_string() {
-        round_trip(Value::String(String::new()));
-        round_trip(Value::String("hello world".to_owned()));
+        round_trip(&Value::String(String::new()));
+        round_trip(&Value::String("hello world".to_owned()));
     }
 
     #[test]
     fn round_trip_bytes() {
-        round_trip(Value::Bytes(vec![]));
-        round_trip(Value::Bytes(vec![0x00, 0xFF, 0x42]));
+        round_trip(&Value::Bytes(vec![]));
+        round_trip(&Value::Bytes(vec![0x00, 0xFF, 0x42]));
     }
 
     #[test]
     fn round_trip_list() {
-        round_trip(Value::List(vec![]));
-        round_trip(Value::List(vec![
+        round_trip(&Value::List(vec![]));
+        round_trip(&Value::List(vec![
             Value::Integer(1),
             Value::String("two".to_owned()),
             Value::Null,
@@ -261,7 +265,7 @@ mod tests {
 
     #[test]
     fn round_trip_nested_list() {
-        round_trip(Value::List(vec![
+        round_trip(&Value::List(vec![
             Value::List(vec![Value::Integer(1), Value::Integer(2)]),
             Value::List(vec![Value::Integer(3)]),
         ]));
@@ -274,7 +278,7 @@ mod tests {
         assert_eq!(Value::from(42_i32), Value::Integer(42));
         assert_eq!(Value::from(42_u64), Value::UnsignedInteger(42));
         assert_eq!(Value::from(42_u32), Value::UnsignedInteger(42));
-        assert_eq!(Value::from(3.14_f64), Value::Float(3.14));
+        assert_eq!(Value::from(1.5_f64), Value::Float(1.5));
         assert_eq!(Value::from("hello"), Value::String("hello".to_owned()));
     }
 }

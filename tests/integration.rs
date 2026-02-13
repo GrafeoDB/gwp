@@ -1,4 +1,4 @@
-//! Integration tests: start a real gRPC server with MockBackend,
+//! Integration tests: start a real gRPC server with `MockBackend`,
 //! connect with tonic clients, and verify the full round-trip.
 
 use std::collections::HashMap;
@@ -34,9 +34,9 @@ async fn start_server() -> SocketAddr {
         let incoming = tokio_stream::wrappers::TcpListenerStream::new(listener);
 
         tonic::transport::Server::builder()
-            .add_service(
-                proto::session_service_server::SessionServiceServer::new(session_svc),
-            )
+            .add_service(proto::session_service_server::SessionServiceServer::new(
+                session_svc,
+            ))
             .add_service(proto::gql_service_server::GqlServiceServer::new(gql_svc))
             .serve_with_incoming(incoming)
             .await
@@ -67,10 +67,8 @@ async fn connect(
     (session_client, gql_client)
 }
 
-/// Perform a handshake and return the session_id.
-async fn handshake(
-    client: &mut SessionServiceClient<tonic::transport::Channel>,
-) -> String {
+/// Perform a handshake and return the `session_id`.
+async fn handshake(client: &mut SessionServiceClient<tonic::transport::Channel>) -> String {
     let resp = client
         .handshake(proto::HandshakeRequest {
             protocol_version: 1,
@@ -244,7 +242,10 @@ async fn execute_ddl() {
         Some(proto::execute_response::Frame::Summary(s)) => s,
         other => panic!("expected summary, got {other:?}"),
     };
-    assert_eq!(summary.status.as_ref().unwrap().code, status::OMITTED_RESULT);
+    assert_eq!(
+        summary.status.as_ref().unwrap().code,
+        status::OMITTED_RESULT
+    );
 }
 
 #[tokio::test]
@@ -391,9 +392,7 @@ async fn double_begin_returns_gqlstatus_error() {
         .into_inner();
 
     assert!(begin2.transaction_id.is_empty());
-    assert!(status::is_exception(
-        &begin2.status.as_ref().unwrap().code
-    ));
+    assert!(status::is_exception(&begin2.status.as_ref().unwrap().code));
 }
 
 #[tokio::test]

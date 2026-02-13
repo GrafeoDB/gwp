@@ -18,7 +18,7 @@ use super::result::ResultCursor;
 /// committing, the transaction is automatically rolled back.
 pub struct Transaction {
     session_id: String,
-    transaction_id: String,
+    id: String,
     client: GqlServiceClient<Channel>,
     committed: bool,
     rolled_back: bool,
@@ -42,9 +42,7 @@ impl Transaction {
         // Check for GQLSTATUS error
         if let Some(ref s) = resp.status {
             if status::is_exception(&s.code) {
-                return Err(GqlError::Status {
-                    status: s.clone(),
-                });
+                return Err(GqlError::Status { status: s.clone() });
             }
         }
 
@@ -56,7 +54,7 @@ impl Transaction {
 
         Ok(Self {
             session_id,
-            transaction_id: resp.transaction_id,
+            id: resp.transaction_id,
             client,
             committed: false,
             rolled_back: false,
@@ -66,10 +64,14 @@ impl Transaction {
     /// Get the transaction ID.
     #[must_use]
     pub fn transaction_id(&self) -> &str {
-        &self.transaction_id
+        &self.id
     }
 
     /// Execute a statement within this transaction.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the server rejects the request.
     pub async fn execute(
         &mut self,
         statement: &str,
@@ -86,7 +88,7 @@ impl Transaction {
                 session_id: self.session_id.clone(),
                 statement: statement.to_owned(),
                 parameters: proto_params,
-                transaction_id: self.transaction_id.clone(),
+                transaction_id: self.id.clone(),
             })
             .await?
             .into_inner();
@@ -95,12 +97,16 @@ impl Transaction {
     }
 
     /// Commit the transaction.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the commit fails.
     pub async fn commit(mut self) -> Result<(), GqlError> {
         let resp = self
             .client
             .commit(proto::CommitRequest {
                 session_id: self.session_id.clone(),
-                transaction_id: self.transaction_id.clone(),
+                transaction_id: self.id.clone(),
             })
             .await?
             .into_inner();
@@ -109,9 +115,7 @@ impl Transaction {
 
         if let Some(ref s) = resp.status {
             if status::is_exception(&s.code) {
-                return Err(GqlError::Status {
-                    status: s.clone(),
-                });
+                return Err(GqlError::Status { status: s.clone() });
             }
         }
 
@@ -119,6 +123,10 @@ impl Transaction {
     }
 
     /// Roll back the transaction.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the rollback fails.
     pub async fn rollback(mut self) -> Result<(), GqlError> {
         self.do_rollback().await
     }
@@ -133,7 +141,7 @@ impl Transaction {
             .client
             .rollback(proto::RollbackRequest {
                 session_id: self.session_id.clone(),
-                transaction_id: self.transaction_id.clone(),
+                transaction_id: self.id.clone(),
             })
             .await?
             .into_inner();
@@ -142,9 +150,7 @@ impl Transaction {
 
         if let Some(ref s) = resp.status {
             if status::is_exception(&s.code) {
-                return Err(GqlError::Status {
-                    status: s.clone(),
-                });
+                return Err(GqlError::Status { status: s.clone() });
             }
         }
 
@@ -159,7 +165,7 @@ impl Drop for Transaction {
             // We can't await in drop, so we spawn a task.
             let mut client = self.client.clone();
             let session_id = self.session_id.clone();
-            let transaction_id = self.transaction_id.clone();
+            let transaction_id = self.id.clone();
             tokio::spawn(async move {
                 let _ = client
                     .rollback(proto::RollbackRequest {

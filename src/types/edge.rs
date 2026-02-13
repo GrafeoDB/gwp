@@ -2,8 +2,8 @@
 
 use std::collections::HashMap;
 
-use crate::proto;
 use super::Value;
+use crate::proto;
 
 /// A property graph edge with an opaque ID, labels, endpoints, and properties.
 #[derive(Debug, Clone, PartialEq)]
@@ -133,8 +133,7 @@ mod tests {
 
     #[test]
     fn undirected_edge() {
-        let edge = Edge::undirected(vec![0x10], vec![0x01], vec![0x02])
-            .with_label("friends_with");
+        let edge = Edge::undirected(vec![0x10], vec![0x01], vec![0x02]).with_label("friends_with");
 
         assert!(edge.undirected);
     }

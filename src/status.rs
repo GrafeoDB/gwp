@@ -198,11 +198,7 @@ pub fn error_with_diagnostic(
 /// Returns the class (first 2 characters) of a GQLSTATUS code.
 #[must_use]
 pub fn class(code: &str) -> &str {
-    if code.len() >= 2 {
-        &code[..2]
-    } else {
-        code
-    }
+    if code.len() >= 2 { &code[..2] } else { code }
 }
 
 /// Returns true if the code represents a successful completion (class 00).

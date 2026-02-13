@@ -13,8 +13,8 @@ use tonic::{Request, Response, Status};
 
 use crate::proto;
 use crate::proto::gql_service_server::GqlService;
+use crate::status as gql_status;
 use crate::types::Value;
-use crate::{status as gql_status};
 
 use super::backend::{GqlBackend, ResultFrame, ResultStream};
 use super::{SessionHandle, SessionManager, TransactionHandle, TransactionManager};
@@ -45,17 +45,14 @@ impl<B: GqlBackend> GqlServiceImpl<B> {
         if self.sessions.exists(session_id).await {
             Ok(())
         } else {
-            Err(Status::not_found(format!(
-                "session {session_id} not found"
-            )))
+            Err(Status::not_found(format!("session {session_id} not found")))
         }
     }
 }
 
 #[tonic::async_trait]
 impl<B: GqlBackend> GqlService for GqlServiceImpl<B> {
-    type ExecuteStream =
-        Pin<Box<dyn Stream<Item = Result<proto::ExecuteResponse, Status>> + Send>>;
+    type ExecuteStream = Pin<Box<dyn Stream<Item = Result<proto::ExecuteResponse, Status>> + Send>>;
 
     async fn execute(
         &self,
@@ -84,12 +81,7 @@ impl<B: GqlBackend> GqlService for GqlServiceImpl<B> {
 
         let result_stream = self
             .backend
-            .execute(
-                &session,
-                &req.statement,
-                &parameters,
-                transaction.as_ref(),
-            )
+            .execute(&session, &req.statement, &parameters, transaction.as_ref())
             .await;
 
         match result_stream {
@@ -101,10 +93,7 @@ impl<B: GqlBackend> GqlService for GqlServiceImpl<B> {
                 // GQL errors go in the response payload, not gRPC status
                 let status = match err.gql_status() {
                     Some(s) => s.clone(),
-                    None => gql_status::error(
-                        gql_status::DATA_EXCEPTION,
-                        err.to_string(),
-                    ),
+                    None => gql_status::error(gql_status::DATA_EXCEPTION, err.to_string()),
                 };
 
                 let summary_stream = futures_single_response(proto::ExecuteResponse {
@@ -131,8 +120,8 @@ impl<B: GqlBackend> GqlService for GqlServiceImpl<B> {
         self.validate_session(&req.session_id).await?;
 
         let session = SessionHandle(req.session_id.clone());
-        let mode = proto::TransactionMode::try_from(req.mode)
-            .unwrap_or(proto::TransactionMode::ReadWrite);
+        let mode =
+            proto::TransactionMode::try_from(req.mode).unwrap_or(proto::TransactionMode::ReadWrite);
 
         match self.backend.begin_transaction(&session, mode).await {
             Ok(handle) => {
@@ -167,10 +156,7 @@ impl<B: GqlBackend> GqlService for GqlServiceImpl<B> {
             Err(err) => {
                 let status = match err.gql_status() {
                     Some(s) => s.clone(),
-                    None => gql_status::error(
-                        gql_status::ACTIVE_TRANSACTION,
-                        err.to_string(),
-                    ),
+                    None => gql_status::error(gql_status::ACTIVE_TRANSACTION, err.to_string()),
                 };
                 Ok(Response::new(proto::BeginResponse {
                     transaction_id: String::new(),
@@ -218,10 +204,7 @@ impl<B: GqlBackend> GqlService for GqlServiceImpl<B> {
             Err(err) => {
                 let status = match err.gql_status() {
                     Some(s) => s.clone(),
-                    None => gql_status::error(
-                        gql_status::TRANSACTION_ROLLBACK,
-                        err.to_string(),
-                    ),
+                    None => gql_status::error(gql_status::TRANSACTION_ROLLBACK, err.to_string()),
                 };
                 Ok(Response::new(proto::CommitResponse {
                     status: Some(status),
@@ -268,10 +251,7 @@ impl<B: GqlBackend> GqlService for GqlServiceImpl<B> {
             Err(err) => {
                 let status = match err.gql_status() {
                     Some(s) => s.clone(),
-                    None => gql_status::error(
-                        gql_status::TRANSACTION_ROLLBACK,
-                        err.to_string(),
-                    ),
+                    None => gql_status::error(gql_status::TRANSACTION_ROLLBACK, err.to_string()),
                 };
                 Ok(Response::new(proto::RollbackResponse {
                     status: Some(status),

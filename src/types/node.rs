@@ -2,8 +2,8 @@
 
 use std::collections::HashMap;
 
-use crate::proto;
 use super::Value;
+use crate::proto;
 
 /// A property graph node with an opaque ID, labels, and properties.
 #[derive(Debug, Clone, PartialEq)]

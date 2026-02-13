@@ -31,6 +31,10 @@ impl ResultCursor {
     ///
     /// Consumes frames until the header is found. Returns `None` if
     /// the stream ends without a header.
+    ///
+    /// # Errors
+    ///
+    /// Returns a transport error if the gRPC stream fails.
     pub async fn header(&mut self) -> Result<Option<&proto::ResultHeader>, GqlError> {
         if self.header.is_some() {
             return Ok(self.header.as_ref());
@@ -41,6 +45,10 @@ impl ResultCursor {
     }
 
     /// Get the column names from the result header.
+    ///
+    /// # Errors
+    ///
+    /// Returns a transport error if the gRPC stream fails.
     pub async fn column_names(&mut self) -> Result<Vec<String>, GqlError> {
         self.header().await?;
         Ok(self
@@ -53,6 +61,10 @@ impl ResultCursor {
     /// Get the next row of results.
     ///
     /// Returns `None` when all rows have been consumed.
+    ///
+    /// # Errors
+    ///
+    /// Returns a transport error if the gRPC stream fails.
     pub async fn next_row(&mut self) -> Result<Option<Vec<Value>>, GqlError> {
         // Drain buffered rows first
         if !self.buffered_rows.is_empty() {
@@ -65,11 +77,10 @@ impl ResultCursor {
 
         // Fetch more frames
         loop {
-            match self.stream.message().await? {
-                Some(response) => match response.frame {
+            if let Some(response) = self.stream.message().await? {
+                match response.frame {
                     Some(proto::execute_response::Frame::Header(h)) => {
                         self.header = Some(h);
-                        continue;
                     }
                     Some(proto::execute_response::Frame::RowBatch(batch)) => {
                         let mut rows: Vec<Vec<Value>> = batch
@@ -91,17 +102,20 @@ impl ResultCursor {
                         self.done = true;
                         return Ok(None);
                     }
-                    None => continue,
-                },
-                None => {
-                    self.done = true;
-                    return Ok(None);
+                    None => {}
                 }
+            } else {
+                self.done = true;
+                return Ok(None);
             }
         }
     }
 
     /// Collect all remaining rows into a vector.
+    ///
+    /// # Errors
+    ///
+    /// Returns a transport error if the gRPC stream fails.
     pub async fn collect_rows(&mut self) -> Result<Vec<Vec<Value>>, GqlError> {
         let mut all_rows = Vec::new();
         while let Some(row) = self.next_row().await? {
@@ -113,6 +127,10 @@ impl ResultCursor {
     /// Get the result summary (available after all rows consumed).
     ///
     /// Consumes remaining frames if needed.
+    ///
+    /// # Errors
+    ///
+    /// Returns a transport error if the gRPC stream fails.
     pub async fn summary(&mut self) -> Result<Option<&proto::ResultSummary>, GqlError> {
         if self.summary.is_some() {
             return Ok(self.summary.as_ref());
@@ -129,16 +147,24 @@ impl ResultCursor {
     /// Check if the result completed successfully.
     ///
     /// Consumes remaining frames if needed.
+    ///
+    /// # Errors
+    ///
+    /// Returns a transport error if the gRPC stream fails.
     pub async fn is_success(&mut self) -> Result<bool, GqlError> {
         let summary = self.summary().await?;
         Ok(summary
             .and_then(|s| s.status.as_ref())
-            .map_or(false, |s| status::is_success(&s.code)))
+            .is_some_and(|s| status::is_success(&s.code)))
     }
 
     /// Get the number of rows affected (for DML operations).
     ///
     /// Consumes remaining frames if needed.
+    ///
+    /// # Errors
+    ///
+    /// Returns a transport error if the gRPC stream fails.
     pub async fn rows_affected(&mut self) -> Result<i64, GqlError> {
         let summary = self.summary().await?;
         Ok(summary.map_or(0, |s| s.rows_affected))
@@ -147,8 +173,8 @@ impl ResultCursor {
     /// Advance the stream until we find the header.
     async fn advance_to_header(&mut self) -> Result<(), GqlError> {
         while !self.done {
-            match self.stream.message().await? {
-                Some(response) => match response.frame {
+            if let Some(response) = self.stream.message().await? {
+                match response.frame {
                     Some(proto::execute_response::Frame::Header(h)) => {
                         self.header = Some(h);
                         return Ok(());
@@ -166,12 +192,11 @@ impl ResultCursor {
                         self.done = true;
                         return Ok(());
                     }
-                    None => continue,
-                },
-                None => {
-                    self.done = true;
-                    return Ok(());
+                    None => {}
                 }
+            } else {
+                self.done = true;
+                return Ok(());
             }
         }
         Ok(())

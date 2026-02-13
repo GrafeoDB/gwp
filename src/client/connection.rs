@@ -17,6 +17,10 @@ pub struct GqlConnection {
 impl GqlConnection {
     /// Connect to a GQL server at the given endpoint.
     ///
+    /// # Errors
+    ///
+    /// Returns an error if the connection cannot be established.
+    ///
     /// # Examples
     ///
     /// ```no_run
@@ -43,6 +47,10 @@ impl GqlConnection {
     }
 
     /// Perform a handshake and return a session.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the handshake fails.
     pub async fn create_session(&self) -> Result<GqlSession, GqlError> {
         GqlSession::new(self.channel.clone()).await
     }

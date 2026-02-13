@@ -64,7 +64,7 @@ impl GqlError {
         }
     }
 
-    /// Convert this error to a `tonic::Status` for SessionService responses.
+    /// Convert this error to a `tonic::Status` for `SessionService` responses.
     ///
     /// Maps crate errors to appropriate gRPC status codes.
     #[must_use]

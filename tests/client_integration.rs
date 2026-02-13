@@ -5,10 +5,10 @@ use std::net::SocketAddr;
 
 use gql_wire_protocol::client::GqlConnection;
 use gql_wire_protocol::proto;
+use gql_wire_protocol::server::mock_backend::MockBackend;
 use gql_wire_protocol::server::{
     GqlServiceImpl, SessionManager, SessionServiceImpl, TransactionManager,
 };
-use gql_wire_protocol::server::mock_backend::MockBackend;
 use gql_wire_protocol::types::Value;
 
 async fn start_server() -> SocketAddr {
@@ -31,9 +31,9 @@ async fn start_server() -> SocketAddr {
         let incoming = tokio_stream::wrappers::TcpListenerStream::new(listener);
 
         tonic::transport::Server::builder()
-            .add_service(
-                proto::session_service_server::SessionServiceServer::new(session_svc),
-            )
+            .add_service(proto::session_service_server::SessionServiceServer::new(
+                session_svc,
+            ))
             .add_service(proto::gql_service_server::GqlServiceServer::new(gql_svc))
             .serve_with_incoming(incoming)
             .await

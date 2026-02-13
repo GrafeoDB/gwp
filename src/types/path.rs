@@ -1,7 +1,7 @@
 //! Path through a property graph - alternating sequence of nodes and edges.
 
-use crate::proto;
 use super::{Edge, Node};
+use crate::proto;
 
 /// A path through a property graph.
 ///
@@ -9,7 +9,7 @@ use super::{Edge, Node};
 /// `edges[i]` connects `nodes[i]` and `nodes[i+1]`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Path {
-    /// Nodes in the path (length = edges.len() + 1 for non-empty paths).
+    /// Nodes in the path (length = `edges.len()` + 1 for non-empty paths).
     pub nodes: Vec<Node>,
     /// Edges connecting consecutive nodes.
     pub edges: Vec<Edge>,

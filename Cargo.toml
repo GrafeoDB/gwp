@@ -21,8 +21,8 @@ tonic-build = "0.12"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "test-util"] }
 
 [lints.clippy]
-all = "warn"
-pedantic = "warn"
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
 module_name_repetitions = "allow"
 
 [profile.release]

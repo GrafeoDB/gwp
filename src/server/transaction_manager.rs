@@ -37,6 +37,8 @@ impl TransactionManager {
 
     /// Register a new transaction for a session.
     ///
+    /// # Errors
+    ///
     /// Returns an error if the session already has an active transaction.
     pub async fn register(
         &self,
@@ -65,19 +67,22 @@ impl TransactionManager {
     }
 
     /// Remove a transaction (on commit or rollback).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the transaction does not exist.
     pub async fn remove(&self, transaction_id: &str) -> Result<TransactionState, GqlError> {
         let mut txns = self.transactions.write().await;
-        txns.remove(transaction_id).ok_or_else(|| {
-            GqlError::Transaction(format!("transaction {transaction_id} not found"))
-        })
+        txns.remove(transaction_id)
+            .ok_or_else(|| GqlError::Transaction(format!("transaction {transaction_id} not found")))
     }
 
     /// Validate that a transaction exists and belongs to the given session.
-    pub async fn validate(
-        &self,
-        transaction_id: &str,
-        session_id: &str,
-    ) -> Result<(), GqlError> {
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the transaction does not exist or belongs to another session.
+    pub async fn validate(&self, transaction_id: &str, session_id: &str) -> Result<(), GqlError> {
         let txns = self.transactions.read().await;
         match txns.get(transaction_id) {
             Some(state) if state.session_id == session_id => Ok(()),

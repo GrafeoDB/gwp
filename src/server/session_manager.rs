@@ -8,7 +8,7 @@ use tokio::sync::RwLock;
 use super::SessionProperty;
 
 /// Tracks the mutable state for a single session.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SessionState {
     /// Current schema.
     pub schema: Option<String>,
@@ -20,18 +20,6 @@ pub struct SessionState {
     pub parameters: HashMap<String, crate::types::Value>,
     /// Active transaction ID, if any.
     pub active_transaction: Option<String>,
-}
-
-impl Default for SessionState {
-    fn default() -> Self {
-        Self {
-            schema: None,
-            graph: None,
-            time_zone_offset_minutes: 0,
-            parameters: HashMap::new(),
-            active_transaction: None,
-        }
-    }
 }
 
 /// Manages session state for all active sessions.
@@ -68,15 +56,19 @@ impl SessionManager {
     }
 
     /// Apply a session property.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session does not exist.
     pub async fn configure(
         &self,
         session_id: &str,
         property: &SessionProperty,
     ) -> Result<(), crate::error::GqlError> {
         let mut sessions = self.sessions.write().await;
-        let state = sessions
-            .get_mut(session_id)
-            .ok_or_else(|| crate::error::GqlError::Session(format!("session {session_id} not found")))?;
+        let state = sessions.get_mut(session_id).ok_or_else(|| {
+            crate::error::GqlError::Session(format!("session {session_id} not found"))
+        })?;
 
         match property {
             SessionProperty::Schema(s) => state.schema = Some(s.clone()),
@@ -90,15 +82,19 @@ impl SessionManager {
     }
 
     /// Reset session state.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session does not exist.
     pub async fn reset(
         &self,
         session_id: &str,
         target: super::backend::ResetTarget,
     ) -> Result<(), crate::error::GqlError> {
         let mut sessions = self.sessions.write().await;
-        let state = sessions
-            .get_mut(session_id)
-            .ok_or_else(|| crate::error::GqlError::Session(format!("session {session_id} not found")))?;
+        let state = sessions.get_mut(session_id).ok_or_else(|| {
+            crate::error::GqlError::Session(format!("session {session_id} not found"))
+        })?;
 
         match target {
             super::backend::ResetTarget::All => *state = SessionState::default(),
@@ -119,15 +115,19 @@ impl SessionManager {
     }
 
     /// Set the active transaction for a session.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session does not exist.
     pub async fn set_active_transaction(
         &self,
         session_id: &str,
         transaction_id: Option<String>,
     ) -> Result<(), crate::error::GqlError> {
         let mut sessions = self.sessions.write().await;
-        let state = sessions
-            .get_mut(session_id)
-            .ok_or_else(|| crate::error::GqlError::Session(format!("session {session_id} not found")))?;
+        let state = sessions.get_mut(session_id).ok_or_else(|| {
+            crate::error::GqlError::Session(format!("session {session_id} not found"))
+        })?;
         state.active_transaction = transaction_id;
         Ok(())
     }

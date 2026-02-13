@@ -11,7 +11,6 @@ use std::sync::Arc;
 use tokio_stream::Stream;
 use tonic::{Request, Response, Status};
 
-use crate::error::GqlError;
 use crate::proto;
 use crate::proto::gql_service_server::GqlService;
 use crate::types::Value;

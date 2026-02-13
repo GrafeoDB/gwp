@@ -3,3 +3,209 @@ syntax = "proto3";
 package gql;
 
 import "gql_types.proto";
+
+// ============================================================================
+// SessionService
+// Manages session lifecycle and configuration.
+// Errors are returned as gRPC Status codes (UNAUTHENTICATED, NOT_FOUND, etc.)
+// ============================================================================
+
+service SessionService {
+  // Establish a session. Negotiates protocol version and authenticates.
+  rpc Handshake(HandshakeRequest) returns (HandshakeResponse);
+
+  // Configure session state (schema, graph, timezone, parameters).
+  rpc Configure(ConfigureRequest) returns (ConfigureResponse);
+
+  // Reset session state to defaults.
+  rpc Reset(ResetRequest) returns (ResetResponse);
+
+  // Terminate the session. Rolls back any active transaction.
+  rpc Close(CloseRequest) returns (CloseResponse);
+
+  // Health check and keepalive.
+  rpc Ping(PingRequest) returns (PongResponse);
+}
+
+// ============================================================================
+// GqlService
+// Executes GQL statements and manages transactions.
+// Errors are returned as GQLSTATUS codes in the response payload.
+// gRPC status is always OK unless there is a transport-level failure.
+// ============================================================================
+
+service GqlService {
+  // Execute any GQL statement. Returns a stream of response frames:
+  //   1. ResultHeader  (column metadata or result type indicator)
+  //   2. RowBatch*     (zero or more batches of rows)
+  //   3. ResultSummary (completion status, row count, diagnostics)
+  rpc Execute(ExecuteRequest) returns (stream ExecuteResponse);
+
+  // Begin an explicit transaction.
+  rpc BeginTransaction(BeginRequest) returns (BeginResponse);
+
+  // Commit the active transaction.
+  rpc Commit(CommitRequest) returns (CommitResponse);
+
+  // Roll back the active transaction.
+  rpc Rollback(RollbackRequest) returns (RollbackResponse);
+}
+
+// ============================================================================
+// Session Messages
+// ============================================================================
+
+message HandshakeRequest {
+  uint32 protocol_version = 1;
+  AuthCredentials credentials = 2;
+  map<string, string> client_info = 3;  // Driver name, version, platform
+}
+
+message HandshakeResponse {
+  uint32 protocol_version = 1;
+  string session_id = 2;
+  ServerInfo server_info = 3;
+  map<string, int64> limits = 4;  // Implementation limits (IL codes)
+}
+
+message ServerInfo {
+  string name = 1;
+  string version = 2;
+  repeated string features = 3;
+}
+
+message ConfigureRequest {
+  string session_id = 1;
+  oneof property {
+    string schema = 2;
+    string graph = 3;
+    int32 time_zone_offset_minutes = 4;
+    SessionParameter parameter = 5;
+  }
+}
+
+message SessionParameter {
+  string name = 1;
+  Value value = 2;
+}
+
+message ConfigureResponse {}
+
+message ResetRequest {
+  string session_id = 1;
+  ResetTarget target = 2;
+}
+
+enum ResetTarget {
+  RESET_ALL = 0;
+  RESET_SCHEMA = 1;
+  RESET_GRAPH = 2;
+  RESET_TIME_ZONE = 3;
+  RESET_PARAMETERS = 4;
+}
+
+message ResetResponse {}
+
+message CloseRequest {
+  string session_id = 1;
+}
+
+message CloseResponse {}
+
+message PingRequest {
+  string session_id = 1;
+}
+
+message PongResponse {
+  int64 timestamp = 1;
+}
+
+// ============================================================================
+// Execute Messages
+// ============================================================================
+
+message ExecuteRequest {
+  string session_id = 1;
+  string statement = 2;
+  map<string, Value> parameters = 3;
+  string transaction_id = 4;  // Empty for auto-commit
+}
+
+message ExecuteResponse {
+  oneof frame {
+    ResultHeader header = 1;
+    RowBatch row_batch = 2;
+    ResultSummary summary = 3;
+  }
+}
+
+// First frame: describes what kind of result follows.
+message ResultHeader {
+  ResultType result_type = 1;
+  repeated ColumnDescriptor columns = 2;
+}
+
+enum ResultType {
+  BINDING_TABLE = 0;
+  GRAPH = 1;
+  OMITTED = 2;
+}
+
+message ColumnDescriptor {
+  string name = 1;
+  TypeDescriptor type = 2;
+}
+
+// Data frames: batched rows.
+message RowBatch {
+  repeated Row rows = 1;
+}
+
+message Row {
+  repeated Value values = 1;  // Positional, matches column order from header
+}
+
+// Final frame: completion status and statistics.
+message ResultSummary {
+  GqlStatus status = 1;
+  repeated GqlStatus warnings = 2;
+  int64 rows_affected = 3;
+  map<string, int64> counters = 4;  // nodes_created, edges_deleted, etc.
+}
+
+// ============================================================================
+// Transaction Messages
+// ============================================================================
+
+message BeginRequest {
+  string session_id = 1;
+  TransactionMode mode = 2;
+}
+
+message BeginResponse {
+  string transaction_id = 1;
+  GqlStatus status = 2;
+}
+
+message CommitRequest {
+  string session_id = 1;
+  string transaction_id = 2;
+}
+
+message CommitResponse {
+  GqlStatus status = 1;
+}
+
+message RollbackRequest {
+  string session_id = 1;
+  string transaction_id = 2;
+}
+
+message RollbackResponse {
+  GqlStatus status = 1;
+}
+
+enum TransactionMode {
+  READ_WRITE = 0;
+  READ_ONLY = 1;
+}

@@ -1,4 +1,4 @@
-package io.grafeodb.gwp.types;
+package dev.grafeodb.gwp.types;
 
 import java.util.List;
 import java.util.Map;

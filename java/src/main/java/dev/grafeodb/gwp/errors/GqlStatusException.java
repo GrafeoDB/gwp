@@ -1,6 +1,6 @@
-package io.grafeodb.gwp.errors;
+package dev.grafeodb.gwp.errors;
 
-import io.grafeodb.gwp.GqlStatus;
+import dev.grafeodb.gwp.GqlStatus;
 
 /**
  * GQL-domain error carrying a GQLSTATUS code and optional diagnostic context.

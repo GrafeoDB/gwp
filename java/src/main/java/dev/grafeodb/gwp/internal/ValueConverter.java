@@ -1,18 +1,18 @@
-package io.grafeodb.gwp.internal;
+package dev.grafeodb.gwp.internal;
 
 import com.google.protobuf.ByteString;
 
-import io.grafeodb.gwp.types.GqlDate;
-import io.grafeodb.gwp.types.GqlDuration;
-import io.grafeodb.gwp.types.GqlEdge;
-import io.grafeodb.gwp.types.GqlField;
-import io.grafeodb.gwp.types.GqlLocalDateTime;
-import io.grafeodb.gwp.types.GqlLocalTime;
-import io.grafeodb.gwp.types.GqlNode;
-import io.grafeodb.gwp.types.GqlPath;
-import io.grafeodb.gwp.types.GqlRecord;
-import io.grafeodb.gwp.types.GqlZonedDateTime;
-import io.grafeodb.gwp.types.GqlZonedTime;
+import dev.grafeodb.gwp.types.GqlDate;
+import dev.grafeodb.gwp.types.GqlDuration;
+import dev.grafeodb.gwp.types.GqlEdge;
+import dev.grafeodb.gwp.types.GqlField;
+import dev.grafeodb.gwp.types.GqlLocalDateTime;
+import dev.grafeodb.gwp.types.GqlLocalTime;
+import dev.grafeodb.gwp.types.GqlNode;
+import dev.grafeodb.gwp.types.GqlPath;
+import dev.grafeodb.gwp.types.GqlRecord;
+import dev.grafeodb.gwp.types.GqlZonedDateTime;
+import dev.grafeodb.gwp.types.GqlZonedTime;
 
 import java.util.ArrayList;
 import java.util.HashMap;

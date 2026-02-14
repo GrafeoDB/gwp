@@ -1,8 +1,8 @@
-package io.grafeodb.gwp;
+package dev.grafeodb.gwp;
 
-import io.grafeodb.gwp.errors.GqlStatusException;
-import io.grafeodb.gwp.errors.TransactionException;
-import io.grafeodb.gwp.internal.ValueConverter;
+import dev.grafeodb.gwp.errors.GqlStatusException;
+import dev.grafeodb.gwp.errors.TransactionException;
+import dev.grafeodb.gwp.internal.ValueConverter;
 
 import java.util.HashMap;
 import java.util.Iterator;

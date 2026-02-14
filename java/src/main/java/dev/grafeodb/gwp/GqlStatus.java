@@ -1,4 +1,4 @@
-package io.grafeodb.gwp;
+package dev.grafeodb.gwp;
 
 /**
  * GQLSTATUS code constants and helpers per ISO/IEC 39075 Chapter 23.

@@ -1,4 +1,4 @@
-package io.grafeodb.gwp;
+package dev.grafeodb.gwp;
 
 import gql.GqlService;
 import gql.GqlServiceGrpc;

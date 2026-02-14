@@ -1,4 +1,4 @@
-package io.grafeodb.gwp.types;
+package dev.grafeodb.gwp.types;
 
 /**
  * A single named field within a {@link GqlRecord}.

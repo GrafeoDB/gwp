@@ -22,10 +22,10 @@ The build will:
 ## Quick Start
 
 ```java
-import io.grafeodb.gwp.GqlConnection;
-import io.grafeodb.gwp.GqlSession;
-import io.grafeodb.gwp.ResultCursor;
-import io.grafeodb.gwp.Transaction;
+import dev.grafeodb.gwp.GqlConnection;
+import dev.grafeodb.gwp.GqlSession;
+import dev.grafeodb.gwp.ResultCursor;
+import dev.grafeodb.gwp.Transaction;
 
 import java.util.List;
 

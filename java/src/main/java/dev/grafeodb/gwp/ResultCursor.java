@@ -1,6 +1,6 @@
-package io.grafeodb.gwp;
+package dev.grafeodb.gwp;
 
-import io.grafeodb.gwp.internal.ValueConverter;
+import dev.grafeodb.gwp.internal.ValueConverter;
 
 import java.util.ArrayList;
 import java.util.Iterator;

@@ -5,6 +5,10 @@ edition = "2024"
 rust-version = "1.85.0"
 description = "A standalone, pure Rust gRPC wire protocol for GQL (ISO/IEC 39075)"
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/GrafeoDB/gql-wire-protocol"
+readme = "README.md"
+keywords = ["gql", "graph", "grpc", "wire-protocol", "database"]
+categories = ["database", "network-programming"]
 
 [dependencies]
 prost = "0.13"

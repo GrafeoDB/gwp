@@ -1,4 +1,4 @@
-package dev.grafeodb.gwp;
+package dev.grafeo.gwp;
 
 import org.junit.jupiter.api.Test;
 

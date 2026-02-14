@@ -1,4 +1,4 @@
-package dev.grafeodb.gwp.errors;
+package dev.grafeo.gwp.errors;
 
 /**
  * Session-level error (not found, expired, handshake failure).

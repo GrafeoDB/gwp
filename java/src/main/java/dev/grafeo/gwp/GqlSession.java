@@ -1,7 +1,7 @@
-package dev.grafeodb.gwp;
+package dev.grafeo.gwp;
 
-import dev.grafeodb.gwp.errors.SessionException;
-import dev.grafeodb.gwp.internal.ValueConverter;
+import dev.grafeo.gwp.errors.SessionException;
+import dev.grafeo.gwp.internal.ValueConverter;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -51,8 +51,8 @@ public class GqlSession implements AutoCloseable {
             gql.SessionServiceGrpc.SessionServiceBlockingStub sessionStub,
             gql.GqlServiceGrpc.GqlServiceBlockingStub gqlStub) {
 
-        gql.GqlService.HandshakeResponse resp = sessionStub.handshake(
-                gql.GqlService.HandshakeRequest.newBuilder()
+        gql.GqlServiceOuterClass.HandshakeResponse resp = sessionStub.handshake(
+                gql.GqlServiceOuterClass.HandshakeRequest.newBuilder()
                         .setProtocolVersion(1)
                         .build());
 
@@ -90,8 +90,8 @@ public class GqlSession implements AutoCloseable {
      * @return a cursor over the results
      */
     public ResultCursor execute(String statement, Map<String, Object> parameters) {
-        gql.GqlService.ExecuteRequest.Builder reqBuilder =
-                gql.GqlService.ExecuteRequest.newBuilder()
+        gql.GqlServiceOuterClass.ExecuteRequest.Builder reqBuilder =
+                gql.GqlServiceOuterClass.ExecuteRequest.newBuilder()
                         .setSessionId(sessionId)
                         .setStatement(statement);
 
@@ -103,7 +103,7 @@ public class GqlSession implements AutoCloseable {
             reqBuilder.putAllParameters(protoParams);
         }
 
-        Iterator<gql.GqlService.ExecuteResponse> stream =
+        Iterator<gql.GqlServiceOuterClass.ExecuteResponse> stream =
                 gqlStub.execute(reqBuilder.build());
 
         return new ResultCursor(stream);
@@ -143,7 +143,7 @@ public class GqlSession implements AutoCloseable {
      */
     public void setGraph(String name) {
         sessionStub.configure(
-                gql.GqlService.ConfigureRequest.newBuilder()
+                gql.GqlServiceOuterClass.ConfigureRequest.newBuilder()
                         .setSessionId(sessionId)
                         .setGraph(name)
                         .build());
@@ -156,7 +156,7 @@ public class GqlSession implements AutoCloseable {
      */
     public void setSchema(String name) {
         sessionStub.configure(
-                gql.GqlService.ConfigureRequest.newBuilder()
+                gql.GqlServiceOuterClass.ConfigureRequest.newBuilder()
                         .setSessionId(sessionId)
                         .setSchema(name)
                         .build());
@@ -169,7 +169,7 @@ public class GqlSession implements AutoCloseable {
      */
     public void setTimeZone(int offsetMinutes) {
         sessionStub.configure(
-                gql.GqlService.ConfigureRequest.newBuilder()
+                gql.GqlServiceOuterClass.ConfigureRequest.newBuilder()
                         .setSessionId(sessionId)
                         .setTimeZoneOffsetMinutes(offsetMinutes)
                         .build());
@@ -184,9 +184,9 @@ public class GqlSession implements AutoCloseable {
      */
     public void reset() {
         sessionStub.reset(
-                gql.GqlService.ResetRequest.newBuilder()
+                gql.GqlServiceOuterClass.ResetRequest.newBuilder()
                         .setSessionId(sessionId)
-                        .setTarget(gql.GqlService.ResetTarget.RESET_ALL)
+                        .setTarget(gql.GqlServiceOuterClass.ResetTarget.RESET_ALL)
                         .build());
     }
 
@@ -196,8 +196,8 @@ public class GqlSession implements AutoCloseable {
      * @return the server timestamp
      */
     public long ping() {
-        gql.GqlService.PongResponse resp = sessionStub.ping(
-                gql.GqlService.PingRequest.newBuilder()
+        gql.GqlServiceOuterClass.PongResponse resp = sessionStub.ping(
+                gql.GqlServiceOuterClass.PingRequest.newBuilder()
                         .setSessionId(sessionId)
                         .build());
         return resp.getTimestamp();
@@ -211,7 +211,7 @@ public class GqlSession implements AutoCloseable {
         if (!closed) {
             try {
                 sessionStub.close(
-                        gql.GqlService.CloseRequest.newBuilder()
+                        gql.GqlServiceOuterClass.CloseRequest.newBuilder()
                                 .setSessionId(sessionId)
                                 .build());
             } catch (Exception e) {

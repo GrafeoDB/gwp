@@ -22,10 +22,10 @@ The build will:
 ## Quick Start
 
 ```java
-import dev.grafeodb.gwp.GqlConnection;
-import dev.grafeodb.gwp.GqlSession;
-import dev.grafeodb.gwp.ResultCursor;
-import dev.grafeodb.gwp.Transaction;
+import dev.grafeo.gwp.GqlConnection;
+import dev.grafeo.gwp.GqlSession;
+import dev.grafeo.gwp.ResultCursor;
+import dev.grafeo.gwp.Transaction;
 
 import java.util.List;
 
@@ -205,7 +205,7 @@ try {
 java/
   pom.xml
   src/
-    main/java/io/grafeodb/gwp/
+    main/java/dev/grafeo/gwp/
       GqlConnection.java          - Connection management
       GqlSession.java             - Session lifecycle and configuration
       ResultCursor.java           - Streaming result cursor
@@ -230,7 +230,7 @@ java/
         GqlDuration.java          - Temporal duration
       internal/
         ValueConverter.java       - Proto <-> native conversion
-    test/java/io/grafeodb/gwp/
+    test/java/dev/grafeo/gwp/
       GqlStatusTest.java          - Status helper unit tests
       GqlConnectionTest.java      - Integration tests with mock server
 ```

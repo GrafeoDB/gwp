@@ -1,6 +1,6 @@
-package dev.grafeodb.gwp;
+package dev.grafeo.gwp;
 
-import dev.grafeodb.gwp.internal.ValueConverter;
+import dev.grafeo.gwp.internal.ValueConverter;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -19,9 +19,9 @@ import java.util.NoSuchElementException;
  */
 public class ResultCursor implements Iterator<List<Object>>, AutoCloseable {
 
-    private final Iterator<gql.GqlService.ExecuteResponse> stream;
-    private gql.GqlService.ResultHeader header;
-    private gql.GqlService.ResultSummary protoSummary;
+    private final Iterator<gql.GqlServiceOuterClass.ExecuteResponse> stream;
+    private gql.GqlServiceOuterClass.ResultHeader header;
+    private gql.GqlServiceOuterClass.ResultSummary protoSummary;
     private final List<List<Object>> bufferedRows = new ArrayList<>();
     private int rowIndex = 0;
     private boolean done = false;
@@ -31,7 +31,7 @@ public class ResultCursor implements Iterator<List<Object>>, AutoCloseable {
      *
      * @param stream the response stream iterator from an Execute RPC
      */
-    public ResultCursor(Iterator<gql.GqlService.ExecuteResponse> stream) {
+    public ResultCursor(Iterator<gql.GqlServiceOuterClass.ExecuteResponse> stream) {
         this.stream = stream;
     }
 
@@ -54,7 +54,7 @@ public class ResultCursor implements Iterator<List<Object>>, AutoCloseable {
             return List.of();
         }
         List<String> names = new ArrayList<>(header.getColumnsCount());
-        for (gql.GqlService.ColumnDescriptor col : header.getColumnsList()) {
+        for (gql.GqlServiceOuterClass.ColumnDescriptor col : header.getColumnsList()) {
             names.add(col.getName());
         }
         return names;
@@ -186,14 +186,14 @@ public class ResultCursor implements Iterator<List<Object>>, AutoCloseable {
                 return;
             }
 
-            gql.GqlService.ExecuteResponse response = stream.next();
-            gql.GqlService.ExecuteResponse.FrameCase frame = response.getFrameCase();
+            gql.GqlServiceOuterClass.ExecuteResponse response = stream.next();
+            gql.GqlServiceOuterClass.ExecuteResponse.FrameCase frame = response.getFrameCase();
 
             switch (frame) {
                 case HEADER -> header = response.getHeader();
 
                 case ROW_BATCH -> {
-                    for (gql.GqlService.Row row : response.getRowBatch().getRowsList()) {
+                    for (gql.GqlServiceOuterClass.Row row : response.getRowBatch().getRowsList()) {
                         List<Object> nativeRow = new ArrayList<>(row.getValuesCount());
                         for (gql.GqlTypes.Value v : row.getValuesList()) {
                             nativeRow.add(ValueConverter.fromProto(v));
@@ -223,9 +223,9 @@ public class ResultCursor implements Iterator<List<Object>>, AutoCloseable {
      */
     public static class ResultSummary {
 
-        private final gql.GqlService.ResultSummary proto;
+        private final gql.GqlServiceOuterClass.ResultSummary proto;
 
-        ResultSummary(gql.GqlService.ResultSummary proto) {
+        ResultSummary(gql.GqlServiceOuterClass.ResultSummary proto) {
             this.proto = proto;
         }
 

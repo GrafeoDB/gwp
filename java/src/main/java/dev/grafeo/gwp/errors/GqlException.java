@@ -1,4 +1,4 @@
-package dev.grafeodb.gwp.errors;
+package dev.grafeo.gwp.errors;
 
 /**
  * Base exception for all GWP errors.

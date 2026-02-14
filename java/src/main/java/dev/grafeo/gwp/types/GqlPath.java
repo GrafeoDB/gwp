@@ -1,4 +1,4 @@
-package dev.grafeodb.gwp.types;
+package dev.grafeo.gwp.types;
 
 import java.util.List;
 import java.util.Optional;

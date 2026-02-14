@@ -1,6 +1,6 @@
-package dev.grafeodb.gwp;
+package dev.grafeo.gwp;
 
-import dev.grafeodb.gwp.errors.GqlException;
+import dev.grafeo.gwp.errors.GqlException;
 import io.grpc.ChannelCredentials;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;

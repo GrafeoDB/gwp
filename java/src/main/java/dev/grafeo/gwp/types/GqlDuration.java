@@ -1,4 +1,4 @@
-package dev.grafeodb.gwp.types;
+package dev.grafeo.gwp.types;
 
 /**
  * A GQL duration value with two components per ISO/IEC 39075.

@@ -1,6 +1,6 @@
-package dev.grafeodb.gwp;
+package dev.grafeo.gwp;
 
-import gql.GqlService;
+import gql.GqlServiceOuterClass;
 import gql.GqlServiceGrpc;
 import gql.GqlTypes;
 import gql.SessionServiceGrpc;
@@ -236,12 +236,12 @@ class GqlConnectionTest {
 
         @Override
         public void handshake(
-                GqlService.HandshakeRequest request,
-                StreamObserver<GqlService.HandshakeResponse> responseObserver) {
-            responseObserver.onNext(GqlService.HandshakeResponse.newBuilder()
+                GqlServiceOuterClass.HandshakeRequest request,
+                StreamObserver<GqlServiceOuterClass.HandshakeResponse> responseObserver) {
+            responseObserver.onNext(GqlServiceOuterClass.HandshakeResponse.newBuilder()
                     .setProtocolVersion(1)
                     .setSessionId("mock-session-" + sessionCounter.incrementAndGet())
-                    .setServerInfo(GqlService.ServerInfo.newBuilder()
+                    .setServerInfo(GqlServiceOuterClass.ServerInfo.newBuilder()
                             .setName("mock-server")
                             .setVersion("0.1.0")
                             .build())
@@ -251,33 +251,33 @@ class GqlConnectionTest {
 
         @Override
         public void configure(
-                GqlService.ConfigureRequest request,
-                StreamObserver<GqlService.ConfigureResponse> responseObserver) {
-            responseObserver.onNext(GqlService.ConfigureResponse.getDefaultInstance());
+                GqlServiceOuterClass.ConfigureRequest request,
+                StreamObserver<GqlServiceOuterClass.ConfigureResponse> responseObserver) {
+            responseObserver.onNext(GqlServiceOuterClass.ConfigureResponse.getDefaultInstance());
             responseObserver.onCompleted();
         }
 
         @Override
         public void reset(
-                GqlService.ResetRequest request,
-                StreamObserver<GqlService.ResetResponse> responseObserver) {
-            responseObserver.onNext(GqlService.ResetResponse.getDefaultInstance());
+                GqlServiceOuterClass.ResetRequest request,
+                StreamObserver<GqlServiceOuterClass.ResetResponse> responseObserver) {
+            responseObserver.onNext(GqlServiceOuterClass.ResetResponse.getDefaultInstance());
             responseObserver.onCompleted();
         }
 
         @Override
         public void close(
-                GqlService.CloseRequest request,
-                StreamObserver<GqlService.CloseResponse> responseObserver) {
-            responseObserver.onNext(GqlService.CloseResponse.getDefaultInstance());
+                GqlServiceOuterClass.CloseRequest request,
+                StreamObserver<GqlServiceOuterClass.CloseResponse> responseObserver) {
+            responseObserver.onNext(GqlServiceOuterClass.CloseResponse.getDefaultInstance());
             responseObserver.onCompleted();
         }
 
         @Override
         public void ping(
-                GqlService.PingRequest request,
-                StreamObserver<GqlService.PongResponse> responseObserver) {
-            responseObserver.onNext(GqlService.PongResponse.newBuilder()
+                GqlServiceOuterClass.PingRequest request,
+                StreamObserver<GqlServiceOuterClass.PongResponse> responseObserver) {
+            responseObserver.onNext(GqlServiceOuterClass.PongResponse.newBuilder()
                     .setTimestamp(System.currentTimeMillis())
                     .build());
             responseObserver.onCompleted();
@@ -290,28 +290,28 @@ class GqlConnectionTest {
 
         @Override
         public void execute(
-                GqlService.ExecuteRequest request,
-                StreamObserver<GqlService.ExecuteResponse> responseObserver) {
+                GqlServiceOuterClass.ExecuteRequest request,
+                StreamObserver<GqlServiceOuterClass.ExecuteResponse> responseObserver) {
 
             // Send header
-            responseObserver.onNext(GqlService.ExecuteResponse.newBuilder()
-                    .setHeader(GqlService.ResultHeader.newBuilder()
-                            .setResultType(GqlService.ResultType.BINDING_TABLE)
-                            .addColumns(GqlService.ColumnDescriptor.newBuilder()
+            responseObserver.onNext(GqlServiceOuterClass.ExecuteResponse.newBuilder()
+                    .setHeader(GqlServiceOuterClass.ResultHeader.newBuilder()
+                            .setResultType(GqlServiceOuterClass.ResultType.BINDING_TABLE)
+                            .addColumns(GqlServiceOuterClass.ColumnDescriptor.newBuilder()
                                     .setName("n.name")
                                     .build())
                             .build())
                     .build());
 
             // Send a batch of rows
-            responseObserver.onNext(GqlService.ExecuteResponse.newBuilder()
-                    .setRowBatch(GqlService.RowBatch.newBuilder()
-                            .addRows(GqlService.Row.newBuilder()
+            responseObserver.onNext(GqlServiceOuterClass.ExecuteResponse.newBuilder()
+                    .setRowBatch(GqlServiceOuterClass.RowBatch.newBuilder()
+                            .addRows(GqlServiceOuterClass.Row.newBuilder()
                                     .addValues(GqlTypes.Value.newBuilder()
                                             .setStringValue("Alice")
                                             .build())
                                     .build())
-                            .addRows(GqlService.Row.newBuilder()
+                            .addRows(GqlServiceOuterClass.Row.newBuilder()
                                     .addValues(GqlTypes.Value.newBuilder()
                                             .setStringValue("Bob")
                                             .build())
@@ -320,8 +320,8 @@ class GqlConnectionTest {
                     .build());
 
             // Send summary
-            responseObserver.onNext(GqlService.ExecuteResponse.newBuilder()
-                    .setSummary(GqlService.ResultSummary.newBuilder()
+            responseObserver.onNext(GqlServiceOuterClass.ExecuteResponse.newBuilder()
+                    .setSummary(GqlServiceOuterClass.ResultSummary.newBuilder()
                             .setStatus(GqlTypes.GqlStatus.newBuilder()
                                     .setCode("00000")
                                     .setMessage("Success")
@@ -335,9 +335,9 @@ class GqlConnectionTest {
 
         @Override
         public void beginTransaction(
-                GqlService.BeginRequest request,
-                StreamObserver<GqlService.BeginResponse> responseObserver) {
-            responseObserver.onNext(GqlService.BeginResponse.newBuilder()
+                GqlServiceOuterClass.BeginRequest request,
+                StreamObserver<GqlServiceOuterClass.BeginResponse> responseObserver) {
+            responseObserver.onNext(GqlServiceOuterClass.BeginResponse.newBuilder()
                     .setTransactionId("mock-tx-" + txCounter.incrementAndGet())
                     .setStatus(GqlTypes.GqlStatus.newBuilder()
                             .setCode("00000")
@@ -349,9 +349,9 @@ class GqlConnectionTest {
 
         @Override
         public void commit(
-                GqlService.CommitRequest request,
-                StreamObserver<GqlService.CommitResponse> responseObserver) {
-            responseObserver.onNext(GqlService.CommitResponse.newBuilder()
+                GqlServiceOuterClass.CommitRequest request,
+                StreamObserver<GqlServiceOuterClass.CommitResponse> responseObserver) {
+            responseObserver.onNext(GqlServiceOuterClass.CommitResponse.newBuilder()
                     .setStatus(GqlTypes.GqlStatus.newBuilder()
                             .setCode("00000")
                             .setMessage("Committed")
@@ -362,9 +362,9 @@ class GqlConnectionTest {
 
         @Override
         public void rollback(
-                GqlService.RollbackRequest request,
-                StreamObserver<GqlService.RollbackResponse> responseObserver) {
-            responseObserver.onNext(GqlService.RollbackResponse.newBuilder()
+                GqlServiceOuterClass.RollbackRequest request,
+                StreamObserver<GqlServiceOuterClass.RollbackResponse> responseObserver) {
+            responseObserver.onNext(GqlServiceOuterClass.RollbackResponse.newBuilder()
                     .setStatus(GqlTypes.GqlStatus.newBuilder()
                             .setCode("00000")
                             .setMessage("Rolled back")

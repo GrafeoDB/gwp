@@ -1,4 +1,4 @@
-package dev.grafeodb.gwp.errors;
+package dev.grafeo.gwp.errors;
 
 /**
  * Transaction state error (begin failed, empty transaction ID).

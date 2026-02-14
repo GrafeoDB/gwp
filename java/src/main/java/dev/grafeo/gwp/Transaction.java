@@ -1,8 +1,8 @@
-package dev.grafeodb.gwp;
+package dev.grafeo.gwp;
 
-import dev.grafeodb.gwp.errors.GqlStatusException;
-import dev.grafeodb.gwp.errors.TransactionException;
-import dev.grafeodb.gwp.internal.ValueConverter;
+import dev.grafeo.gwp.errors.GqlStatusException;
+import dev.grafeo.gwp.errors.TransactionException;
+import dev.grafeo.gwp.internal.ValueConverter;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -60,12 +60,12 @@ public class Transaction implements AutoCloseable {
             gql.SessionServiceGrpc.SessionServiceBlockingStub sessionStub,
             boolean readOnly) {
 
-        gql.GqlService.TransactionMode mode = readOnly
-                ? gql.GqlService.TransactionMode.READ_ONLY
-                : gql.GqlService.TransactionMode.READ_WRITE;
+        gql.GqlServiceOuterClass.TransactionMode mode = readOnly
+                ? gql.GqlServiceOuterClass.TransactionMode.READ_ONLY
+                : gql.GqlServiceOuterClass.TransactionMode.READ_WRITE;
 
-        gql.GqlService.BeginResponse resp = gqlStub.beginTransaction(
-                gql.GqlService.BeginRequest.newBuilder()
+        gql.GqlServiceOuterClass.BeginResponse resp = gqlStub.beginTransaction(
+                gql.GqlServiceOuterClass.BeginRequest.newBuilder()
                         .setSessionId(sessionId)
                         .setMode(mode)
                         .build());
@@ -106,8 +106,8 @@ public class Transaction implements AutoCloseable {
      * @return a cursor over the results
      */
     public ResultCursor execute(String statement, Map<String, Object> parameters) {
-        gql.GqlService.ExecuteRequest.Builder reqBuilder =
-                gql.GqlService.ExecuteRequest.newBuilder()
+        gql.GqlServiceOuterClass.ExecuteRequest.Builder reqBuilder =
+                gql.GqlServiceOuterClass.ExecuteRequest.newBuilder()
                         .setSessionId(sessionId)
                         .setStatement(statement)
                         .setTransactionId(transactionId);
@@ -120,7 +120,7 @@ public class Transaction implements AutoCloseable {
             reqBuilder.putAllParameters(protoParams);
         }
 
-        Iterator<gql.GqlService.ExecuteResponse> stream =
+        Iterator<gql.GqlServiceOuterClass.ExecuteResponse> stream =
                 gqlStub.execute(reqBuilder.build());
 
         return new ResultCursor(stream);
@@ -132,8 +132,8 @@ public class Transaction implements AutoCloseable {
      * @throws GqlStatusException if the server returns an exception status
      */
     public void commit() {
-        gql.GqlService.CommitResponse resp = gqlStub.commit(
-                gql.GqlService.CommitRequest.newBuilder()
+        gql.GqlServiceOuterClass.CommitResponse resp = gqlStub.commit(
+                gql.GqlServiceOuterClass.CommitRequest.newBuilder()
                         .setSessionId(sessionId)
                         .setTransactionId(transactionId)
                         .build());
@@ -160,8 +160,8 @@ public class Transaction implements AutoCloseable {
             return;
         }
 
-        gql.GqlService.RollbackResponse resp = gqlStub.rollback(
-                gql.GqlService.RollbackRequest.newBuilder()
+        gql.GqlServiceOuterClass.RollbackResponse resp = gqlStub.rollback(
+                gql.GqlServiceOuterClass.RollbackRequest.newBuilder()
                         .setSessionId(sessionId)
                         .setTransactionId(transactionId)
                         .build());

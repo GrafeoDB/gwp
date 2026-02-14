@@ -10,8 +10,8 @@ use crate::proto;
 use crate::types::Value;
 
 use super::backend::{
-    GqlBackend, ResetTarget, ResultFrame, ResultStream, SessionConfig, SessionHandle,
-    SessionProperty, TransactionHandle,
+    CreateDatabaseConfig, DatabaseInfo, GqlBackend, ResetTarget, ResultFrame, ResultStream,
+    SessionConfig, SessionHandle, SessionProperty, TransactionHandle,
 };
 
 /// A simple in-memory backend for testing.
@@ -123,6 +123,94 @@ impl GqlBackend for MockBackend {
         _transaction: &TransactionHandle,
     ) -> Result<(), GqlError> {
         Ok(())
+    }
+
+    async fn list_databases(&self) -> Result<Vec<DatabaseInfo>, GqlError> {
+        Ok(vec![
+            DatabaseInfo {
+                name: "default".to_owned(),
+                node_count: 100,
+                edge_count: 50,
+                persistent: false,
+                database_type: "Lpg".to_owned(),
+                storage_mode: "InMemory".to_owned(),
+                memory_limit_bytes: None,
+                backward_edges: Some(false),
+                threads: None,
+            },
+            DatabaseInfo {
+                name: "test".to_owned(),
+                node_count: 10,
+                edge_count: 5,
+                persistent: false,
+                database_type: "Lpg".to_owned(),
+                storage_mode: "InMemory".to_owned(),
+                memory_limit_bytes: None,
+                backward_edges: None,
+                threads: None,
+            },
+        ])
+    }
+
+    async fn create_database(
+        &self,
+        config: CreateDatabaseConfig,
+    ) -> Result<DatabaseInfo, GqlError> {
+        if config.name == "default" {
+            return Err(GqlError::Session(
+                "database 'default' already exists".to_owned(),
+            ));
+        }
+        Ok(DatabaseInfo {
+            name: config.name,
+            node_count: 0,
+            edge_count: 0,
+            persistent: config.storage_mode == "Persistent",
+            database_type: config.database_type,
+            storage_mode: config.storage_mode,
+            memory_limit_bytes: config.memory_limit_bytes,
+            backward_edges: config.backward_edges,
+            threads: config.threads,
+        })
+    }
+
+    async fn delete_database(&self, name: &str) -> Result<String, GqlError> {
+        if name == "default" {
+            return Err(GqlError::Session(
+                "cannot delete the default database".to_owned(),
+            ));
+        }
+        Ok(name.to_owned())
+    }
+
+    async fn get_database_info(&self, name: &str) -> Result<DatabaseInfo, GqlError> {
+        match name {
+            "default" => Ok(DatabaseInfo {
+                name: "default".to_owned(),
+                node_count: 100,
+                edge_count: 50,
+                persistent: false,
+                database_type: "Lpg".to_owned(),
+                storage_mode: "InMemory".to_owned(),
+                memory_limit_bytes: None,
+                backward_edges: Some(false),
+                threads: None,
+            }),
+            "test" => Ok(DatabaseInfo {
+                name: "test".to_owned(),
+                node_count: 10,
+                edge_count: 5,
+                persistent: false,
+                database_type: "Lpg".to_owned(),
+                storage_mode: "InMemory".to_owned(),
+                memory_limit_bytes: None,
+                backward_edges: None,
+                threads: None,
+            }),
+            _ => Err(GqlError::Session(format!(
+                "database '{name}' not found"
+            ))),
+        }
     }
 }
 

@@ -86,6 +86,50 @@ pub trait ResultStream: Send + 'static {
     ) -> std::task::Poll<Option<Result<ResultFrame, GqlError>>>;
 }
 
+/// Configuration for creating a new database.
+#[derive(Debug, Clone)]
+pub struct CreateDatabaseConfig {
+    /// Database name.
+    pub name: String,
+    /// Database type (e.g. "Lpg", "Rdf").
+    pub database_type: String,
+    /// Storage mode (e.g. `InMemory`, `Persistent`).
+    pub storage_mode: String,
+    /// Optional memory limit in bytes.
+    pub memory_limit_bytes: Option<u64>,
+    /// Whether to maintain backward edges.
+    pub backward_edges: Option<bool>,
+    /// Number of worker threads.
+    pub threads: Option<u32>,
+    /// Whether write-ahead logging is enabled.
+    pub wal_enabled: Option<bool>,
+    /// WAL durability mode.
+    pub wal_durability: Option<String>,
+}
+
+/// Summary information about a database.
+#[derive(Debug, Clone)]
+pub struct DatabaseInfo {
+    /// Database name.
+    pub name: String,
+    /// Number of nodes in the database.
+    pub node_count: u64,
+    /// Number of edges in the database.
+    pub edge_count: u64,
+    /// Whether the database is persistent.
+    pub persistent: bool,
+    /// Database type (e.g. "Lpg", "Rdf").
+    pub database_type: String,
+    /// Storage mode (e.g. `InMemory`, `Persistent`).
+    pub storage_mode: String,
+    /// Memory limit in bytes, if configured.
+    pub memory_limit_bytes: Option<u64>,
+    /// Whether backward edges are maintained.
+    pub backward_edges: Option<bool>,
+    /// Number of worker threads.
+    pub threads: Option<u32>,
+}
+
 /// The pluggable backend trait for GQL database engines.
 ///
 /// Implement this trait to connect any GQL-compatible database to the
@@ -156,4 +200,48 @@ pub trait GqlBackend: Send + Sync + 'static {
         session: &SessionHandle,
         transaction: &TransactionHandle,
     ) -> Result<(), GqlError>;
+
+    /// List all databases.
+    ///
+    /// Default implementation returns `Unimplemented` for backends that
+    /// don't support database management.
+    async fn list_databases(&self) -> Result<Vec<DatabaseInfo>, GqlError> {
+        Err(GqlError::Protocol(
+            "database management not supported".into(),
+        ))
+    }
+
+    /// Create a new database.
+    ///
+    /// Default implementation returns `Unimplemented` for backends that
+    /// don't support database management.
+    async fn create_database(
+        &self,
+        _config: CreateDatabaseConfig,
+    ) -> Result<DatabaseInfo, GqlError> {
+        Err(GqlError::Protocol(
+            "database management not supported".into(),
+        ))
+    }
+
+    /// Delete a database by name.
+    ///
+    /// Returns the name of the deleted database on success.
+    /// Default implementation returns `Unimplemented` for backends that
+    /// don't support database management.
+    async fn delete_database(&self, _name: &str) -> Result<String, GqlError> {
+        Err(GqlError::Protocol(
+            "database management not supported".into(),
+        ))
+    }
+
+    /// Get info for a specific database.
+    ///
+    /// Default implementation returns `Unimplemented` for backends that
+    /// don't support database management.
+    async fn get_database_info(&self, _name: &str) -> Result<DatabaseInfo, GqlError> {
+        Err(GqlError::Protocol(
+            "database management not supported".into(),
+        ))
+    }
 }

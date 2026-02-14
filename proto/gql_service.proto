@@ -209,3 +209,84 @@ enum TransactionMode {
   READ_WRITE = 0;
   READ_ONLY = 1;
 }
+
+// ============================================================================
+// DatabaseService
+// Manages database lifecycle. Requires appropriate privileges.
+// Errors are returned as gRPC Status codes.
+// ============================================================================
+
+service DatabaseService {
+  // List all databases with summary info.
+  rpc ListDatabases(ListDatabasesRequest) returns (ListDatabasesResponse);
+
+  // Create a new named database.
+  rpc CreateDatabase(CreateDatabaseRequest) returns (CreateDatabaseResponse);
+
+  // Delete a database by name. Cannot delete "default".
+  rpc DeleteDatabase(DeleteDatabaseRequest) returns (DeleteDatabaseResponse);
+
+  // Get database info (node/edge counts, metadata).
+  rpc GetDatabaseInfo(GetDatabaseInfoRequest) returns (GetDatabaseInfoResponse);
+}
+
+// ============================================================================
+// Database Messages
+// ============================================================================
+
+message ListDatabasesRequest {}
+
+message DatabaseSummary {
+  string name = 1;
+  uint64 node_count = 2;
+  uint64 edge_count = 3;
+  bool persistent = 4;
+  string database_type = 5;
+}
+
+message ListDatabasesResponse {
+  repeated DatabaseSummary databases = 1;
+}
+
+message CreateDatabaseRequest {
+  string name = 1;
+  string database_type = 2;           // "Lpg", "Rdf", etc.
+  string storage_mode = 3;            // "InMemory" or "Persistent"
+  DatabaseOptions options = 4;
+}
+
+message DatabaseOptions {
+  optional uint64 memory_limit_bytes = 1;
+  optional bool backward_edges = 2;
+  optional uint32 threads = 3;
+  optional bool wal_enabled = 4;
+  optional string wal_durability = 5;
+}
+
+message CreateDatabaseResponse {
+  DatabaseSummary database = 1;
+}
+
+message DeleteDatabaseRequest {
+  string name = 1;
+}
+
+message DeleteDatabaseResponse {
+  string deleted = 1;
+}
+
+message GetDatabaseInfoRequest {
+  string name = 1;
+}
+
+message GetDatabaseInfoResponse {
+  string name = 1;
+  uint64 node_count = 2;
+  uint64 edge_count = 3;
+  bool persistent = 4;
+  string database_type = 5;
+  string storage_mode = 6;
+  uint64 memory_limit_bytes = 7;
+  bool backward_edges = 8;
+  uint32 threads = 9;
+}

@@ -5,10 +5,12 @@ use std::sync::Arc;
 
 use tonic::transport::Server;
 
+use crate::proto::database_service_server::DatabaseServiceServer;
 use crate::proto::gql_service_server::GqlServiceServer;
 use crate::proto::session_service_server::SessionServiceServer;
 
 use super::backend::GqlBackend;
+use super::database_service::DatabaseServiceImpl;
 use super::gql_service::GqlServiceImpl;
 use super::session_service::SessionServiceImpl;
 use super::{SessionManager, TransactionManager};
@@ -38,9 +40,12 @@ impl GqlServer {
 
         let gql_service = GqlServiceImpl::new(Arc::clone(&backend), sessions, transactions);
 
+        let database_service = DatabaseServiceImpl::new(Arc::clone(&backend));
+
         Server::builder()
             .add_service(SessionServiceServer::new(session_service))
             .add_service(GqlServiceServer::new(gql_service))
+            .add_service(DatabaseServiceServer::new(database_service))
             .serve(addr)
             .await
     }

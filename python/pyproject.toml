@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gwp-py"
+version = "0.1.1"
+description = "Python client for the GQL Wire Protocol (GWP)"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+requires-python = ">=3.10"
+keywords = ["gql", "graph", "grpc", "wire-protocol", "database"]
+dependencies = [
+    "grpcio>=1.60.0",
+    "protobuf>=4.25.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "grpcio-tools>=1.60.0",
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.3",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gwp_py"]

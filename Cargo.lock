@@ -209,7 +209,8 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "tonic",
- "tonic-build",
+ "tonic-prost",
+ "tonic-prost-build",
 ]
 
 [[package]]
@@ -543,6 +544,8 @@ dependencies = [
  "prettyplease",
  "prost",
  "prost-types",
+ "pulldown-cmark",
+ "pulldown-cmark-to-cmark",
  "regex",
  "syn",
  "tempfile",
@@ -568,6 +571,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8991c4cbdb8bc5b11f0b074ffe286c30e523de90fee5ba8132f1399f23cb3dd7"
 dependencies = [
  "prost",
+]
+
+[[package]]
+name = "pulldown-cmark"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e8bbe1a966bd2f362681a44f6edce3c2310ac21e4d5067a6e7ec396297a6ea0"
+dependencies = [
+ "bitflags",
+ "memchr",
+ "unicase",
+]
+
+[[package]]
+name = "pulldown-cmark-to-cmark"
+version = "22.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "50793def1b900256624a709439404384204a5dc3a6ec580281bfaac35e882e90"
+dependencies = [
+ "pulldown-cmark",
 ]
 
 [[package]]
@@ -839,6 +862,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "tonic-prost"
+version = "0.14.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9f86539c0089bfd09b1f8c0ab0239d80392af74c21bc9e0f15e1b4aca4c1647f"
+dependencies = [
+ "bytes",
+ "prost",
+ "tonic",
+]
+
+[[package]]
+name = "tonic-prost-build"
+version = "0.14.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "65873ace111e90344b8973e94a1fc817c924473affff24629281f90daed1cd2e"
+dependencies = [
+ "prettyplease",
+ "proc-macro2",
+ "prost-build",
+ "prost-types",
+ "quote",
+ "syn",
+ "tempfile",
+ "tonic-build",
+]
+
+[[package]]
 name = "tower"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -905,6 +955,12 @@ name = "try-lock"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
+
+[[package]]
+name = "unicase"
+version = "2.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dbc4bc3a9f746d862c45cb89d705aa10f187bb96c76001afab07a0d35ce60142"
 
 [[package]]
 name = "unicode-ident"

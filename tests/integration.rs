@@ -4,14 +4,14 @@
 use std::collections::HashMap;
 use std::net::SocketAddr;
 
-use gql_wire_protocol::proto;
-use gql_wire_protocol::proto::gql_service_client::GqlServiceClient;
-use gql_wire_protocol::proto::session_service_client::SessionServiceClient;
-use gql_wire_protocol::server::mock_backend::MockBackend;
-use gql_wire_protocol::server::{
+use gwp::proto;
+use gwp::proto::gql_service_client::GqlServiceClient;
+use gwp::proto::session_service_client::SessionServiceClient;
+use gwp::server::mock_backend::MockBackend;
+use gwp::server::{
     GqlServiceImpl, SessionManager, SessionServiceImpl, TransactionManager,
 };
-use gql_wire_protocol::status;
+use gwp::status;
 
 /// Start a server on a random port and return the address.
 async fn start_server() -> SocketAddr {

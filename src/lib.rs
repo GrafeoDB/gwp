@@ -1,4 +1,4 @@
-//! A standalone, pure Rust gRPC wire protocol for GQL (ISO/IEC 39075).
+//! GWP - A standalone, pure Rust gRPC wire protocol for GQL (ISO/IEC 39075).
 //!
 //! This crate provides the protobuf type definitions, gRPC service
 //! implementations, and client library for communicating GQL queries

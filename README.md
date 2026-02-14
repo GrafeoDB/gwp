@@ -1,8 +1,8 @@
-# gql-wire-protocol
+# GWP
 
 A standalone, pure Rust gRPC wire protocol for [GQL (ISO/IEC 39075)](https://www.iso.org/standard/76120.html) - the international standard query language for property graphs.
 
-Any GQL-compatible database engine can plug in via the `GqlBackend` trait. The crate handles gRPC transport, session management, transactions, and the full GQL type system over the wire.
+Any GQL-compatible database engine can plug in via the `GqlBackend` trait. GWP handles gRPC transport, session management, transactions, and the full GQL type system over the wire.
 
 ## Features
 
@@ -18,7 +18,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-gql-wire-protocol = "0.1"
+gwp = "0.1"
 ```
 
 ### Implementing a Backend
@@ -26,8 +26,8 @@ gql-wire-protocol = "0.1"
 Implement the `GqlBackend` trait to connect your database:
 
 ```rust
-use gql_wire_protocol::server::{GqlBackend, SessionHandle, TransactionHandle, SessionConfig};
-use gql_wire_protocol::error::GqlError;
+use gwp::server::{GqlBackend, SessionHandle, TransactionHandle, SessionConfig};
+use gwp::error::GqlError;
 
 struct MyDatabase { /* ... */ }
 
@@ -42,9 +42,9 @@ impl GqlBackend for MyDatabase {
         &self,
         session: &SessionHandle,
         statement: &str,
-        parameters: &std::collections::HashMap<String, gql_wire_protocol::types::Value>,
+        parameters: &std::collections::HashMap<String, gwp::types::Value>,
         transaction: Option<&TransactionHandle>,
-    ) -> Result<std::pin::Pin<Box<dyn gql_wire_protocol::server::ResultStream>>, GqlError> {
+    ) -> Result<std::pin::Pin<Box<dyn gwp::server::ResultStream>>, GqlError> {
         // Execute GQL and return a result stream
         todo!()
     }
@@ -56,7 +56,7 @@ impl GqlBackend for MyDatabase {
 ### Starting the Server
 
 ```rust
-use gql_wire_protocol::server::GqlServer;
+use gwp::server::GqlServer;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -73,7 +73,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ### Using the Client
 
 ```rust
-use gql_wire_protocol::client::GqlConnection;
+use gwp::client::GqlConnection;
 use std::collections::HashMap;
 
 #[tokio::main]

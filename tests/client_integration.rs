@@ -3,13 +3,13 @@
 use std::collections::HashMap;
 use std::net::SocketAddr;
 
-use gql_wire_protocol::client::GqlConnection;
-use gql_wire_protocol::proto;
-use gql_wire_protocol::server::mock_backend::MockBackend;
-use gql_wire_protocol::server::{
+use gwp::client::GqlConnection;
+use gwp::proto;
+use gwp::server::mock_backend::MockBackend;
+use gwp::server::{
     GqlServiceImpl, SessionManager, SessionServiceImpl, TransactionManager,
 };
-use gql_wire_protocol::types::Value;
+use gwp::types::Value;
 
 async fn start_server() -> SocketAddr {
     let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();

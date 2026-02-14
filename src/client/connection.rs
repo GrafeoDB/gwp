@@ -25,7 +25,7 @@ impl GqlConnection {
     ///
     /// ```no_run
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// use gql_wire_protocol::client::GqlConnection;
+    /// use gwp::client::GqlConnection;
     ///
     /// let conn = GqlConnection::connect("http://localhost:50051").await?;
     /// # Ok(())

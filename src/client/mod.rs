@@ -3,11 +3,13 @@
 //! Wraps the raw tonic gRPC stubs with a typed, session-oriented API.
 
 mod connection;
+mod database;
 mod result;
 mod session;
 mod transaction;
 
 pub use connection::GqlConnection;
+pub use database::DatabaseClient;
 pub use result::ResultCursor;
 pub use session::GqlSession;
 pub use transaction::Transaction;

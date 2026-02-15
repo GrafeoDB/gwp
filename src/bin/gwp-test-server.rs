@@ -7,8 +7,8 @@
 
 use std::net::SocketAddr;
 
-use gwp::server::mock_backend::MockBackend;
 use gwp::server::GqlServer;
+use gwp::server::mock_backend::MockBackend;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

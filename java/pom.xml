@@ -7,7 +7,7 @@
 
     <groupId>dev.grafeo</groupId>
     <artifactId>gwp</artifactId>
-    <version>0.1.1</version>
+    <version>0.1.2</version>
     <packaging>jar</packaging>
 
     <name>GQL Wire Protocol - Java Binding</name>

@@ -830,7 +830,7 @@ type ExecuteRequest struct {
 	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	Statement     string                 `protobuf:"bytes,2,opt,name=statement,proto3" json:"statement,omitempty"`
 	Parameters    map[string]*Value      `protobuf:"bytes,3,rep,name=parameters,proto3" json:"parameters,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	TransactionId string                 `protobuf:"bytes,4,opt,name=transaction_id,json=transactionId,proto3" json:"transaction_id,omitempty"` // Empty for auto-commit
+	TransactionId *string                `protobuf:"bytes,4,opt,name=transaction_id,json=transactionId,proto3,oneof" json:"transaction_id,omitempty"` // Omit for auto-commit
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -887,8 +887,8 @@ func (x *ExecuteRequest) GetParameters() map[string]*Value {
 }
 
 func (x *ExecuteRequest) GetTransactionId() string {
-	if x != nil {
-		return x.TransactionId
+	if x != nil && x.TransactionId != nil {
+		return *x.TransactionId
 	}
 	return ""
 }
@@ -1550,6 +1550,590 @@ func (x *RollbackResponse) GetStatus() *GqlStatus {
 	return nil
 }
 
+type ListDatabasesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListDatabasesRequest) Reset() {
+	*x = ListDatabasesRequest{}
+	mi := &file_gql_service_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListDatabasesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListDatabasesRequest) ProtoMessage() {}
+
+func (x *ListDatabasesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListDatabasesRequest.ProtoReflect.Descriptor instead.
+func (*ListDatabasesRequest) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{25}
+}
+
+type DatabaseSummary struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	NodeCount     uint64                 `protobuf:"varint,2,opt,name=node_count,json=nodeCount,proto3" json:"node_count,omitempty"`
+	EdgeCount     uint64                 `protobuf:"varint,3,opt,name=edge_count,json=edgeCount,proto3" json:"edge_count,omitempty"`
+	Persistent    bool                   `protobuf:"varint,4,opt,name=persistent,proto3" json:"persistent,omitempty"`
+	DatabaseType  string                 `protobuf:"bytes,5,opt,name=database_type,json=databaseType,proto3" json:"database_type,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DatabaseSummary) Reset() {
+	*x = DatabaseSummary{}
+	mi := &file_gql_service_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DatabaseSummary) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DatabaseSummary) ProtoMessage() {}
+
+func (x *DatabaseSummary) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DatabaseSummary.ProtoReflect.Descriptor instead.
+func (*DatabaseSummary) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *DatabaseSummary) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *DatabaseSummary) GetNodeCount() uint64 {
+	if x != nil {
+		return x.NodeCount
+	}
+	return 0
+}
+
+func (x *DatabaseSummary) GetEdgeCount() uint64 {
+	if x != nil {
+		return x.EdgeCount
+	}
+	return 0
+}
+
+func (x *DatabaseSummary) GetPersistent() bool {
+	if x != nil {
+		return x.Persistent
+	}
+	return false
+}
+
+func (x *DatabaseSummary) GetDatabaseType() string {
+	if x != nil {
+		return x.DatabaseType
+	}
+	return ""
+}
+
+type ListDatabasesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Databases     []*DatabaseSummary     `protobuf:"bytes,1,rep,name=databases,proto3" json:"databases,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListDatabasesResponse) Reset() {
+	*x = ListDatabasesResponse{}
+	mi := &file_gql_service_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListDatabasesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListDatabasesResponse) ProtoMessage() {}
+
+func (x *ListDatabasesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListDatabasesResponse.ProtoReflect.Descriptor instead.
+func (*ListDatabasesResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *ListDatabasesResponse) GetDatabases() []*DatabaseSummary {
+	if x != nil {
+		return x.Databases
+	}
+	return nil
+}
+
+type CreateDatabaseRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	DatabaseType  string                 `protobuf:"bytes,2,opt,name=database_type,json=databaseType,proto3" json:"database_type,omitempty"` // "Lpg", "Rdf", etc.
+	StorageMode   string                 `protobuf:"bytes,3,opt,name=storage_mode,json=storageMode,proto3" json:"storage_mode,omitempty"`    // "InMemory" or "Persistent"
+	Options       *DatabaseOptions       `protobuf:"bytes,4,opt,name=options,proto3" json:"options,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateDatabaseRequest) Reset() {
+	*x = CreateDatabaseRequest{}
+	mi := &file_gql_service_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateDatabaseRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateDatabaseRequest) ProtoMessage() {}
+
+func (x *CreateDatabaseRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateDatabaseRequest.ProtoReflect.Descriptor instead.
+func (*CreateDatabaseRequest) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *CreateDatabaseRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CreateDatabaseRequest) GetDatabaseType() string {
+	if x != nil {
+		return x.DatabaseType
+	}
+	return ""
+}
+
+func (x *CreateDatabaseRequest) GetStorageMode() string {
+	if x != nil {
+		return x.StorageMode
+	}
+	return ""
+}
+
+func (x *CreateDatabaseRequest) GetOptions() *DatabaseOptions {
+	if x != nil {
+		return x.Options
+	}
+	return nil
+}
+
+type DatabaseOptions struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	MemoryLimitBytes *uint64                `protobuf:"varint,1,opt,name=memory_limit_bytes,json=memoryLimitBytes,proto3,oneof" json:"memory_limit_bytes,omitempty"`
+	BackwardEdges    *bool                  `protobuf:"varint,2,opt,name=backward_edges,json=backwardEdges,proto3,oneof" json:"backward_edges,omitempty"`
+	Threads          *uint32                `protobuf:"varint,3,opt,name=threads,proto3,oneof" json:"threads,omitempty"`
+	WalEnabled       *bool                  `protobuf:"varint,4,opt,name=wal_enabled,json=walEnabled,proto3,oneof" json:"wal_enabled,omitempty"`
+	WalDurability    *string                `protobuf:"bytes,5,opt,name=wal_durability,json=walDurability,proto3,oneof" json:"wal_durability,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *DatabaseOptions) Reset() {
+	*x = DatabaseOptions{}
+	mi := &file_gql_service_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DatabaseOptions) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DatabaseOptions) ProtoMessage() {}
+
+func (x *DatabaseOptions) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DatabaseOptions.ProtoReflect.Descriptor instead.
+func (*DatabaseOptions) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *DatabaseOptions) GetMemoryLimitBytes() uint64 {
+	if x != nil && x.MemoryLimitBytes != nil {
+		return *x.MemoryLimitBytes
+	}
+	return 0
+}
+
+func (x *DatabaseOptions) GetBackwardEdges() bool {
+	if x != nil && x.BackwardEdges != nil {
+		return *x.BackwardEdges
+	}
+	return false
+}
+
+func (x *DatabaseOptions) GetThreads() uint32 {
+	if x != nil && x.Threads != nil {
+		return *x.Threads
+	}
+	return 0
+}
+
+func (x *DatabaseOptions) GetWalEnabled() bool {
+	if x != nil && x.WalEnabled != nil {
+		return *x.WalEnabled
+	}
+	return false
+}
+
+func (x *DatabaseOptions) GetWalDurability() string {
+	if x != nil && x.WalDurability != nil {
+		return *x.WalDurability
+	}
+	return ""
+}
+
+type CreateDatabaseResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Database      *DatabaseSummary       `protobuf:"bytes,1,opt,name=database,proto3" json:"database,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateDatabaseResponse) Reset() {
+	*x = CreateDatabaseResponse{}
+	mi := &file_gql_service_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateDatabaseResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateDatabaseResponse) ProtoMessage() {}
+
+func (x *CreateDatabaseResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateDatabaseResponse.ProtoReflect.Descriptor instead.
+func (*CreateDatabaseResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *CreateDatabaseResponse) GetDatabase() *DatabaseSummary {
+	if x != nil {
+		return x.Database
+	}
+	return nil
+}
+
+type DeleteDatabaseRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteDatabaseRequest) Reset() {
+	*x = DeleteDatabaseRequest{}
+	mi := &file_gql_service_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteDatabaseRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteDatabaseRequest) ProtoMessage() {}
+
+func (x *DeleteDatabaseRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteDatabaseRequest.ProtoReflect.Descriptor instead.
+func (*DeleteDatabaseRequest) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *DeleteDatabaseRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type DeleteDatabaseResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Deleted       string                 `protobuf:"bytes,1,opt,name=deleted,proto3" json:"deleted,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteDatabaseResponse) Reset() {
+	*x = DeleteDatabaseResponse{}
+	mi := &file_gql_service_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteDatabaseResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteDatabaseResponse) ProtoMessage() {}
+
+func (x *DeleteDatabaseResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteDatabaseResponse.ProtoReflect.Descriptor instead.
+func (*DeleteDatabaseResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *DeleteDatabaseResponse) GetDeleted() string {
+	if x != nil {
+		return x.Deleted
+	}
+	return ""
+}
+
+type GetDatabaseInfoRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetDatabaseInfoRequest) Reset() {
+	*x = GetDatabaseInfoRequest{}
+	mi := &file_gql_service_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetDatabaseInfoRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetDatabaseInfoRequest) ProtoMessage() {}
+
+func (x *GetDatabaseInfoRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetDatabaseInfoRequest.ProtoReflect.Descriptor instead.
+func (*GetDatabaseInfoRequest) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *GetDatabaseInfoRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type GetDatabaseInfoResponse struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Name             string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	NodeCount        uint64                 `protobuf:"varint,2,opt,name=node_count,json=nodeCount,proto3" json:"node_count,omitempty"`
+	EdgeCount        uint64                 `protobuf:"varint,3,opt,name=edge_count,json=edgeCount,proto3" json:"edge_count,omitempty"`
+	Persistent       bool                   `protobuf:"varint,4,opt,name=persistent,proto3" json:"persistent,omitempty"`
+	DatabaseType     string                 `protobuf:"bytes,5,opt,name=database_type,json=databaseType,proto3" json:"database_type,omitempty"`
+	StorageMode      string                 `protobuf:"bytes,6,opt,name=storage_mode,json=storageMode,proto3" json:"storage_mode,omitempty"`
+	MemoryLimitBytes uint64                 `protobuf:"varint,7,opt,name=memory_limit_bytes,json=memoryLimitBytes,proto3" json:"memory_limit_bytes,omitempty"`
+	BackwardEdges    bool                   `protobuf:"varint,8,opt,name=backward_edges,json=backwardEdges,proto3" json:"backward_edges,omitempty"`
+	Threads          uint32                 `protobuf:"varint,9,opt,name=threads,proto3" json:"threads,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *GetDatabaseInfoResponse) Reset() {
+	*x = GetDatabaseInfoResponse{}
+	mi := &file_gql_service_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetDatabaseInfoResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetDatabaseInfoResponse) ProtoMessage() {}
+
+func (x *GetDatabaseInfoResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetDatabaseInfoResponse.ProtoReflect.Descriptor instead.
+func (*GetDatabaseInfoResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *GetDatabaseInfoResponse) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *GetDatabaseInfoResponse) GetNodeCount() uint64 {
+	if x != nil {
+		return x.NodeCount
+	}
+	return 0
+}
+
+func (x *GetDatabaseInfoResponse) GetEdgeCount() uint64 {
+	if x != nil {
+		return x.EdgeCount
+	}
+	return 0
+}
+
+func (x *GetDatabaseInfoResponse) GetPersistent() bool {
+	if x != nil {
+		return x.Persistent
+	}
+	return false
+}
+
+func (x *GetDatabaseInfoResponse) GetDatabaseType() string {
+	if x != nil {
+		return x.DatabaseType
+	}
+	return ""
+}
+
+func (x *GetDatabaseInfoResponse) GetStorageMode() string {
+	if x != nil {
+		return x.StorageMode
+	}
+	return ""
+}
+
+func (x *GetDatabaseInfoResponse) GetMemoryLimitBytes() uint64 {
+	if x != nil {
+		return x.MemoryLimitBytes
+	}
+	return 0
+}
+
+func (x *GetDatabaseInfoResponse) GetBackwardEdges() bool {
+	if x != nil {
+		return x.BackwardEdges
+	}
+	return false
+}
+
+func (x *GetDatabaseInfoResponse) GetThreads() uint32 {
+	if x != nil {
+		return x.Threads
+	}
+	return 0
+}
+
 var File_gql_service_proto protoreflect.FileDescriptor
 
 const file_gql_service_proto_rawDesc = "" +
@@ -1605,19 +2189,20 @@ const file_gql_service_proto_rawDesc = "" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\",\n" +
 	"\fPongResponse\x12\x1c\n" +
-	"\ttimestamp\x18\x01 \x01(\x03R\ttimestamp\"\x84\x02\n" +
+	"\ttimestamp\x18\x01 \x01(\x03R\ttimestamp\"\x9c\x02\n" +
 	"\x0eExecuteRequest\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1c\n" +
 	"\tstatement\x18\x02 \x01(\tR\tstatement\x12C\n" +
 	"\n" +
 	"parameters\x18\x03 \x03(\v2#.gql.ExecuteRequest.ParametersEntryR\n" +
-	"parameters\x12%\n" +
-	"\x0etransaction_id\x18\x04 \x01(\tR\rtransactionId\x1aI\n" +
+	"parameters\x12*\n" +
+	"\x0etransaction_id\x18\x04 \x01(\tH\x00R\rtransactionId\x88\x01\x01\x1aI\n" +
 	"\x0fParametersEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12 \n" +
 	"\x05value\x18\x02 \x01(\v2\n" +
-	".gql.ValueR\x05value:\x028\x01\"\xa5\x01\n" +
+	".gql.ValueR\x05value:\x028\x01B\x11\n" +
+	"\x0f_transaction_id\"\xa5\x01\n" +
 	"\x0fExecuteResponse\x12+\n" +
 	"\x06header\x18\x01 \x01(\v2\x11.gql.ResultHeaderH\x00R\x06header\x12,\n" +
 	"\trow_batch\x18\x02 \x01(\v2\r.gql.RowBatchH\x00R\browBatch\x12.\n" +
@@ -1661,7 +2246,60 @@ const file_gql_service_proto_rawDesc = "" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12%\n" +
 	"\x0etransaction_id\x18\x02 \x01(\tR\rtransactionId\":\n" +
 	"\x10RollbackResponse\x12&\n" +
-	"\x06status\x18\x01 \x01(\v2\x0e.gql.GqlStatusR\x06status*j\n" +
+	"\x06status\x18\x01 \x01(\v2\x0e.gql.GqlStatusR\x06status\"\x16\n" +
+	"\x14ListDatabasesRequest\"\xa8\x01\n" +
+	"\x0fDatabaseSummary\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1d\n" +
+	"\n" +
+	"node_count\x18\x02 \x01(\x04R\tnodeCount\x12\x1d\n" +
+	"\n" +
+	"edge_count\x18\x03 \x01(\x04R\tedgeCount\x12\x1e\n" +
+	"\n" +
+	"persistent\x18\x04 \x01(\bR\n" +
+	"persistent\x12#\n" +
+	"\rdatabase_type\x18\x05 \x01(\tR\fdatabaseType\"K\n" +
+	"\x15ListDatabasesResponse\x122\n" +
+	"\tdatabases\x18\x01 \x03(\v2\x14.gql.DatabaseSummaryR\tdatabases\"\xa3\x01\n" +
+	"\x15CreateDatabaseRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12#\n" +
+	"\rdatabase_type\x18\x02 \x01(\tR\fdatabaseType\x12!\n" +
+	"\fstorage_mode\x18\x03 \x01(\tR\vstorageMode\x12.\n" +
+	"\aoptions\x18\x04 \x01(\v2\x14.gql.DatabaseOptionsR\aoptions\"\xba\x02\n" +
+	"\x0fDatabaseOptions\x121\n" +
+	"\x12memory_limit_bytes\x18\x01 \x01(\x04H\x00R\x10memoryLimitBytes\x88\x01\x01\x12*\n" +
+	"\x0ebackward_edges\x18\x02 \x01(\bH\x01R\rbackwardEdges\x88\x01\x01\x12\x1d\n" +
+	"\athreads\x18\x03 \x01(\rH\x02R\athreads\x88\x01\x01\x12$\n" +
+	"\vwal_enabled\x18\x04 \x01(\bH\x03R\n" +
+	"walEnabled\x88\x01\x01\x12*\n" +
+	"\x0ewal_durability\x18\x05 \x01(\tH\x04R\rwalDurability\x88\x01\x01B\x15\n" +
+	"\x13_memory_limit_bytesB\x11\n" +
+	"\x0f_backward_edgesB\n" +
+	"\n" +
+	"\b_threadsB\x0e\n" +
+	"\f_wal_enabledB\x11\n" +
+	"\x0f_wal_durability\"J\n" +
+	"\x16CreateDatabaseResponse\x120\n" +
+	"\bdatabase\x18\x01 \x01(\v2\x14.gql.DatabaseSummaryR\bdatabase\"+\n" +
+	"\x15DeleteDatabaseRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\"2\n" +
+	"\x16DeleteDatabaseResponse\x12\x18\n" +
+	"\adeleted\x18\x01 \x01(\tR\adeleted\",\n" +
+	"\x16GetDatabaseInfoRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\"\xc2\x02\n" +
+	"\x17GetDatabaseInfoResponse\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1d\n" +
+	"\n" +
+	"node_count\x18\x02 \x01(\x04R\tnodeCount\x12\x1d\n" +
+	"\n" +
+	"edge_count\x18\x03 \x01(\x04R\tedgeCount\x12\x1e\n" +
+	"\n" +
+	"persistent\x18\x04 \x01(\bR\n" +
+	"persistent\x12#\n" +
+	"\rdatabase_type\x18\x05 \x01(\tR\fdatabaseType\x12!\n" +
+	"\fstorage_mode\x18\x06 \x01(\tR\vstorageMode\x12,\n" +
+	"\x12memory_limit_bytes\x18\a \x01(\x04R\x10memoryLimitBytes\x12%\n" +
+	"\x0ebackward_edges\x18\b \x01(\bR\rbackwardEdges\x12\x18\n" +
+	"\athreads\x18\t \x01(\rR\athreads*j\n" +
 	"\vResetTarget\x12\r\n" +
 	"\tRESET_ALL\x10\x00\x12\x10\n" +
 	"\fRESET_SCHEMA\x10\x01\x12\x0f\n" +
@@ -1688,7 +2326,12 @@ const file_gql_service_proto_rawDesc = "" +
 	"\aExecute\x12\x13.gql.ExecuteRequest\x1a\x14.gql.ExecuteResponse0\x01\x129\n" +
 	"\x10BeginTransaction\x12\x11.gql.BeginRequest\x1a\x12.gql.BeginResponse\x121\n" +
 	"\x06Commit\x12\x12.gql.CommitRequest\x1a\x13.gql.CommitResponse\x127\n" +
-	"\bRollback\x12\x14.gql.RollbackRequest\x1a\x15.gql.RollbackResponseb\x06proto3"
+	"\bRollback\x12\x14.gql.RollbackRequest\x1a\x15.gql.RollbackResponse2\xbd\x02\n" +
+	"\x0fDatabaseService\x12F\n" +
+	"\rListDatabases\x12\x19.gql.ListDatabasesRequest\x1a\x1a.gql.ListDatabasesResponse\x12I\n" +
+	"\x0eCreateDatabase\x12\x1a.gql.CreateDatabaseRequest\x1a\x1b.gql.CreateDatabaseResponse\x12I\n" +
+	"\x0eDeleteDatabase\x12\x1a.gql.DeleteDatabaseRequest\x1a\x1b.gql.DeleteDatabaseResponse\x12L\n" +
+	"\x0fGetDatabaseInfo\x12\x1b.gql.GetDatabaseInfoRequest\x1a\x1c.gql.GetDatabaseInfoResponseb\x06proto3"
 
 var (
 	file_gql_service_proto_rawDescOnce sync.Once
@@ -1703,93 +2346,114 @@ func file_gql_service_proto_rawDescGZIP() []byte {
 }
 
 var file_gql_service_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_gql_service_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
+var file_gql_service_proto_msgTypes = make([]protoimpl.MessageInfo, 39)
 var file_gql_service_proto_goTypes = []any{
-	(ResetTarget)(0),          // 0: gql.ResetTarget
-	(ResultType)(0),           // 1: gql.ResultType
-	(TransactionMode)(0),      // 2: gql.TransactionMode
-	(*HandshakeRequest)(nil),  // 3: gql.HandshakeRequest
-	(*HandshakeResponse)(nil), // 4: gql.HandshakeResponse
-	(*ServerInfo)(nil),        // 5: gql.ServerInfo
-	(*ConfigureRequest)(nil),  // 6: gql.ConfigureRequest
-	(*SessionParameter)(nil),  // 7: gql.SessionParameter
-	(*ConfigureResponse)(nil), // 8: gql.ConfigureResponse
-	(*ResetRequest)(nil),      // 9: gql.ResetRequest
-	(*ResetResponse)(nil),     // 10: gql.ResetResponse
-	(*CloseRequest)(nil),      // 11: gql.CloseRequest
-	(*CloseResponse)(nil),     // 12: gql.CloseResponse
-	(*PingRequest)(nil),       // 13: gql.PingRequest
-	(*PongResponse)(nil),      // 14: gql.PongResponse
-	(*ExecuteRequest)(nil),    // 15: gql.ExecuteRequest
-	(*ExecuteResponse)(nil),   // 16: gql.ExecuteResponse
-	(*ResultHeader)(nil),      // 17: gql.ResultHeader
-	(*ColumnDescriptor)(nil),  // 18: gql.ColumnDescriptor
-	(*RowBatch)(nil),          // 19: gql.RowBatch
-	(*Row)(nil),               // 20: gql.Row
-	(*ResultSummary)(nil),     // 21: gql.ResultSummary
-	(*BeginRequest)(nil),      // 22: gql.BeginRequest
-	(*BeginResponse)(nil),     // 23: gql.BeginResponse
-	(*CommitRequest)(nil),     // 24: gql.CommitRequest
-	(*CommitResponse)(nil),    // 25: gql.CommitResponse
-	(*RollbackRequest)(nil),   // 26: gql.RollbackRequest
-	(*RollbackResponse)(nil),  // 27: gql.RollbackResponse
-	nil,                       // 28: gql.HandshakeRequest.ClientInfoEntry
-	nil,                       // 29: gql.HandshakeResponse.LimitsEntry
-	nil,                       // 30: gql.ExecuteRequest.ParametersEntry
-	nil,                       // 31: gql.ResultSummary.CountersEntry
-	(*AuthCredentials)(nil),   // 32: gql.AuthCredentials
-	(*Value)(nil),             // 33: gql.Value
-	(*TypeDescriptor)(nil),    // 34: gql.TypeDescriptor
-	(*GqlStatus)(nil),         // 35: gql.GqlStatus
+	(ResetTarget)(0),                // 0: gql.ResetTarget
+	(ResultType)(0),                 // 1: gql.ResultType
+	(TransactionMode)(0),            // 2: gql.TransactionMode
+	(*HandshakeRequest)(nil),        // 3: gql.HandshakeRequest
+	(*HandshakeResponse)(nil),       // 4: gql.HandshakeResponse
+	(*ServerInfo)(nil),              // 5: gql.ServerInfo
+	(*ConfigureRequest)(nil),        // 6: gql.ConfigureRequest
+	(*SessionParameter)(nil),        // 7: gql.SessionParameter
+	(*ConfigureResponse)(nil),       // 8: gql.ConfigureResponse
+	(*ResetRequest)(nil),            // 9: gql.ResetRequest
+	(*ResetResponse)(nil),           // 10: gql.ResetResponse
+	(*CloseRequest)(nil),            // 11: gql.CloseRequest
+	(*CloseResponse)(nil),           // 12: gql.CloseResponse
+	(*PingRequest)(nil),             // 13: gql.PingRequest
+	(*PongResponse)(nil),            // 14: gql.PongResponse
+	(*ExecuteRequest)(nil),          // 15: gql.ExecuteRequest
+	(*ExecuteResponse)(nil),         // 16: gql.ExecuteResponse
+	(*ResultHeader)(nil),            // 17: gql.ResultHeader
+	(*ColumnDescriptor)(nil),        // 18: gql.ColumnDescriptor
+	(*RowBatch)(nil),                // 19: gql.RowBatch
+	(*Row)(nil),                     // 20: gql.Row
+	(*ResultSummary)(nil),           // 21: gql.ResultSummary
+	(*BeginRequest)(nil),            // 22: gql.BeginRequest
+	(*BeginResponse)(nil),           // 23: gql.BeginResponse
+	(*CommitRequest)(nil),           // 24: gql.CommitRequest
+	(*CommitResponse)(nil),          // 25: gql.CommitResponse
+	(*RollbackRequest)(nil),         // 26: gql.RollbackRequest
+	(*RollbackResponse)(nil),        // 27: gql.RollbackResponse
+	(*ListDatabasesRequest)(nil),    // 28: gql.ListDatabasesRequest
+	(*DatabaseSummary)(nil),         // 29: gql.DatabaseSummary
+	(*ListDatabasesResponse)(nil),   // 30: gql.ListDatabasesResponse
+	(*CreateDatabaseRequest)(nil),   // 31: gql.CreateDatabaseRequest
+	(*DatabaseOptions)(nil),         // 32: gql.DatabaseOptions
+	(*CreateDatabaseResponse)(nil),  // 33: gql.CreateDatabaseResponse
+	(*DeleteDatabaseRequest)(nil),   // 34: gql.DeleteDatabaseRequest
+	(*DeleteDatabaseResponse)(nil),  // 35: gql.DeleteDatabaseResponse
+	(*GetDatabaseInfoRequest)(nil),  // 36: gql.GetDatabaseInfoRequest
+	(*GetDatabaseInfoResponse)(nil), // 37: gql.GetDatabaseInfoResponse
+	nil,                             // 38: gql.HandshakeRequest.ClientInfoEntry
+	nil,                             // 39: gql.HandshakeResponse.LimitsEntry
+	nil,                             // 40: gql.ExecuteRequest.ParametersEntry
+	nil,                             // 41: gql.ResultSummary.CountersEntry
+	(*AuthCredentials)(nil),         // 42: gql.AuthCredentials
+	(*Value)(nil),                   // 43: gql.Value
+	(*TypeDescriptor)(nil),          // 44: gql.TypeDescriptor
+	(*GqlStatus)(nil),               // 45: gql.GqlStatus
 }
 var file_gql_service_proto_depIdxs = []int32{
-	32, // 0: gql.HandshakeRequest.credentials:type_name -> gql.AuthCredentials
-	28, // 1: gql.HandshakeRequest.client_info:type_name -> gql.HandshakeRequest.ClientInfoEntry
+	42, // 0: gql.HandshakeRequest.credentials:type_name -> gql.AuthCredentials
+	38, // 1: gql.HandshakeRequest.client_info:type_name -> gql.HandshakeRequest.ClientInfoEntry
 	5,  // 2: gql.HandshakeResponse.server_info:type_name -> gql.ServerInfo
-	29, // 3: gql.HandshakeResponse.limits:type_name -> gql.HandshakeResponse.LimitsEntry
+	39, // 3: gql.HandshakeResponse.limits:type_name -> gql.HandshakeResponse.LimitsEntry
 	7,  // 4: gql.ConfigureRequest.parameter:type_name -> gql.SessionParameter
-	33, // 5: gql.SessionParameter.value:type_name -> gql.Value
+	43, // 5: gql.SessionParameter.value:type_name -> gql.Value
 	0,  // 6: gql.ResetRequest.target:type_name -> gql.ResetTarget
-	30, // 7: gql.ExecuteRequest.parameters:type_name -> gql.ExecuteRequest.ParametersEntry
+	40, // 7: gql.ExecuteRequest.parameters:type_name -> gql.ExecuteRequest.ParametersEntry
 	17, // 8: gql.ExecuteResponse.header:type_name -> gql.ResultHeader
 	19, // 9: gql.ExecuteResponse.row_batch:type_name -> gql.RowBatch
 	21, // 10: gql.ExecuteResponse.summary:type_name -> gql.ResultSummary
 	1,  // 11: gql.ResultHeader.result_type:type_name -> gql.ResultType
 	18, // 12: gql.ResultHeader.columns:type_name -> gql.ColumnDescriptor
-	34, // 13: gql.ColumnDescriptor.type:type_name -> gql.TypeDescriptor
+	44, // 13: gql.ColumnDescriptor.type:type_name -> gql.TypeDescriptor
 	20, // 14: gql.RowBatch.rows:type_name -> gql.Row
-	33, // 15: gql.Row.values:type_name -> gql.Value
-	35, // 16: gql.ResultSummary.status:type_name -> gql.GqlStatus
-	35, // 17: gql.ResultSummary.warnings:type_name -> gql.GqlStatus
-	31, // 18: gql.ResultSummary.counters:type_name -> gql.ResultSummary.CountersEntry
+	43, // 15: gql.Row.values:type_name -> gql.Value
+	45, // 16: gql.ResultSummary.status:type_name -> gql.GqlStatus
+	45, // 17: gql.ResultSummary.warnings:type_name -> gql.GqlStatus
+	41, // 18: gql.ResultSummary.counters:type_name -> gql.ResultSummary.CountersEntry
 	2,  // 19: gql.BeginRequest.mode:type_name -> gql.TransactionMode
-	35, // 20: gql.BeginResponse.status:type_name -> gql.GqlStatus
-	35, // 21: gql.CommitResponse.status:type_name -> gql.GqlStatus
-	35, // 22: gql.RollbackResponse.status:type_name -> gql.GqlStatus
-	33, // 23: gql.ExecuteRequest.ParametersEntry.value:type_name -> gql.Value
-	3,  // 24: gql.SessionService.Handshake:input_type -> gql.HandshakeRequest
-	6,  // 25: gql.SessionService.Configure:input_type -> gql.ConfigureRequest
-	9,  // 26: gql.SessionService.Reset:input_type -> gql.ResetRequest
-	11, // 27: gql.SessionService.Close:input_type -> gql.CloseRequest
-	13, // 28: gql.SessionService.Ping:input_type -> gql.PingRequest
-	15, // 29: gql.GqlService.Execute:input_type -> gql.ExecuteRequest
-	22, // 30: gql.GqlService.BeginTransaction:input_type -> gql.BeginRequest
-	24, // 31: gql.GqlService.Commit:input_type -> gql.CommitRequest
-	26, // 32: gql.GqlService.Rollback:input_type -> gql.RollbackRequest
-	4,  // 33: gql.SessionService.Handshake:output_type -> gql.HandshakeResponse
-	8,  // 34: gql.SessionService.Configure:output_type -> gql.ConfigureResponse
-	10, // 35: gql.SessionService.Reset:output_type -> gql.ResetResponse
-	12, // 36: gql.SessionService.Close:output_type -> gql.CloseResponse
-	14, // 37: gql.SessionService.Ping:output_type -> gql.PongResponse
-	16, // 38: gql.GqlService.Execute:output_type -> gql.ExecuteResponse
-	23, // 39: gql.GqlService.BeginTransaction:output_type -> gql.BeginResponse
-	25, // 40: gql.GqlService.Commit:output_type -> gql.CommitResponse
-	27, // 41: gql.GqlService.Rollback:output_type -> gql.RollbackResponse
-	33, // [33:42] is the sub-list for method output_type
-	24, // [24:33] is the sub-list for method input_type
-	24, // [24:24] is the sub-list for extension type_name
-	24, // [24:24] is the sub-list for extension extendee
-	0,  // [0:24] is the sub-list for field type_name
+	45, // 20: gql.BeginResponse.status:type_name -> gql.GqlStatus
+	45, // 21: gql.CommitResponse.status:type_name -> gql.GqlStatus
+	45, // 22: gql.RollbackResponse.status:type_name -> gql.GqlStatus
+	29, // 23: gql.ListDatabasesResponse.databases:type_name -> gql.DatabaseSummary
+	32, // 24: gql.CreateDatabaseRequest.options:type_name -> gql.DatabaseOptions
+	29, // 25: gql.CreateDatabaseResponse.database:type_name -> gql.DatabaseSummary
+	43, // 26: gql.ExecuteRequest.ParametersEntry.value:type_name -> gql.Value
+	3,  // 27: gql.SessionService.Handshake:input_type -> gql.HandshakeRequest
+	6,  // 28: gql.SessionService.Configure:input_type -> gql.ConfigureRequest
+	9,  // 29: gql.SessionService.Reset:input_type -> gql.ResetRequest
+	11, // 30: gql.SessionService.Close:input_type -> gql.CloseRequest
+	13, // 31: gql.SessionService.Ping:input_type -> gql.PingRequest
+	15, // 32: gql.GqlService.Execute:input_type -> gql.ExecuteRequest
+	22, // 33: gql.GqlService.BeginTransaction:input_type -> gql.BeginRequest
+	24, // 34: gql.GqlService.Commit:input_type -> gql.CommitRequest
+	26, // 35: gql.GqlService.Rollback:input_type -> gql.RollbackRequest
+	28, // 36: gql.DatabaseService.ListDatabases:input_type -> gql.ListDatabasesRequest
+	31, // 37: gql.DatabaseService.CreateDatabase:input_type -> gql.CreateDatabaseRequest
+	34, // 38: gql.DatabaseService.DeleteDatabase:input_type -> gql.DeleteDatabaseRequest
+	36, // 39: gql.DatabaseService.GetDatabaseInfo:input_type -> gql.GetDatabaseInfoRequest
+	4,  // 40: gql.SessionService.Handshake:output_type -> gql.HandshakeResponse
+	8,  // 41: gql.SessionService.Configure:output_type -> gql.ConfigureResponse
+	10, // 42: gql.SessionService.Reset:output_type -> gql.ResetResponse
+	12, // 43: gql.SessionService.Close:output_type -> gql.CloseResponse
+	14, // 44: gql.SessionService.Ping:output_type -> gql.PongResponse
+	16, // 45: gql.GqlService.Execute:output_type -> gql.ExecuteResponse
+	23, // 46: gql.GqlService.BeginTransaction:output_type -> gql.BeginResponse
+	25, // 47: gql.GqlService.Commit:output_type -> gql.CommitResponse
+	27, // 48: gql.GqlService.Rollback:output_type -> gql.RollbackResponse
+	30, // 49: gql.DatabaseService.ListDatabases:output_type -> gql.ListDatabasesResponse
+	33, // 50: gql.DatabaseService.CreateDatabase:output_type -> gql.CreateDatabaseResponse
+	35, // 51: gql.DatabaseService.DeleteDatabase:output_type -> gql.DeleteDatabaseResponse
+	37, // 52: gql.DatabaseService.GetDatabaseInfo:output_type -> gql.GetDatabaseInfoResponse
+	40, // [40:53] is the sub-list for method output_type
+	27, // [27:40] is the sub-list for method input_type
+	27, // [27:27] is the sub-list for extension type_name
+	27, // [27:27] is the sub-list for extension extendee
+	0,  // [0:27] is the sub-list for field type_name
 }
 
 func init() { file_gql_service_proto_init() }
@@ -1804,20 +2468,22 @@ func file_gql_service_proto_init() {
 		(*ConfigureRequest_TimeZoneOffsetMinutes)(nil),
 		(*ConfigureRequest_Parameter)(nil),
 	}
+	file_gql_service_proto_msgTypes[12].OneofWrappers = []any{}
 	file_gql_service_proto_msgTypes[13].OneofWrappers = []any{
 		(*ExecuteResponse_Header)(nil),
 		(*ExecuteResponse_RowBatch)(nil),
 		(*ExecuteResponse_Summary)(nil),
 	}
+	file_gql_service_proto_msgTypes[29].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_gql_service_proto_rawDesc), len(file_gql_service_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   29,
+			NumMessages:   39,
 			NumExtensions: 0,
-			NumServices:   2,
+			NumServices:   3,
 		},
 		GoTypes:           file_gql_service_proto_goTypes,
 		DependencyIndexes: file_gql_service_proto_depIdxs,

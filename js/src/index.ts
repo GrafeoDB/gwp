@@ -2,6 +2,8 @@
 
 export { GqlConnection } from "./connection";
 export { GqlSession } from "./session";
+export { DatabaseClient } from "./database";
+export type { DatabaseInfo, CreateDatabaseConfig } from "./database";
 export { ResultCursor, ResultSummary } from "./result";
 export { Transaction } from "./transaction";
 

@@ -27,11 +27,12 @@ func (t *Transaction) Execute(ctx context.Context, statement string, params map[
 		protoParams[k] = valueToProto(v)
 	}
 
+	txID := t.transactionID
 	stream, err := t.gqlClient.Execute(ctx, &pb.ExecuteRequest{
 		SessionId:     t.sessionID,
 		Statement:     statement,
 		Parameters:    protoParams,
-		TransactionId: t.transactionID,
+		TransactionId: &txID,
 	})
 	if err != nil {
 		return nil, err

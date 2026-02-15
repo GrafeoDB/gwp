@@ -54,6 +54,11 @@ func (c *GqlConnection) CreateSession(ctx context.Context) (*GqlSession, error) 
 	}, nil
 }
 
+// CreateDatabaseClient creates a new database management client.
+func (c *GqlConnection) CreateDatabaseClient() *DatabaseClient {
+	return NewDatabaseClient(c.conn)
+}
+
 // Close closes the underlying gRPC connection.
 func (c *GqlConnection) Close() error {
 	return c.conn.Close()

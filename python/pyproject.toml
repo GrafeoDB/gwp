@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gwp-py"
-version = "0.1.1"
+version = "0.1.2"
 description = "Python client for the GQL Wire Protocol (GWP)"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
@@ -25,6 +25,9 @@ dev = [
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+
+[tool.ruff]
+extend-exclude = ["src/gwp_py/_generated"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/gwp_py"]

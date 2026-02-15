@@ -128,7 +128,7 @@ message ExecuteRequest {
   string session_id = 1;
   string statement = 2;
   map<string, Value> parameters = 3;
-  string transaction_id = 4;  // Empty for auto-commit
+  optional string transaction_id = 4;  // Omit for auto-commit
 }
 
 message ExecuteResponse {

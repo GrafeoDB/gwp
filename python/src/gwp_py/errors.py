@@ -24,6 +24,7 @@ class TransactionError(GqlError):
 @dataclass
 class DiagnosticRecord:
     """Diagnostic context from a GQLSTATUS error."""
+
     operation: str
     operation_code: int
     current_schema: str = ""

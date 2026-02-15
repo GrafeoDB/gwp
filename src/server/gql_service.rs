@@ -62,15 +62,15 @@ impl<B: GqlBackend> GqlService for GqlServiceImpl<B> {
         self.validate_session(&req.session_id).await?;
 
         let session = SessionHandle(req.session_id.clone());
-        let transaction = if req.transaction_id.is_empty() {
-            None
-        } else {
+        let transaction = if let Some(ref tx_id) = req.transaction_id {
             // Validate the transaction belongs to this session
             self.transactions
-                .validate(&req.transaction_id, &req.session_id)
+                .validate(tx_id, &req.session_id)
                 .await
                 .map_err(|e| e.to_grpc_status())?;
-            Some(TransactionHandle(req.transaction_id.clone()))
+            Some(TransactionHandle(tx_id.clone()))
+        } else {
+            None
         };
 
         let parameters: HashMap<String, Value> = req

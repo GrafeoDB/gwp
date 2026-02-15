@@ -1,6 +1,5 @@
 """Shared fixtures for gwp-py tests."""
 
-import os
 import socket
 import subprocess
 import sys

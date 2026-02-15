@@ -79,6 +79,15 @@ public class GqlConnection implements AutoCloseable {
     }
 
     /**
+     * Create a database management client.
+     *
+     * @return a new DatabaseClient
+     */
+    public DatabaseClient createDatabaseClient() {
+        return new DatabaseClient(channel);
+    }
+
+    /**
      * Close the underlying gRPC channel.
      *
      * <p>Initiates an orderly shutdown and waits up to 5 seconds for

@@ -1,7 +1,6 @@
 """Integration tests for connection and session lifecycle."""
 
 import pytest
-import pytest_asyncio
 
 from gwp_py import GqlConnection
 

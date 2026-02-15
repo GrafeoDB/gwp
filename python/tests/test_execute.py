@@ -3,7 +3,6 @@
 import pytest
 
 from gwp_py import GqlConnection
-from gwp_py.errors import GqlStatusError
 
 
 @pytest.mark.asyncio

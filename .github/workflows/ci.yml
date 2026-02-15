@@ -94,10 +94,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: js/package-lock.json
+          cache-dependency-path: js/package.json
 
       - name: Install
-        run: npm ci
+        run: npm install
 
       - name: Download test server
         uses: actions/download-artifact@v4

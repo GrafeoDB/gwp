@@ -8,9 +8,7 @@ use gwp::proto;
 use gwp::proto::gql_service_client::GqlServiceClient;
 use gwp::proto::session_service_client::SessionServiceClient;
 use gwp::server::mock_backend::MockBackend;
-use gwp::server::{
-    GqlServiceImpl, SessionManager, SessionServiceImpl, TransactionManager,
-};
+use gwp::server::{GqlServiceImpl, SessionManager, SessionServiceImpl, TransactionManager};
 use gwp::status;
 
 /// Start a server on a random port and return the address.

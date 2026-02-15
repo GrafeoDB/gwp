@@ -4,8 +4,8 @@ use tonic::transport::Channel;
 
 use crate::error::GqlError;
 
-use super::database::DatabaseClient;
 use super::GqlSession;
+use super::database::DatabaseClient;
 
 /// A connection to a GQL wire protocol server.
 ///

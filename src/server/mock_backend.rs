@@ -207,9 +207,7 @@ impl GqlBackend for MockBackend {
                 backward_edges: None,
                 threads: None,
             }),
-            _ => Err(GqlError::Session(format!(
-                "database '{name}' not found"
-            ))),
+            _ => Err(GqlError::Session(format!("database '{name}' not found"))),
         }
     }
 }

@@ -7,8 +7,8 @@ use gwp::client::GqlConnection;
 use gwp::proto;
 use gwp::server::mock_backend::MockBackend;
 use gwp::server::{
-    CreateDatabaseConfig, DatabaseServiceImpl, GqlServiceImpl, SessionManager,
-    SessionServiceImpl, TransactionManager,
+    CreateDatabaseConfig, DatabaseServiceImpl, GqlServiceImpl, SessionManager, SessionServiceImpl,
+    TransactionManager,
 };
 use gwp::types::Value;
 
@@ -27,8 +27,7 @@ async fn start_server() -> SocketAddr {
             sessions.clone(),
             transactions.clone(),
         );
-        let gql_svc =
-            GqlServiceImpl::new(std::sync::Arc::clone(&backend), sessions, transactions);
+        let gql_svc = GqlServiceImpl::new(std::sync::Arc::clone(&backend), sessions, transactions);
         let db_svc = DatabaseServiceImpl::new(std::sync::Arc::clone(&backend));
 
         let incoming = tokio_stream::wrappers::TcpListenerStream::new(listener);

@@ -260,7 +260,9 @@ impl fmt::Display for Value {
             Self::LocalTime(t) => write_time(f, t, None),
             Self::ZonedTime(t) => write_time(f, &t.time, Some(t.offset_minutes)),
             Self::LocalDateTime(dt) => write_datetime(f, &dt.date, &dt.time, None),
-            Self::ZonedDateTime(dt) => write_datetime(f, &dt.date, &dt.time, Some(dt.offset_minutes)),
+            Self::ZonedDateTime(dt) => {
+                write_datetime(f, &dt.date, &dt.time, Some(dt.offset_minutes))
+            }
             Self::Duration(d) => write_duration(f, d),
             Self::List(elems) => write_list(f, elems),
             Self::Record(r) => write_record(f, r),
@@ -281,26 +283,44 @@ impl fmt::Display for Value {
     }
 }
 
-fn write_time(f: &mut fmt::Formatter<'_>, t: &super::LocalTime, offset: Option<i32>) -> fmt::Result {
+fn write_time(
+    f: &mut fmt::Formatter<'_>,
+    t: &super::LocalTime,
+    offset: Option<i32>,
+) -> fmt::Result {
     write!(f, "{:02}:{:02}:{:02}", t.hour, t.minute, t.second)?;
-    if t.nanosecond > 0 { write!(f, ".{:09}", t.nanosecond)?; }
-    if let Some(off) = offset { write_offset(f, off)?; }
+    if t.nanosecond > 0 {
+        write!(f, ".{:09}", t.nanosecond)?;
+    }
+    if let Some(off) = offset {
+        write_offset(f, off)?;
+    }
     Ok(())
 }
 
-fn write_datetime(f: &mut fmt::Formatter<'_>, d: &super::Date, t: &super::LocalTime, offset: Option<i32>) -> fmt::Result {
+fn write_datetime(
+    f: &mut fmt::Formatter<'_>,
+    d: &super::Date,
+    t: &super::LocalTime,
+    offset: Option<i32>,
+) -> fmt::Result {
     write!(f, "{:04}-{:02}-{:02}T", d.year, d.month, d.day)?;
     write_time(f, t, offset)
 }
 
 fn write_duration(f: &mut fmt::Formatter<'_>, d: &super::Duration) -> fmt::Result {
     write!(f, "P")?;
-    if d.months != 0 { write!(f, "{}M", d.months)?; }
+    if d.months != 0 {
+        write!(f, "{}M", d.months)?;
+    }
     if d.nanoseconds != 0 || d.months == 0 {
         let secs = d.nanoseconds / 1_000_000_000;
         let nanos = d.nanoseconds % 1_000_000_000;
-        if nanos == 0 { write!(f, "T{secs}S")?; }
-        else { write!(f, "T{secs}.{:09}S", nanos.unsigned_abs())?; }
+        if nanos == 0 {
+            write!(f, "T{secs}S")?;
+        } else {
+            write!(f, "T{secs}.{:09}S", nanos.unsigned_abs())?;
+        }
     }
     Ok(())
 }
@@ -308,7 +328,9 @@ fn write_duration(f: &mut fmt::Formatter<'_>, d: &super::Duration) -> fmt::Resul
 fn write_list(f: &mut fmt::Formatter<'_>, elems: &[Value]) -> fmt::Result {
     write!(f, "[")?;
     for (i, e) in elems.iter().enumerate() {
-        if i > 0 { write!(f, ", ")?; }
+        if i > 0 {
+            write!(f, ", ")?;
+        }
         write!(f, "{e}")?;
     }
     write!(f, "]")
@@ -317,17 +339,24 @@ fn write_list(f: &mut fmt::Formatter<'_>, elems: &[Value]) -> fmt::Result {
 fn write_record(f: &mut fmt::Formatter<'_>, r: &super::Record) -> fmt::Result {
     write!(f, "{{")?;
     for (i, field) in r.fields.iter().enumerate() {
-        if i > 0 { write!(f, ", ")?; }
+        if i > 0 {
+            write!(f, ", ")?;
+        }
         write!(f, "{}: {}", field.name, field.value)?;
     }
     write!(f, "}}")
 }
 
-fn write_props(f: &mut fmt::Formatter<'_>, props: &std::collections::HashMap<std::string::String, Value>) -> fmt::Result {
+fn write_props(
+    f: &mut fmt::Formatter<'_>,
+    props: &std::collections::HashMap<std::string::String, Value>,
+) -> fmt::Result {
     if !props.is_empty() {
         write!(f, " {{")?;
         for (i, (k, v)) in props.iter().enumerate() {
-            if i > 0 { write!(f, ", ")?; }
+            if i > 0 {
+                write!(f, ", ")?;
+            }
             write!(f, "{k}: {v}")?;
         }
         write!(f, "}}")?;
@@ -337,7 +366,9 @@ fn write_props(f: &mut fmt::Formatter<'_>, props: &std::collections::HashMap<std
 
 fn write_labels(f: &mut fmt::Formatter<'_>, labels: &[std::string::String]) -> fmt::Result {
     for (i, label) in labels.iter().enumerate() {
-        if i > 0 { write!(f, ":")?; }
+        if i > 0 {
+            write!(f, ":")?;
+        }
         write!(f, "{label}")?;
     }
     Ok(())
@@ -382,10 +413,13 @@ fn write_offset(f: &mut fmt::Formatter<'_>, offset_minutes: i32) -> fmt::Result 
 /// Hex-encode a byte slice (lowercase, no prefix).
 fn hex_encode(bytes: &[u8]) -> std::string::String {
     use std::fmt::Write;
-    bytes.iter().fold(std::string::String::with_capacity(bytes.len() * 2), |mut s, b| {
-        let _ = write!(s, "{b:02x}");
-        s
-    })
+    bytes.iter().fold(
+        std::string::String::with_capacity(bytes.len() * 2),
+        |mut s, b| {
+            let _ = write!(s, "{b:02x}");
+            s
+        },
+    )
 }
 
 #[cfg(test)]
@@ -526,7 +560,12 @@ mod tests {
         use super::{Date, LocalTime};
 
         assert_eq!(
-            Value::Date(Date { year: 2026, month: 2, day: 14 }).to_string(),
+            Value::Date(Date {
+                year: 2026,
+                month: 2,
+                day: 14
+            })
+            .to_string(),
             "2026-02-14"
         );
         assert_eq!(

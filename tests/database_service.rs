@@ -25,8 +25,7 @@ async fn start_server() -> SocketAddr {
             sessions.clone(),
             transactions.clone(),
         );
-        let gql_svc =
-            GqlServiceImpl::new(std::sync::Arc::clone(&backend), sessions, transactions);
+        let gql_svc = GqlServiceImpl::new(std::sync::Arc::clone(&backend), sessions, transactions);
         let db_svc = DatabaseServiceImpl::new(std::sync::Arc::clone(&backend));
 
         let incoming = tokio_stream::wrappers::TcpListenerStream::new(listener);
@@ -194,10 +193,7 @@ async fn delete_default_database_fails() {
         .await;
 
     assert!(result.is_err());
-    assert_eq!(
-        result.unwrap_err().code(),
-        tonic::Code::InvalidArgument
-    );
+    assert_eq!(result.unwrap_err().code(), tonic::Code::InvalidArgument);
 }
 
 #[tokio::test]

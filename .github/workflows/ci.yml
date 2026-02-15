@@ -10,13 +10,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    name: Pre-commit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: j178/prek-action@v1
-
   rust:
     name: Rust
     runs-on: ubuntu-latest

@@ -73,7 +73,7 @@ impl GqlSession {
                 session_id: self.session_id.clone(),
                 statement: statement.to_owned(),
                 parameters: proto_params,
-                transaction_id: String::new(),
+                transaction_id: None,
             })
             .await?
             .into_inner();

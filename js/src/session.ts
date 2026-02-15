@@ -68,7 +68,6 @@ export class GqlSession {
       sessionId: this._sessionId,
       statement,
       parameters: protoParams,
-      transactionId: "",
     });
 
     return new ResultCursor(stream);

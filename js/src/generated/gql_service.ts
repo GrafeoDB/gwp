@@ -225,8 +225,8 @@ export interface ExecuteRequest {
   sessionId: string;
   statement: string;
   parameters: { [key: string]: Value };
-  /** Empty for auto-commit */
-  transactionId: string;
+  /** Omit for auto-commit */
+  transactionId?: string | undefined;
 }
 
 export interface ExecuteRequest_ParametersEntry {
@@ -1503,7 +1503,7 @@ export const PongResponse: MessageFns<PongResponse> = {
 };
 
 function createBaseExecuteRequest(): ExecuteRequest {
-  return { sessionId: "", statement: "", parameters: {}, transactionId: "" };
+  return { sessionId: "", statement: "", parameters: {}, transactionId: undefined };
 }
 
 export const ExecuteRequest: MessageFns<ExecuteRequest> = {
@@ -1517,7 +1517,7 @@ export const ExecuteRequest: MessageFns<ExecuteRequest> = {
     globalThis.Object.entries(message.parameters).forEach(([key, value]: [string, Value]) => {
       ExecuteRequest_ParametersEntry.encode({ key: key as any, value }, writer.uint32(26).fork()).join();
     });
-    if (message.transactionId !== "") {
+    if (message.transactionId !== undefined) {
       writer.uint32(34).string(message.transactionId);
     }
     return writer;
@@ -1595,7 +1595,7 @@ export const ExecuteRequest: MessageFns<ExecuteRequest> = {
         ? globalThis.String(object.transactionId)
         : isSet(object.transaction_id)
         ? globalThis.String(object.transaction_id)
-        : "",
+        : undefined,
     };
   },
 
@@ -1616,7 +1616,7 @@ export const ExecuteRequest: MessageFns<ExecuteRequest> = {
         });
       }
     }
-    if (message.transactionId !== "") {
+    if (message.transactionId !== undefined) {
       obj.transactionId = message.transactionId;
     }
     return obj;
@@ -1638,7 +1638,7 @@ export const ExecuteRequest: MessageFns<ExecuteRequest> = {
       },
       {},
     );
-    message.transactionId = object.transactionId ?? "";
+    message.transactionId = object.transactionId ?? undefined;
     return message;
   },
 };
@@ -3818,7 +3818,6 @@ export interface SessionServiceServer extends UntypedServiceImplementation {
   ping: handleUnaryCall<PingRequest, PongResponse>;
 }
 
-// @ts-expect-error - `close` RPC conflicts with grpc Client.close()
 export interface SessionServiceClient extends Client {
   /** Establish a session. Negotiates protocol version and authenticates. */
   handshake(

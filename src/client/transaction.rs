@@ -88,7 +88,7 @@ impl Transaction {
                 session_id: self.session_id.clone(),
                 statement: statement.to_owned(),
                 parameters: proto_params,
-                transaction_id: self.id.clone(),
+                transaction_id: Some(self.id.clone()),
             })
             .await?
             .into_inner();

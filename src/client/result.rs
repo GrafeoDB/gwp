@@ -1,5 +1,7 @@
 //! Result cursor for iterating over streaming query results.
 
+use std::collections::VecDeque;
+
 use crate::error::GqlError;
 use crate::proto;
 use crate::status;
@@ -12,7 +14,7 @@ pub struct ResultCursor {
     stream: tonic::Streaming<proto::ExecuteResponse>,
     header: Option<proto::ResultHeader>,
     summary: Option<proto::ResultSummary>,
-    buffered_rows: Vec<Vec<Value>>,
+    buffered_rows: VecDeque<Vec<Value>>,
     done: bool,
 }
 
@@ -22,7 +24,7 @@ impl ResultCursor {
             stream,
             header: None,
             summary: None,
-            buffered_rows: Vec::new(),
+            buffered_rows: VecDeque::new(),
             done: false,
         }
     }
@@ -67,8 +69,8 @@ impl ResultCursor {
     /// Returns a transport error if the gRPC stream fails.
     pub async fn next_row(&mut self) -> Result<Option<Vec<Value>>, GqlError> {
         // Drain buffered rows first
-        if !self.buffered_rows.is_empty() {
-            return Ok(Some(self.buffered_rows.remove(0)));
+        if let Some(row) = self.buffered_rows.pop_front() {
+            return Ok(Some(row));
         }
 
         if self.done {
@@ -83,19 +85,16 @@ impl ResultCursor {
                         self.header = Some(h);
                     }
                     Some(proto::execute_response::Frame::RowBatch(batch)) => {
-                        let mut rows: Vec<Vec<Value>> = batch
+                        let mut rows: VecDeque<Vec<Value>> = batch
                             .rows
                             .into_iter()
                             .map(|r| r.values.into_iter().map(Value::from).collect())
                             .collect();
 
-                        if rows.is_empty() {
-                            continue;
+                        if let Some(first) = rows.pop_front() {
+                            self.buffered_rows = rows;
+                            return Ok(Some(first));
                         }
-
-                        let first = rows.remove(0);
-                        self.buffered_rows = rows;
-                        return Ok(Some(first));
                     }
                     Some(proto::execute_response::Frame::Summary(s)) => {
                         self.summary = Some(s);
@@ -180,7 +179,7 @@ impl ResultCursor {
                         return Ok(());
                     }
                     Some(proto::execute_response::Frame::RowBatch(batch)) => {
-                        let rows: Vec<Vec<Value>> = batch
+                        let rows: VecDeque<Vec<Value>> = batch
                             .rows
                             .into_iter()
                             .map(|r| r.values.into_iter().map(Value::from).collect())

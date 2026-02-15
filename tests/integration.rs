@@ -172,7 +172,7 @@ async fn execute_query_streaming() {
             session_id: session_id.clone(),
             statement: "MATCH (p:Person) RETURN p.name, p.age".to_owned(),
             parameters: HashMap::new(),
-            transaction_id: String::new(),
+            transaction_id: None,
         })
         .await
         .unwrap()
@@ -222,7 +222,7 @@ async fn execute_ddl() {
             session_id: session_id.clone(),
             statement: "CREATE GRAPH my_graph".to_owned(),
             parameters: HashMap::new(),
-            transaction_id: String::new(),
+            transaction_id: None,
         })
         .await
         .unwrap()
@@ -260,7 +260,7 @@ async fn execute_error() {
             session_id: session_id.clone(),
             statement: "ERROR this should fail".to_owned(),
             parameters: HashMap::new(),
-            transaction_id: String::new(),
+            transaction_id: None,
         })
         .await
         .unwrap()
@@ -307,7 +307,7 @@ async fn transaction_lifecycle() {
             session_id: session_id.clone(),
             statement: "INSERT (:Person {name: 'Carol'})".to_owned(),
             parameters: HashMap::new(),
-            transaction_id: tx_id.clone(),
+            transaction_id: Some(tx_id.clone()),
         })
         .await
         .unwrap()
@@ -405,7 +405,7 @@ async fn invalid_session_returns_grpc_not_found() {
             session_id: "nonexistent".to_owned(),
             statement: "MATCH (n) RETURN n".to_owned(),
             parameters: HashMap::new(),
-            transaction_id: String::new(),
+            transaction_id: None,
         })
         .await;
 

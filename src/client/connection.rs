@@ -4,6 +4,7 @@ use tonic::transport::Channel;
 
 use crate::error::GqlError;
 
+use super::database::DatabaseClient;
 use super::GqlSession;
 
 /// A connection to a GQL wire protocol server.
@@ -53,6 +54,12 @@ impl GqlConnection {
     /// Returns an error if the handshake fails.
     pub async fn create_session(&self) -> Result<GqlSession, GqlError> {
         GqlSession::new(self.channel.clone()).await
+    }
+
+    /// Create a database management client.
+    #[must_use]
+    pub fn create_database_client(&self) -> DatabaseClient {
+        DatabaseClient::new(self.channel.clone())
     }
 
     /// Get the underlying tonic channel.

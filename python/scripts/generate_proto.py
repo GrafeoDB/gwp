@@ -19,7 +19,9 @@ def main():
     ]
 
     cmd = [
-        sys.executable, "-m", "grpc_tools.protoc",
+        sys.executable,
+        "-m",
+        "grpc_tools.protoc",
         f"--proto_path={PROTO_DIR}",
         f"--python_out={OUT_DIR}",
         f"--pyi_out={OUT_DIR}",
@@ -34,6 +36,7 @@ def main():
     # grpc_tools.protoc generates `import gql_types_pb2` but we need
     # `from . import gql_types_pb2` since the files live inside a package.
     import re
+
     for py_file in OUT_DIR.glob("*.py"):
         text = py_file.read_text()
         fixed = re.sub(

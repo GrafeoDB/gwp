@@ -92,9 +92,7 @@ class DatabaseClient:
 
     async def delete(self, name: str) -> str:
         """Delete a database by name. Returns the deleted database name."""
-        resp = await self._stub.DeleteDatabase(
-            gql_pb2.DeleteDatabaseRequest(name=name)
-        )
+        resp = await self._stub.DeleteDatabase(gql_pb2.DeleteDatabaseRequest(name=name))
         return resp.deleted
 
     async def get_info(self, name: str) -> DatabaseInfo:

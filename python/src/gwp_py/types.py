@@ -10,6 +10,7 @@ from typing import Any
 @dataclass(frozen=True)
 class GqlDate:
     """A GQL date value."""
+
     year: int
     month: int
     day: int
@@ -22,6 +23,7 @@ class GqlDate:
 @dataclass(frozen=True)
 class GqlLocalTime:
     """A GQL local time value (no timezone)."""
+
     hour: int
     minute: int
     second: int
@@ -29,12 +31,15 @@ class GqlLocalTime:
 
     def to_time(self) -> datetime.time:
         """Convert to a Python time (microsecond precision)."""
-        return datetime.time(self.hour, self.minute, self.second, self.nanosecond // 1000)
+        return datetime.time(
+            self.hour, self.minute, self.second, self.nanosecond // 1000
+        )
 
 
 @dataclass(frozen=True)
 class GqlZonedTime:
     """A GQL time value with timezone offset."""
+
     time: GqlLocalTime
     offset_minutes: int
 
@@ -47,6 +52,7 @@ class GqlZonedTime:
 @dataclass(frozen=True)
 class GqlLocalDateTime:
     """A GQL local datetime value (no timezone)."""
+
     date: GqlDate
     time: GqlLocalTime
 
@@ -58,6 +64,7 @@ class GqlLocalDateTime:
 @dataclass(frozen=True)
 class GqlZonedDateTime:
     """A GQL datetime value with timezone offset."""
+
     date: GqlDate
     time: GqlLocalTime
     offset_minutes: int
@@ -73,6 +80,7 @@ class GqlZonedDateTime:
 @dataclass(frozen=True)
 class GqlDuration:
     """A GQL duration value (months + nanoseconds)."""
+
     months: int
     nanoseconds: int
 
@@ -80,6 +88,7 @@ class GqlDuration:
 @dataclass(frozen=True)
 class Field:
     """A named field in a Record."""
+
     name: str
     value: Any
 
@@ -87,6 +96,7 @@ class Field:
 @dataclass(frozen=True)
 class Record:
     """An ordered collection of named fields."""
+
     fields: tuple[Field, ...] = ()
 
     def get(self, name: str) -> Any | None:
@@ -109,6 +119,7 @@ class Record:
 @dataclass(frozen=True)
 class Node:
     """A property graph node."""
+
     id: bytes
     labels: tuple[str, ...] = ()
     properties: dict[str, Any] = field(default_factory=dict)
@@ -124,6 +135,7 @@ class Node:
 @dataclass(frozen=True)
 class Edge:
     """A property graph edge."""
+
     id: bytes
     labels: tuple[str, ...] = ()
     source_node_id: bytes = b""
@@ -142,6 +154,7 @@ class Edge:
 @dataclass(frozen=True)
 class Path:
     """A path through a property graph."""
+
     nodes: tuple[Node, ...] = ()
     edges: tuple[Edge, ...] = ()
 

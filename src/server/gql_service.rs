@@ -40,9 +40,10 @@ impl<B: GqlBackend> GqlServiceImpl<B> {
         }
     }
 
-    /// Validate a session exists, returning a gRPC error if not.
+    /// Validate a session exists and update its activity timestamp.
     async fn validate_session(&self, session_id: &str) -> Result<(), Status> {
         if self.sessions.exists(session_id).await {
+            self.sessions.touch(session_id).await;
             Ok(())
         } else {
             Err(Status::not_found(format!("session {session_id} not found")))

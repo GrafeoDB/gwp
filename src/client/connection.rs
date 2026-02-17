@@ -62,6 +62,28 @@ impl GqlConnection {
         DatabaseClient::new(self.channel.clone())
     }
 
+    /// Connect to a GQL server with TLS.
+    ///
+    /// Requires the `tls` feature to be enabled.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the connection cannot be established.
+    #[cfg(feature = "tls")]
+    pub async fn connect_tls(
+        endpoint: &str,
+        tls_config: tonic::transport::ClientTlsConfig,
+    ) -> Result<Self, GqlError> {
+        let channel = Channel::from_shared(endpoint.to_owned())
+            .map_err(|e| GqlError::Protocol(e.to_string()))?
+            .tls_config(tls_config)
+            .map_err(|e| GqlError::Protocol(e.to_string()))?
+            .connect()
+            .await?;
+
+        Ok(Self { channel })
+    }
+
     /// Get the underlying tonic channel.
     #[must_use]
     pub fn channel(&self) -> &Channel {

@@ -3818,6 +3818,7 @@ export interface SessionServiceServer extends UntypedServiceImplementation {
   ping: handleUnaryCall<PingRequest, PongResponse>;
 }
 
+// @ts-expect-error SessionService.close() conflicts with grpc.Client.close()
 export interface SessionServiceClient extends Client {
   /** Establish a session. Negotiates protocol version and authenticates. */
   handshake(

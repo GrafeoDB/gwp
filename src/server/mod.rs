@@ -3,6 +3,7 @@
 //! Provides the `SessionService` and `GqlService` implementations,
 //! session/transaction state management, and the pluggable `GqlBackend` trait.
 
+mod auth;
 mod backend;
 pub mod builder;
 mod database_service;
@@ -12,6 +13,7 @@ mod session_manager;
 mod session_service;
 mod transaction_manager;
 
+pub use auth::AuthValidator;
 pub use backend::{
     CreateDatabaseConfig, DatabaseInfo, GqlBackend, ResetTarget, ResultFrame, ResultStream,
     SessionConfig, SessionHandle, SessionProperty, TransactionHandle,

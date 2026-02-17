@@ -26,6 +26,7 @@ async fn start_server() -> SocketAddr {
             std::sync::Arc::clone(&backend),
             sessions.clone(),
             transactions.clone(),
+            None,
         );
         let gql_svc = GqlServiceImpl::new(backend, sessions, transactions);
 

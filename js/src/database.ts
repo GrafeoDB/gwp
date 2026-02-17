@@ -59,7 +59,7 @@ export class DatabaseClient {
       databaseType: config.databaseType ?? "Lpg",
       storageMode: config.storageMode ?? "InMemory",
       options: {
-        memoryLimitBytes: config.memoryLimitBytes,
+        memoryLimitBytes: config.memoryLimitBytes != null ? BigInt(config.memoryLimitBytes) : undefined,
         backwardEdges: config.backwardEdges,
         threads: config.threads,
         walEnabled: config.walEnabled,

@@ -4,11 +4,12 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use tokio::sync::RwLock;
+use tokio::time::Instant;
 
 use super::SessionProperty;
 
 /// Tracks the mutable state for a single session.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct SessionState {
     /// Current schema.
     pub schema: Option<String>,
@@ -20,27 +21,65 @@ pub struct SessionState {
     pub parameters: HashMap<String, crate::types::Value>,
     /// Active transaction ID, if any.
     pub active_transaction: Option<String>,
+    /// Timestamp of last activity for idle detection.
+    pub last_activity: Instant,
+}
+
+impl Default for SessionState {
+    fn default() -> Self {
+        Self {
+            schema: None,
+            graph: None,
+            time_zone_offset_minutes: 0,
+            parameters: HashMap::new(),
+            active_transaction: None,
+            last_activity: Instant::now(),
+        }
+    }
 }
 
 /// Manages session state for all active sessions.
 #[derive(Debug, Clone)]
 pub struct SessionManager {
     sessions: Arc<RwLock<HashMap<String, SessionState>>>,
+    max_sessions: Option<usize>,
 }
 
 impl SessionManager {
-    /// Create a new session manager.
+    /// Create a new session manager with no capacity limit.
     #[must_use]
     pub fn new() -> Self {
         Self {
             sessions: Arc::new(RwLock::new(HashMap::new())),
+            max_sessions: None,
+        }
+    }
+
+    /// Create a session manager with a maximum number of concurrent sessions.
+    #[must_use]
+    pub fn with_capacity(max_sessions: usize) -> Self {
+        Self {
+            sessions: Arc::new(RwLock::new(HashMap::new())),
+            max_sessions: Some(max_sessions),
         }
     }
 
     /// Register a new session.
-    pub async fn register(&self, session_id: &str) {
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session limit has been reached.
+    pub async fn register(&self, session_id: &str) -> Result<(), crate::error::GqlError> {
         let mut sessions = self.sessions.write().await;
+        if let Some(max) = self.max_sessions {
+            if sessions.len() >= max {
+                return Err(crate::error::GqlError::Session(
+                    "session limit reached".to_owned(),
+                ));
+            }
+        }
         sessions.insert(session_id.to_owned(), SessionState::default());
+        Ok(())
     }
 
     /// Remove a session.
@@ -53,6 +92,30 @@ impl SessionManager {
     pub async fn exists(&self, session_id: &str) -> bool {
         let sessions = self.sessions.read().await;
         sessions.contains_key(session_id)
+    }
+
+    /// Update the last-activity timestamp for a session.
+    pub async fn touch(&self, session_id: &str) {
+        if let Some(state) = self.sessions.write().await.get_mut(session_id) {
+            state.last_activity = Instant::now();
+        }
+    }
+
+    /// Remove sessions that have been idle longer than `max_idle`.
+    ///
+    /// Returns the IDs of reaped sessions.
+    pub async fn reap_idle(&self, max_idle: std::time::Duration) -> Vec<String> {
+        let mut sessions = self.sessions.write().await;
+        let now = Instant::now();
+        let expired: Vec<String> = sessions
+            .iter()
+            .filter(|(_, s)| now.duration_since(s.last_activity) > max_idle)
+            .map(|(id, _)| id.clone())
+            .collect();
+        for id in &expired {
+            sessions.remove(id);
+        }
+        expired
     }
 
     /// Apply a session property.

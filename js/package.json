@@ -1,6 +1,6 @@
 {
   "name": "gwp-js",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "JavaScript/TypeScript client for the GQL Wire Protocol (GWP)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

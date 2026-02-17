@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.3 2026-02-17
+## 0.1.4 2026-02-17
 
 - **Feature**: `GqlServer` builder pattern with `.tls()`, `.auth()`, `.idle_timeout()`, `.max_sessions()`
 - **Feature**: Optional TLS via `tls` feature flag (rustls)

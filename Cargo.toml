@@ -1,6 +1,6 @@
 [package]
 name = "gwp"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2024"
 rust-version = "1.85.0"
 description = "A standalone, pure Rust gRPC wire protocol for GQL (ISO/IEC 39075)"

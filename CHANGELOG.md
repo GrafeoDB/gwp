@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.3 2026-02-17
+
+- **Feature**: `GqlServer` builder pattern with `.tls()`, `.auth()`, `.idle_timeout()`, `.max_sessions()`
+- **Feature**: Optional TLS via `tls` feature flag (rustls)
+- **Feature**: `AuthValidator` trait for pluggable handshake credential checks
+- **Feature**: Idle session reaper with configurable timeout
+- **Feature**: Configurable max concurrent sessions (`RESOURCE_EXHAUSTED` on limit)
+- **Feature**: `GqlConnection::connect_tls()` on the client
+- **Infra**: `publish.yml` workflow for crates.io, npm, and Maven Central
+
 ## 0.1.2 2026-02-15
 
 - **Breaking (proto)**: `ExecuteRequest.transaction_id` changed from `string` to `optional string`

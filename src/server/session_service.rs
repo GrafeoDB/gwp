@@ -10,6 +10,7 @@ use tonic::{Request, Response, Status};
 use crate::proto;
 use crate::proto::session_service_server::SessionService;
 
+use super::auth::AuthValidator;
 use super::backend::{GqlBackend, ResetTarget, SessionConfig, SessionProperty};
 use super::{SessionManager, TransactionManager};
 
@@ -18,6 +19,7 @@ pub struct SessionServiceImpl<B: GqlBackend> {
     backend: Arc<B>,
     sessions: SessionManager,
     transactions: TransactionManager,
+    auth: Option<Arc<dyn AuthValidator>>,
 }
 
 impl<B: GqlBackend> SessionServiceImpl<B> {
@@ -26,11 +28,13 @@ impl<B: GqlBackend> SessionServiceImpl<B> {
         backend: Arc<B>,
         sessions: SessionManager,
         transactions: TransactionManager,
+        auth: Option<Arc<dyn AuthValidator>>,
     ) -> Self {
         Self {
             backend,
             sessions,
             transactions,
+            auth,
         }
     }
 }
@@ -43,6 +47,17 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
     ) -> Result<Response<proto::HandshakeResponse>, Status> {
         let req = request.into_inner();
 
+        if let Some(ref auth) = self.auth {
+            match req.credentials {
+                Some(ref creds) => {
+                    auth.validate(creds)
+                        .await
+                        .map_err(|_| Status::unauthenticated("invalid credentials"))?;
+                }
+                None => return Err(Status::unauthenticated("credentials required")),
+            }
+        }
+
         let config = SessionConfig {
             protocol_version: req.protocol_version,
             client_info: req.client_info,
@@ -54,7 +69,10 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
             .await
             .map_err(|e| e.to_grpc_status())?;
 
-        self.sessions.register(&handle.0).await;
+        if let Err(e) = self.sessions.register(&handle.0).await {
+            let _ = self.backend.close_session(&handle).await;
+            return Err(Status::resource_exhausted(e.to_string()));
+        }
 
         Ok(Response::new(proto::HandshakeResponse {
             protocol_version: 1,
@@ -78,6 +96,7 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
         if !self.sessions.exists(session_id).await {
             return Err(Status::not_found(format!("session {session_id} not found")));
         }
+        self.sessions.touch(session_id).await;
 
         let property = match req.property {
             Some(proto::configure_request::Property::Schema(s)) => SessionProperty::Schema(s),
@@ -117,6 +136,7 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
         if !self.sessions.exists(session_id).await {
             return Err(Status::not_found(format!("session {session_id} not found")));
         }
+        self.sessions.touch(session_id).await;
 
         let target = match proto::ResetTarget::try_from(req.target) {
             Ok(proto::ResetTarget::ResetAll) => ResetTarget::All,
@@ -185,6 +205,7 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
                 req.session_id
             )));
         }
+        self.sessions.touch(&req.session_id).await;
 
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)

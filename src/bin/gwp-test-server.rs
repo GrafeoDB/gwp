@@ -21,7 +21,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let backend = MockBackend::new();
 
     eprintln!("GWP test server listening on {addr}");
-    GqlServer::serve(backend, addr).await?;
+    GqlServer::start(backend, addr).await?;
 
     Ok(())
 }

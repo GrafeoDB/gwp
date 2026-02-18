@@ -63,9 +63,14 @@ impl<B: GqlBackend> GqlService for GqlServiceImpl<B> {
         let req = request.into_inner();
         let span = tracing::Span::current();
         span.record("session_id", &req.session_id);
-        span.record("statement", tracing::field::display(
-            if req.statement.len() > 100 { &req.statement[..100] } else { &req.statement }
-        ));
+        span.record(
+            "statement",
+            tracing::field::display(if req.statement.len() > 100 {
+                &req.statement[..100]
+            } else {
+                &req.statement
+            }),
+        );
 
         self.validate_session(&req.session_id).await?;
 

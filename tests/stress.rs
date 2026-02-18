@@ -23,10 +23,7 @@ use gwp::server::{CreateDatabaseConfig, GqlServer};
 // ---------------------------------------------------------------------------
 
 /// Spin up a server with optional `max_sessions` and `idle_timeout`, return addr.
-async fn start_server(
-    max_sessions: Option<usize>,
-    idle_timeout: Option<Duration>,
-) -> SocketAddr {
+async fn start_server(max_sessions: Option<usize>, idle_timeout: Option<Duration>) -> SocketAddr {
     let backend = MockBackend::new();
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
@@ -47,9 +44,7 @@ async fn start_server(
 }
 
 /// Create a handshake via raw gRPC and return (client, `session_id`).
-async fn handshake(
-    addr: SocketAddr,
-) -> (SessionServiceClient<Channel>, String) {
+async fn handshake(addr: SocketAddr) -> (SessionServiceClient<Channel>, String) {
     let channel = Channel::from_shared(format!("http://{addr}"))
         .unwrap()
         .connect()
@@ -124,7 +119,9 @@ async fn stress_session_limit() {
         Err(e) => {
             let err_msg = format!("{e}");
             assert!(
-                err_msg.contains("RESOURCE_EXHAUSTED") || err_msg.contains("resource") || err_msg.contains("capacity"),
+                err_msg.contains("RESOURCE_EXHAUSTED")
+                    || err_msg.contains("resource")
+                    || err_msg.contains("capacity"),
                 "error should be RESOURCE_EXHAUSTED, got: {err_msg}"
             );
         }
@@ -345,10 +342,7 @@ async fn stress_query_flood_parallel_sessions() {
 
             for i in 0..100 {
                 let mut cursor = session
-                    .execute(
-                        &format!("MATCH (n) RETURN n /* {i} */"),
-                        HashMap::new(),
-                    )
+                    .execute(&format!("MATCH (n) RETURN n /* {i} */"), HashMap::new())
                     .await
                     .unwrap();
                 let _rows = cursor.collect_rows().await.unwrap();
@@ -382,14 +376,8 @@ async fn stress_config_churn() {
     let mut session = conn.create_session().await.unwrap();
 
     for i in 0..200i32 {
-        session
-            .set_graph(&format!("graph_{i}"))
-            .await
-            .unwrap();
-        session
-            .set_schema(&format!("schema_{i}"))
-            .await
-            .unwrap();
+        session.set_graph(&format!("graph_{i}")).await.unwrap();
+        session.set_schema(&format!("schema_{i}")).await.unwrap();
         session.set_time_zone(i % 1440 - 720).await.unwrap();
     }
 

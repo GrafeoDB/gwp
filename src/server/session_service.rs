@@ -50,12 +50,10 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
 
         if let Some(ref auth) = self.auth {
             if let Some(ref creds) = req.credentials {
-                auth.validate(creds)
-                    .await
-                    .map_err(|_| {
-                        tracing::warn!("authentication failed");
-                        Status::unauthenticated("invalid credentials")
-                    })?;
+                auth.validate(creds).await.map_err(|_| {
+                    tracing::warn!("authentication failed");
+                    Status::unauthenticated("invalid credentials")
+                })?;
             } else {
                 tracing::warn!("handshake missing credentials");
                 return Err(Status::unauthenticated("credentials required"));

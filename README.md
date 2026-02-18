@@ -6,11 +6,16 @@ Any GQL-compatible database engine can plug in via the `GqlBackend` trait. GWP h
 
 ## Features
 
-- **Spec-faithful** - Full GQL type system, GQLSTATUS codes, session/transaction semantics
-- **Pure Rust** - No C/C++ dependencies, `#![forbid(unsafe_code)]`
-- **Lightweight** - Minimal deps: tonic, prost, tokio
-- **Fast** - Streaming results via server-side gRPC streaming
-- **Embeddable** - Library-first design, usable by any Rust project
+- **Spec-faithful:** Full GQL type system, GQLSTATUS codes, session/transaction semantics
+- **Pure Rust:** No C/C++ dependencies, `#![forbid(unsafe_code)]`
+- **Lightweight:** Minimal deps: tonic, prost, tokio
+- **Fast:** Streaming results via server-side gRPC streaming
+- **Embeddable:** Library-first design, usable by any Rust project
+- **TLS:** Optional TLS via `tls` feature flag (rustls)
+- **Auth:** Pluggable authentication via `AuthValidator` trait
+- **Health checks:** Standard `grpc.health.v1.Health` service
+- **Observability:** Structured tracing on all gRPC methods via `tracing` crate
+- **Graceful shutdown:** Drain connections on signal with `.shutdown()`
 
 ## Quick Start
 
@@ -57,17 +62,29 @@ impl GqlBackend for MyDatabase {
 
 ```rust
 use gwp::server::GqlServer;
+use std::time::Duration;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let backend = MyDatabase::new();
     let addr = "127.0.0.1:50051".parse()?;
 
-    println!("GQL server listening on {addr}");
-    GqlServer::serve(backend, addr).await?;
+    // Quick start with ctrl-c shutdown
+    GqlServer::start(backend, addr).await?;
 
     Ok(())
 }
+```
+
+Or use the builder for full control:
+
+```rust
+GqlServer::builder(backend)
+    .idle_timeout(Duration::from_secs(300))
+    .max_sessions(1000)
+    .shutdown(async { tokio::signal::ctrl_c().await.unwrap() })
+    .serve(addr)
+    .await?;
 ```
 
 ### Using the Client
@@ -99,8 +116,10 @@ Application (GQL statements, parameters, results)
        |
        v
   gRPC Services
-  - SessionService: handshake, configure, reset, close, ping
-  - GqlService:     execute, begin_transaction, commit, rollback
+  - SessionService:  handshake, configure, reset, close, ping
+  - GqlService:      execute, begin_transaction, commit, rollback
+  - DatabaseService: list, create, delete, get_info
+  - HealthService:   grpc.health.v1.Health (check, watch)
        |
        v
   Protocol Buffers (prost)
@@ -130,9 +149,20 @@ Application (GQL statements, parameters, results)
 | `proto` | Generated protobuf types and gRPC stubs |
 | `types` | Ergonomic Rust wrappers over proto types |
 | `server` | `GqlBackend` trait, session/transaction management, gRPC server |
-| `client` | `GqlConnection`, `GqlSession`, `ResultCursor`, `Transaction` |
+| `client` | `GqlConnection`, `GqlSession`, `ResultCursor`, `Transaction`, `DatabaseClient` |
 | `error` | `GqlError` enum |
 | `status` | GQLSTATUS code constants and helpers |
+
+## Client Bindings
+
+| Language | Package | Install |
+| ---------- | ------- | ------- |
+| Python | [gwp-py](https://pypi.org/project/gwp-py/) | `pip install gwp-py` |
+| JavaScript/TypeScript | [gwp-js](https://www.npmjs.com/package/gwp-js) | `npm install gwp-js` |
+| Go | `github.com/GrafeoDB/gwp/go` | `go get github.com/GrafeoDB/gwp/go` |
+| Java | `dev.grafeo:gwp` | Maven Central |
+
+All bindings include `GqlConnection`, `GqlSession`, `Transaction`, `ResultCursor`, and `DatabaseClient`.
 
 ## Requirements
 

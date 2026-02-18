@@ -51,6 +51,7 @@ fn map_error(err: GqlError) -> Status {
 
 #[tonic::async_trait]
 impl<B: GqlBackend> DatabaseService for DatabaseServiceImpl<B> {
+    #[tracing::instrument(skip(self, _request))]
     async fn list_databases(
         &self,
         _request: Request<proto::ListDatabasesRequest>,
@@ -64,11 +65,13 @@ impl<B: GqlBackend> DatabaseService for DatabaseServiceImpl<B> {
         }))
     }
 
+    #[tracing::instrument(skip(self, request), fields(db_name))]
     async fn create_database(
         &self,
         request: Request<proto::CreateDatabaseRequest>,
     ) -> Result<Response<proto::CreateDatabaseResponse>, Status> {
         let req = request.into_inner();
+        tracing::Span::current().record("db_name", &req.name);
 
         if req.name.is_empty() {
             return Err(Status::invalid_argument("database name is required"));
@@ -92,16 +95,20 @@ impl<B: GqlBackend> DatabaseService for DatabaseServiceImpl<B> {
             .await
             .map_err(map_error)?;
 
+        tracing::info!(db_name = %info.name, "database created");
+
         Ok(Response::new(proto::CreateDatabaseResponse {
             database: Some(to_summary(&info)),
         }))
     }
 
+    #[tracing::instrument(skip(self, request), fields(db_name))]
     async fn delete_database(
         &self,
         request: Request<proto::DeleteDatabaseRequest>,
     ) -> Result<Response<proto::DeleteDatabaseResponse>, Status> {
         let req = request.into_inner();
+        tracing::Span::current().record("db_name", &req.name);
 
         if req.name.is_empty() {
             return Err(Status::invalid_argument("database name is required"));
@@ -113,14 +120,18 @@ impl<B: GqlBackend> DatabaseService for DatabaseServiceImpl<B> {
             .await
             .map_err(map_error)?;
 
+        tracing::info!(db_name = %deleted, "database deleted");
+
         Ok(Response::new(proto::DeleteDatabaseResponse { deleted }))
     }
 
+    #[tracing::instrument(skip(self, request), fields(db_name))]
     async fn get_database_info(
         &self,
         request: Request<proto::GetDatabaseInfoRequest>,
     ) -> Result<Response<proto::GetDatabaseInfoResponse>, Status> {
         let req = request.into_inner();
+        tracing::Span::current().record("db_name", &req.name);
 
         if req.name.is_empty() {
             return Err(Status::invalid_argument("database name is required"));

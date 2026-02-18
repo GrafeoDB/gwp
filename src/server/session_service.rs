@@ -41,6 +41,7 @@ impl<B: GqlBackend> SessionServiceImpl<B> {
 
 #[tonic::async_trait]
 impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
+    #[tracing::instrument(skip(self, request))]
     async fn handshake(
         &self,
         request: Request<proto::HandshakeRequest>,
@@ -48,13 +49,16 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
         let req = request.into_inner();
 
         if let Some(ref auth) = self.auth {
-            match req.credentials {
-                Some(ref creds) => {
-                    auth.validate(creds)
-                        .await
-                        .map_err(|_| Status::unauthenticated("invalid credentials"))?;
-                }
-                None => return Err(Status::unauthenticated("credentials required")),
+            if let Some(ref creds) = req.credentials {
+                auth.validate(creds)
+                    .await
+                    .map_err(|_| {
+                        tracing::warn!("authentication failed");
+                        Status::unauthenticated("invalid credentials")
+                    })?;
+            } else {
+                tracing::warn!("handshake missing credentials");
+                return Err(Status::unauthenticated("credentials required"));
             }
         }
 
@@ -71,8 +75,11 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
 
         if let Err(e) = self.sessions.register(&handle.0).await {
             let _ = self.backend.close_session(&handle).await;
+            tracing::warn!("session limit reached");
             return Err(Status::resource_exhausted(e.to_string()));
         }
+
+        tracing::info!(session_id = %handle.0, "session created");
 
         Ok(Response::new(proto::HandshakeResponse {
             protocol_version: 1,
@@ -86,12 +93,14 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
         }))
     }
 
+    #[tracing::instrument(skip(self, request), fields(session_id))]
     async fn configure(
         &self,
         request: Request<proto::ConfigureRequest>,
     ) -> Result<Response<proto::ConfigureResponse>, Status> {
         let req = request.into_inner();
         let session_id = &req.session_id;
+        tracing::Span::current().record("session_id", session_id);
 
         if !self.sessions.exists(session_id).await {
             return Err(Status::not_found(format!("session {session_id} not found")));
@@ -126,12 +135,14 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
         Ok(Response::new(proto::ConfigureResponse {}))
     }
 
+    #[tracing::instrument(skip(self, request), fields(session_id))]
     async fn reset(
         &self,
         request: Request<proto::ResetRequest>,
     ) -> Result<Response<proto::ResetResponse>, Status> {
         let req = request.into_inner();
         let session_id = &req.session_id;
+        tracing::Span::current().record("session_id", session_id);
 
         if !self.sessions.exists(session_id).await {
             return Err(Status::not_found(format!("session {session_id} not found")));
@@ -160,12 +171,14 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
         Ok(Response::new(proto::ResetResponse {}))
     }
 
+    #[tracing::instrument(skip(self, request), fields(session_id))]
     async fn close(
         &self,
         request: Request<proto::CloseRequest>,
     ) -> Result<Response<proto::CloseResponse>, Status> {
         let req = request.into_inner();
         let session_id = &req.session_id;
+        tracing::Span::current().record("session_id", session_id);
 
         if !self.sessions.exists(session_id).await {
             return Err(Status::not_found(format!("session {session_id} not found")));
@@ -174,6 +187,7 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
         // Roll back any active transactions
         let active_txns = self.transactions.remove_for_session(session_id).await;
         for tx_id in &active_txns {
+            tracing::info!(session_id, transaction_id = %tx_id, "rolling back transaction on close");
             let _ = self
                 .backend
                 .rollback(
@@ -190,14 +204,18 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
 
         self.sessions.remove(session_id).await;
 
+        tracing::info!(session_id, "session closed");
+
         Ok(Response::new(proto::CloseResponse {}))
     }
 
+    #[tracing::instrument(skip(self, request), fields(session_id))]
     async fn ping(
         &self,
         request: Request<proto::PingRequest>,
     ) -> Result<Response<proto::PongResponse>, Status> {
         let req = request.into_inner();
+        tracing::Span::current().record("session_id", &req.session_id);
 
         if !self.sessions.exists(&req.session_id).await {
             return Err(Status::not_found(format!(

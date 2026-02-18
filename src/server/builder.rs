@@ -1,6 +1,8 @@
 //! Server builder for configuring and starting the gRPC server.
 
+use std::future::Future;
 use std::net::SocketAddr;
+use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -25,6 +27,7 @@ pub struct GqlServer<B: GqlBackend> {
     auth_validator: Option<Arc<dyn AuthValidator>>,
     idle_timeout: Option<Duration>,
     max_sessions: Option<usize>,
+    shutdown: Option<Pin<Box<dyn Future<Output = ()> + Send>>>,
 }
 
 impl<B: GqlBackend> GqlServer<B> {
@@ -38,6 +41,7 @@ impl<B: GqlBackend> GqlServer<B> {
             auth_validator: None,
             idle_timeout: None,
             max_sessions: None,
+            shutdown: None,
         }
     }
 
@@ -82,6 +86,17 @@ impl<B: GqlBackend> GqlServer<B> {
         self
     }
 
+    /// Set a shutdown signal.
+    ///
+    /// When the future completes, the server will stop accepting new
+    /// connections and drain in-flight requests before returning.
+    /// The idle session reaper is also stopped on shutdown.
+    #[must_use]
+    pub fn shutdown(mut self, signal: impl Future<Output = ()> + Send + 'static) -> Self {
+        self.shutdown = Some(Box::pin(signal));
+        self
+    }
+
     /// Build and start serving on the given address.
     ///
     /// # Errors
@@ -107,24 +122,49 @@ impl<B: GqlBackend> GqlServer<B> {
 
         let database_service = DatabaseServiceImpl::new(Arc::clone(&backend));
 
-        if let Some(timeout) = self.idle_timeout {
+        // Health check service
+        let (health_reporter, health_service) = tonic_health::server::health_reporter();
+        health_reporter
+            .set_serving::<SessionServiceServer<SessionServiceImpl<B>>>()
+            .await;
+        health_reporter
+            .set_serving::<GqlServiceServer<GqlServiceImpl<B>>>()
+            .await;
+        health_reporter
+            .set_serving::<DatabaseServiceServer<DatabaseServiceImpl<B>>>()
+            .await;
+
+        // Idle session reaper
+        let reaper_handle = if let Some(timeout) = self.idle_timeout {
             let reaper_sessions = sessions.clone();
             let reaper_transactions = transactions.clone();
             let reaper_backend = Arc::clone(&backend);
-            tokio::spawn(async move {
+            let token = tokio_util::sync::CancellationToken::new();
+            let reaper_token = token.clone();
+            let handle = tokio::spawn(async move {
                 let mut interval = tokio::time::interval(timeout / 2);
                 loop {
-                    interval.tick().await;
-                    let expired = reaper_sessions.reap_idle(timeout).await;
-                    for session_id in &expired {
-                        reaper_transactions.remove_for_session(session_id).await;
-                        let _ = reaper_backend
-                            .close_session(&SessionHandle(session_id.clone()))
-                            .await;
+                    tokio::select! {
+                        _ = interval.tick() => {
+                            let expired = reaper_sessions.reap_idle(timeout).await;
+                            for session_id in &expired {
+                                reaper_transactions.remove_for_session(session_id).await;
+                                let _ = reaper_backend
+                                    .close_session(&SessionHandle(session_id.clone()))
+                                    .await;
+                            }
+                        }
+                        () = reaper_token.cancelled() => {
+                            tracing::info!("session reaper stopped");
+                            break;
+                        }
                     }
                 }
             });
-        }
+            Some((handle, token))
+        } else {
+            None
+        };
 
         let mut server = Server::builder();
 
@@ -133,22 +173,51 @@ impl<B: GqlBackend> GqlServer<B> {
             server = server.tls_config(tls)?;
         }
 
-        server
+        let router = server
+            .add_service(health_service)
             .add_service(SessionServiceServer::new(session_service))
             .add_service(GqlServiceServer::new(gql_service))
-            .add_service(DatabaseServiceServer::new(database_service))
-            .serve(addr)
-            .await
+            .add_service(DatabaseServiceServer::new(database_service));
+
+        tracing::info!(%addr, "GWP server listening");
+
+        let result = if let Some(signal) = self.shutdown {
+            router.serve_with_shutdown(addr, signal).await
+        } else {
+            router.serve(addr).await
+        };
+
+        // Stop the reaper on shutdown
+        if let Some((handle, token)) = reaper_handle {
+            token.cancel();
+            let _ = handle.await;
+        }
+
+        tracing::info!("GWP server stopped");
+
+        result
     }
 
     /// Convenience method: build and serve with default settings.
     ///
-    /// Equivalent to `GqlServer::builder(backend).serve(addr)`.
+    /// Listens for Ctrl-C and shuts down gracefully.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the Ctrl-C signal handler cannot be installed.
     ///
     /// # Errors
     ///
     /// Returns an error if the server fails to bind or start.
     pub async fn start(backend: B, addr: SocketAddr) -> Result<(), tonic::transport::Error> {
-        Self::builder(backend).serve(addr).await
+        Self::builder(backend)
+            .shutdown(async {
+                tokio::signal::ctrl_c()
+                    .await
+                    .expect("failed to listen for ctrl-c");
+                tracing::info!("ctrl-c received, shutting down");
+            })
+            .serve(addr)
+            .await
     }
 }

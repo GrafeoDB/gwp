@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.4 2026-02-17
+## 0.1.4 2026-02-18
 
 - **Feature**: `GqlServer` builder pattern with `.tls()`, `.auth()`, `.idle_timeout()`, `.max_sessions()`
 - **Feature**: Optional TLS via `tls` feature flag (rustls)
@@ -8,7 +8,10 @@
 - **Feature**: Idle session reaper with configurable timeout
 - **Feature**: Configurable max concurrent sessions (`RESOURCE_EXHAUSTED` on limit)
 - **Feature**: `GqlConnection::connect_tls()` on the client
-- **Infra**: `publish.yml` workflow for crates.io, npm, and Maven Central
+- **Feature**: Structured tracing via `tracing` crate on all gRPC methods
+- **Feature**: Graceful shutdown with `.shutdown(signal)` builder method
+- **Feature**: gRPC health check service (`grpc.health.v1.Health`)
+- **Infra**: `publish.yml` workflow for crates.io (trusted publishing), npm, and Maven Central
 
 ## 0.1.2 2026-02-15
 

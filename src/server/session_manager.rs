@@ -79,13 +79,18 @@ impl SessionManager {
             }
         }
         sessions.insert(session_id.to_owned(), SessionState::default());
+        tracing::info!(session_id, "session registered");
         Ok(())
     }
 
     /// Remove a session.
     pub async fn remove(&self, session_id: &str) -> bool {
         let mut sessions = self.sessions.write().await;
-        sessions.remove(session_id).is_some()
+        let removed = sessions.remove(session_id).is_some();
+        if removed {
+            tracing::info!(session_id, "session removed");
+        }
+        removed
     }
 
     /// Check if a session exists.
@@ -114,6 +119,9 @@ impl SessionManager {
             .collect();
         for id in &expired {
             sessions.remove(id);
+        }
+        if !expired.is_empty() {
+            tracing::info!(count = expired.len(), "idle sessions reaped");
         }
         expired
     }

@@ -55,11 +55,18 @@ impl<B: GqlBackend> GqlServiceImpl<B> {
 impl<B: GqlBackend> GqlService for GqlServiceImpl<B> {
     type ExecuteStream = Pin<Box<dyn Stream<Item = Result<proto::ExecuteResponse, Status>> + Send>>;
 
+    #[tracing::instrument(skip(self, request), fields(session_id, statement))]
     async fn execute(
         &self,
         request: Request<proto::ExecuteRequest>,
     ) -> Result<Response<Self::ExecuteStream>, Status> {
         let req = request.into_inner();
+        let span = tracing::Span::current();
+        span.record("session_id", &req.session_id);
+        span.record("statement", tracing::field::display(
+            if req.statement.len() > 100 { &req.statement[..100] } else { &req.statement }
+        ));
+
         self.validate_session(&req.session_id).await?;
 
         let session = SessionHandle(req.session_id.clone());
@@ -91,6 +98,7 @@ impl<B: GqlBackend> GqlService for GqlServiceImpl<B> {
                 Ok(Response::new(Box::pin(output)))
             }
             Err(err) => {
+                tracing::warn!(error = %err, "execute failed");
                 // GQL errors go in the response payload, not gRPC status
                 let status = match err.gql_status() {
                     Some(s) => s.clone(),
@@ -113,11 +121,13 @@ impl<B: GqlBackend> GqlService for GqlServiceImpl<B> {
         }
     }
 
+    #[tracing::instrument(skip(self, request), fields(session_id))]
     async fn begin_transaction(
         &self,
         request: Request<proto::BeginRequest>,
     ) -> Result<Response<proto::BeginResponse>, Status> {
         let req = request.into_inner();
+        tracing::Span::current().record("session_id", &req.session_id);
         self.validate_session(&req.session_id).await?;
 
         let session = SessionHandle(req.session_id.clone());
@@ -135,6 +145,7 @@ impl<B: GqlBackend> GqlService for GqlServiceImpl<B> {
                 {
                     // Roll back the backend transaction if we can't register it
                     let _ = self.backend.rollback(&session, &handle).await;
+                    tracing::warn!(session_id = %req.session_id, "double begin rejected");
                     return Ok(Response::new(proto::BeginResponse {
                         transaction_id: String::new(),
                         status: Some(gql_status::error(
@@ -148,6 +159,8 @@ impl<B: GqlBackend> GqlService for GqlServiceImpl<B> {
                     .set_active_transaction(&req.session_id, Some(tx_id.clone()))
                     .await
                     .ok();
+
+                tracing::info!(session_id = %req.session_id, transaction_id = %tx_id, "transaction started");
 
                 Ok(Response::new(proto::BeginResponse {
                     transaction_id: tx_id,
@@ -167,11 +180,15 @@ impl<B: GqlBackend> GqlService for GqlServiceImpl<B> {
         }
     }
 
+    #[tracing::instrument(skip(self, request), fields(session_id, transaction_id))]
     async fn commit(
         &self,
         request: Request<proto::CommitRequest>,
     ) -> Result<Response<proto::CommitResponse>, Status> {
         let req = request.into_inner();
+        let span = tracing::Span::current();
+        span.record("session_id", &req.session_id);
+        span.record("transaction_id", &req.transaction_id);
         self.validate_session(&req.session_id).await?;
 
         if let Err(e) = self
@@ -198,11 +215,14 @@ impl<B: GqlBackend> GqlService for GqlServiceImpl<B> {
                     .await
                     .ok();
 
+                tracing::info!("transaction committed");
+
                 Ok(Response::new(proto::CommitResponse {
                     status: Some(gql_status::success()),
                 }))
             }
             Err(err) => {
+                tracing::warn!(error = %err, "commit failed");
                 let status = match err.gql_status() {
                     Some(s) => s.clone(),
                     None => gql_status::error(gql_status::TRANSACTION_ROLLBACK, err.to_string()),
@@ -214,11 +234,15 @@ impl<B: GqlBackend> GqlService for GqlServiceImpl<B> {
         }
     }
 
+    #[tracing::instrument(skip(self, request), fields(session_id, transaction_id))]
     async fn rollback(
         &self,
         request: Request<proto::RollbackRequest>,
     ) -> Result<Response<proto::RollbackResponse>, Status> {
         let req = request.into_inner();
+        let span = tracing::Span::current();
+        span.record("session_id", &req.session_id);
+        span.record("transaction_id", &req.transaction_id);
         self.validate_session(&req.session_id).await?;
 
         if let Err(e) = self
@@ -245,11 +269,14 @@ impl<B: GqlBackend> GqlService for GqlServiceImpl<B> {
                     .await
                     .ok();
 
+                tracing::info!("transaction rolled back");
+
                 Ok(Response::new(proto::RollbackResponse {
                     status: Some(gql_status::success()),
                 }))
             }
             Err(err) => {
+                tracing::warn!(error = %err, "rollback failed");
                 let status = match err.gql_status() {
                     Some(s) => s.clone(),
                     None => gql_status::error(gql_status::TRANSACTION_ROLLBACK, err.to_string()),

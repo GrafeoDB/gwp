@@ -284,26 +284,17 @@ pub trait GqlBackend: Send + Sync + 'static {
     // =========================================================================
 
     /// Vector similarity search (KNN).
-    async fn vector_search(
-        &self,
-        _req: VectorSearchParams,
-    ) -> Result<Vec<SearchHit>, GqlError> {
+    async fn vector_search(&self, _req: VectorSearchParams) -> Result<Vec<SearchHit>, GqlError> {
         Err(GqlError::Protocol("search not supported".into()))
     }
 
     /// Full-text search (BM25).
-    async fn text_search(
-        &self,
-        _req: TextSearchParams,
-    ) -> Result<Vec<SearchHit>, GqlError> {
+    async fn text_search(&self, _req: TextSearchParams) -> Result<Vec<SearchHit>, GqlError> {
         Err(GqlError::Protocol("search not supported".into()))
     }
 
     /// Hybrid search (vector + text with rank fusion).
-    async fn hybrid_search(
-        &self,
-        _req: HybridSearchParams,
-    ) -> Result<Vec<SearchHit>, GqlError> {
+    async fn hybrid_search(&self, _req: HybridSearchParams) -> Result<Vec<SearchHit>, GqlError> {
         Err(GqlError::Protocol("search not supported".into()))
     }
 }

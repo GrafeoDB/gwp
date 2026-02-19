@@ -165,16 +165,14 @@ impl<B: GqlBackend> AdminService for AdminServiceImpl<B> {
                     property: def.property,
                 }
             }
-            Some(proto::create_index_request::Index::VectorIndex(def)) => {
-                IndexDefinition::Vector {
-                    label: def.label,
-                    property: def.property,
-                    dimensions: def.dimensions,
-                    metric: def.metric,
-                    m: def.m,
-                    ef_construction: def.ef_construction,
-                }
-            }
+            Some(proto::create_index_request::Index::VectorIndex(def)) => IndexDefinition::Vector {
+                label: def.label,
+                property: def.property,
+                dimensions: def.dimensions,
+                metric: def.metric,
+                m: def.m,
+                ef_construction: def.ef_construction,
+            },
             Some(proto::create_index_request::Index::TextIndex(def)) => IndexDefinition::Text {
                 label: def.label,
                 property: def.property,
@@ -212,16 +210,14 @@ impl<B: GqlBackend> AdminService for AdminServiceImpl<B> {
                     property: def.property,
                 }
             }
-            Some(proto::drop_index_request::Index::VectorIndex(def)) => {
-                IndexDefinition::Vector {
-                    label: def.label,
-                    property: def.property,
-                    dimensions: None,
-                    metric: None,
-                    m: None,
-                    ef_construction: None,
-                }
-            }
+            Some(proto::drop_index_request::Index::VectorIndex(def)) => IndexDefinition::Vector {
+                label: def.label,
+                property: def.property,
+                dimensions: None,
+                metric: None,
+                m: None,
+                ef_construction: None,
+            },
             Some(proto::drop_index_request::Index::TextIndex(def)) => IndexDefinition::Text {
                 label: def.label,
                 property: def.property,

@@ -45,9 +45,7 @@ fn map_error(err: GqlError) -> Status {
         GqlError::Session(ref msg) if msg.contains("already exists") => {
             Status::already_exists(msg.clone())
         }
-        GqlError::Session(ref msg) if msg.contains("not found") => {
-            Status::not_found(msg.clone())
-        }
+        GqlError::Session(ref msg) if msg.contains("not found") => Status::not_found(msg.clone()),
         GqlError::Session(msg) => Status::invalid_argument(msg),
         other => other.to_optional_service_status(),
     }

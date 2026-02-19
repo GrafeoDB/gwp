@@ -244,4 +244,234 @@ pub trait GqlBackend: Send + Sync + 'static {
             "database management not supported".into(),
         ))
     }
+
+    // =========================================================================
+    // Admin operations (optional)
+    // =========================================================================
+
+    /// Get detailed database statistics.
+    async fn get_database_stats(&self, _name: &str) -> Result<AdminStats, GqlError> {
+        Err(GqlError::Protocol("admin not supported".into()))
+    }
+
+    /// Get WAL status for a database.
+    async fn wal_status(&self, _name: &str) -> Result<AdminWalStatus, GqlError> {
+        Err(GqlError::Protocol("admin not supported".into()))
+    }
+
+    /// Force a WAL checkpoint on a database.
+    async fn wal_checkpoint(&self, _name: &str) -> Result<(), GqlError> {
+        Err(GqlError::Protocol("admin not supported".into()))
+    }
+
+    /// Validate database integrity.
+    async fn validate(&self, _name: &str) -> Result<AdminValidationResult, GqlError> {
+        Err(GqlError::Protocol("admin not supported".into()))
+    }
+
+    /// Create an index on a database.
+    async fn create_index(&self, _name: &str, _index: IndexDefinition) -> Result<(), GqlError> {
+        Err(GqlError::Protocol("admin not supported".into()))
+    }
+
+    /// Drop an index from a database.
+    async fn drop_index(&self, _name: &str, _index: IndexDefinition) -> Result<bool, GqlError> {
+        Err(GqlError::Protocol("admin not supported".into()))
+    }
+
+    // =========================================================================
+    // Search operations (optional)
+    // =========================================================================
+
+    /// Vector similarity search (KNN).
+    async fn vector_search(
+        &self,
+        _req: VectorSearchParams,
+    ) -> Result<Vec<SearchHit>, GqlError> {
+        Err(GqlError::Protocol("search not supported".into()))
+    }
+
+    /// Full-text search (BM25).
+    async fn text_search(
+        &self,
+        _req: TextSearchParams,
+    ) -> Result<Vec<SearchHit>, GqlError> {
+        Err(GqlError::Protocol("search not supported".into()))
+    }
+
+    /// Hybrid search (vector + text with rank fusion).
+    async fn hybrid_search(
+        &self,
+        _req: HybridSearchParams,
+    ) -> Result<Vec<SearchHit>, GqlError> {
+        Err(GqlError::Protocol("search not supported".into()))
+    }
+}
+
+// ============================================================================
+// Admin types
+// ============================================================================
+
+/// Detailed database statistics.
+#[derive(Debug, Clone)]
+pub struct AdminStats {
+    /// Number of nodes.
+    pub node_count: u64,
+    /// Number of edges.
+    pub edge_count: u64,
+    /// Number of distinct labels.
+    pub label_count: u64,
+    /// Number of distinct edge types.
+    pub edge_type_count: u64,
+    /// Number of distinct property keys.
+    pub property_key_count: u64,
+    /// Number of indexes.
+    pub index_count: u64,
+    /// Memory usage in bytes.
+    pub memory_bytes: u64,
+    /// Disk usage in bytes (if persistent).
+    pub disk_bytes: Option<u64>,
+}
+
+/// WAL status information.
+#[derive(Debug, Clone)]
+pub struct AdminWalStatus {
+    /// Whether WAL is enabled.
+    pub enabled: bool,
+    /// WAL file path.
+    pub path: Option<String>,
+    /// WAL size in bytes.
+    pub size_bytes: u64,
+    /// Number of WAL records.
+    pub record_count: u64,
+    /// Last checkpoint timestamp.
+    pub last_checkpoint: Option<u64>,
+    /// Current epoch.
+    pub current_epoch: u64,
+}
+
+/// Validation result.
+#[derive(Debug, Clone)]
+pub struct AdminValidationResult {
+    /// Whether validation passed (no errors).
+    pub valid: bool,
+    /// Validation errors.
+    pub errors: Vec<ValidationDiagnostic>,
+    /// Validation warnings.
+    pub warnings: Vec<ValidationDiagnostic>,
+}
+
+/// A single validation diagnostic (error or warning).
+#[derive(Debug, Clone)]
+pub struct ValidationDiagnostic {
+    /// Diagnostic code.
+    pub code: String,
+    /// Human-readable message.
+    pub message: String,
+    /// Optional context (e.g. the affected element or property).
+    pub context: Option<String>,
+}
+
+/// Index definition for create/drop operations.
+#[derive(Debug, Clone)]
+pub enum IndexDefinition {
+    /// Property hash index.
+    Property {
+        /// Property name.
+        property: String,
+    },
+    /// Vector similarity index (HNSW).
+    Vector {
+        /// Node label.
+        label: String,
+        /// Property name.
+        property: String,
+        /// Expected dimensions.
+        dimensions: Option<u32>,
+        /// Distance metric.
+        metric: Option<String>,
+        /// HNSW links per node.
+        m: Option<u32>,
+        /// Construction beam width.
+        ef_construction: Option<u32>,
+    },
+    /// Full-text index (BM25).
+    Text {
+        /// Node label.
+        label: String,
+        /// Property name.
+        property: String,
+    },
+}
+
+// ============================================================================
+// Search types
+// ============================================================================
+
+/// Vector search parameters.
+#[derive(Debug, Clone)]
+pub struct VectorSearchParams {
+    /// Database name.
+    pub database: String,
+    /// Node label.
+    pub label: String,
+    /// Property name.
+    pub property: String,
+    /// Query vector.
+    pub query_vector: Vec<f32>,
+    /// Number of results.
+    pub k: u32,
+    /// Search beam width.
+    pub ef: Option<u32>,
+    /// Property filters.
+    pub filters: std::collections::HashMap<String, Value>,
+}
+
+/// Text search parameters.
+#[derive(Debug, Clone)]
+pub struct TextSearchParams {
+    /// Database name.
+    pub database: String,
+    /// Node label.
+    pub label: String,
+    /// Property name.
+    pub property: String,
+    /// Search query text.
+    pub query: String,
+    /// Number of results.
+    pub k: u32,
+}
+
+/// Hybrid search parameters.
+#[derive(Debug, Clone)]
+pub struct HybridSearchParams {
+    /// Database name.
+    pub database: String,
+    /// Node label.
+    pub label: String,
+    /// Text property name.
+    pub text_property: String,
+    /// Vector property name.
+    pub vector_property: String,
+    /// Text query.
+    pub query_text: String,
+    /// Optional vector query.
+    pub query_vector: Vec<f32>,
+    /// Number of results.
+    pub k: u32,
+}
+
+/// A single search result hit.
+///
+/// Search results use a numeric `node_id` (uint64) rather than the opaque
+/// `bytes` element ID from the GQL type system. This is an internal
+/// identifier suitable for fast lookups; it is not the same as `Node.id`.
+#[derive(Debug, Clone)]
+pub struct SearchHit {
+    /// Internal numeric node identifier (not the opaque GQL element ID).
+    pub node_id: u64,
+    /// Relevance score (distance for vector, BM25 for text).
+    pub score: f64,
+    /// Node properties.
+    pub properties: std::collections::HashMap<String, Value>,
 }

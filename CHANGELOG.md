@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.5 2026-02-19
+
+- **Feature**: `AdminService` gRPC service (database stats, WAL status/checkpoint, integrity validation, index create/drop)
+- **Feature**: `SearchService` gRPC service (vector similarity, full-text, hybrid search)
+- **Feature**: Three index types: property (hash), vector (HNSW), full-text (BM25)
+- **Feature**: `GqlBackend` trait extended with optional admin and search methods
+
 ## 0.1.4 2026-02-18
 
 - **Feature**: Structured tracing via `tracing` crate on all gRPC methods

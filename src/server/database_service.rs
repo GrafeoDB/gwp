@@ -37,15 +37,19 @@ fn to_summary(info: &DatabaseInfo) -> proto::DatabaseSummary {
 }
 
 /// Map a `GqlError` to an appropriate gRPC `Status` for database operations.
+///
+/// Extends the common mapping with `ALREADY_EXISTS` for duplicate databases
+/// and a `Session` fallback to `INVALID_ARGUMENT`.
 fn map_error(err: GqlError) -> Status {
     match err {
         GqlError::Session(ref msg) if msg.contains("already exists") => {
             Status::already_exists(msg.clone())
         }
-        GqlError::Session(ref msg) if msg.contains("not found") => Status::not_found(msg.clone()),
+        GqlError::Session(ref msg) if msg.contains("not found") => {
+            Status::not_found(msg.clone())
+        }
         GqlError::Session(msg) => Status::invalid_argument(msg),
-        GqlError::Protocol(msg) => Status::unimplemented(msg),
-        other => other.to_grpc_status(),
+        other => other.to_optional_service_status(),
     }
 }
 

@@ -290,3 +290,200 @@ message GetDatabaseInfoResponse {
   bool backward_edges = 8;
   uint32 threads = 9;
 }
+
+// ============================================================================
+// AdminService
+// Database introspection, maintenance, and index management.
+// Errors are returned as gRPC Status codes.
+// ============================================================================
+
+service AdminService {
+  // Get detailed database statistics (counts, memory, disk, indexes).
+  rpc GetDatabaseStats(GetDatabaseStatsRequest) returns (GetDatabaseStatsResponse);
+
+  // Get WAL (Write-Ahead Log) status.
+  rpc WalStatus(WalStatusRequest) returns (WalStatusResponse);
+
+  // Force a WAL checkpoint (flush pending records to storage).
+  rpc WalCheckpoint(WalCheckpointRequest) returns (WalCheckpointResponse);
+
+  // Validate database integrity (dangling edges, index consistency).
+  rpc Validate(ValidateRequest) returns (ValidateResponse);
+
+  // Create an index (property, vector, or text).
+  rpc CreateIndex(CreateIndexRequest) returns (CreateIndexResponse);
+
+  // Drop an index.
+  rpc DropIndex(DropIndexRequest) returns (DropIndexResponse);
+}
+
+// ============================================================================
+// SearchService
+// Vector, text, and hybrid search operations.
+// Errors are returned as gRPC Status codes.
+// ============================================================================
+
+service SearchService {
+  // Vector similarity search (KNN via HNSW index).
+  rpc VectorSearch(VectorSearchRequest) returns (VectorSearchResponse);
+
+  // Full-text search (BM25 scoring).
+  rpc TextSearch(TextSearchRequest) returns (TextSearchResponse);
+
+  // Hybrid search combining text and vector results with rank fusion.
+  rpc HybridSearch(HybridSearchRequest) returns (HybridSearchResponse);
+}
+
+// ============================================================================
+// Admin Messages
+// ============================================================================
+
+message GetDatabaseStatsRequest {
+  string database = 1;
+}
+
+message GetDatabaseStatsResponse {
+  uint64 node_count = 1;
+  uint64 edge_count = 2;
+  uint64 label_count = 3;
+  uint64 edge_type_count = 4;
+  uint64 property_key_count = 5;
+  uint64 index_count = 6;
+  uint64 memory_bytes = 7;
+  optional uint64 disk_bytes = 8;
+}
+
+message WalStatusRequest {
+  string database = 1;
+}
+
+message WalStatusResponse {
+  bool enabled = 1;
+  optional string path = 2;
+  uint64 size_bytes = 3;
+  uint64 record_count = 4;
+  optional uint64 last_checkpoint = 5;
+  uint64 current_epoch = 6;
+}
+
+message WalCheckpointRequest {
+  string database = 1;
+}
+
+message WalCheckpointResponse {}
+
+message ValidateRequest {
+  string database = 1;
+}
+
+message ValidateResponse {
+  bool valid = 1;
+  repeated ValidationError errors = 2;
+  repeated ValidationWarning warnings = 3;
+}
+
+message ValidationError {
+  string code = 1;
+  string message = 2;
+  optional string context = 3;
+}
+
+message ValidationWarning {
+  string code = 1;
+  string message = 2;
+  optional string context = 3;
+}
+
+message CreateIndexRequest {
+  string database = 1;
+  oneof index {
+    PropertyIndexDef property_index = 2;
+    VectorIndexDef vector_index = 3;
+    TextIndexDef text_index = 4;
+  }
+}
+
+message PropertyIndexDef {
+  string property = 1;
+}
+
+message VectorIndexDef {
+  string label = 1;
+  string property = 2;
+  optional uint32 dimensions = 3;
+  optional string metric = 4;      // cosine, euclidean, dot_product, manhattan
+  optional uint32 m = 5;           // HNSW links per node
+  optional uint32 ef_construction = 6;
+}
+
+message TextIndexDef {
+  string label = 1;
+  string property = 2;
+}
+
+message CreateIndexResponse {}
+
+message DropIndexRequest {
+  string database = 1;
+  oneof index {
+    PropertyIndexDef property_index = 2;
+    VectorIndexDef vector_index = 3;
+    TextIndexDef text_index = 4;
+  }
+}
+
+message DropIndexResponse {
+  bool existed = 1;
+}
+
+// ============================================================================
+// Search Messages
+// ============================================================================
+
+message VectorSearchRequest {
+  string database = 1;
+  string label = 2;
+  string property = 3;
+  repeated float query_vector = 4;
+  uint32 k = 5;
+  optional uint32 ef = 6;
+  map<string, Value> filters = 7;
+}
+
+message TextSearchRequest {
+  string database = 1;
+  string label = 2;
+  string property = 3;
+  string query = 4;
+  uint32 k = 5;
+}
+
+message HybridSearchRequest {
+  string database = 1;
+  string label = 2;
+  string text_property = 3;
+  string vector_property = 4;
+  string query_text = 5;
+  repeated float query_vector = 6;
+  uint32 k = 7;
+}
+
+// A single search result. node_id is an internal numeric identifier
+// (not the opaque bytes element ID from the GQL type system).
+message SearchHit {
+  uint64 node_id = 1;
+  double score = 2;
+  map<string, Value> properties = 3;
+}
+
+message VectorSearchResponse {
+  repeated SearchHit hits = 1;
+}
+
+message TextSearchResponse {
+  repeated SearchHit hits = 1;
+}
+
+message HybridSearchResponse {
+  repeated SearchHit hits = 1;
+}

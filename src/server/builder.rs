@@ -8,14 +8,18 @@ use std::time::Duration;
 
 use tonic::transport::Server;
 
+use crate::proto::admin_service_server::AdminServiceServer;
 use crate::proto::database_service_server::DatabaseServiceServer;
 use crate::proto::gql_service_server::GqlServiceServer;
+use crate::proto::search_service_server::SearchServiceServer;
 use crate::proto::session_service_server::SessionServiceServer;
 
+use super::admin_service::AdminServiceImpl;
 use super::auth::AuthValidator;
 use super::backend::{GqlBackend, SessionHandle};
 use super::database_service::DatabaseServiceImpl;
 use super::gql_service::GqlServiceImpl;
+use super::search_service::SearchServiceImpl;
 use super::session_service::SessionServiceImpl;
 use super::{SessionManager, TransactionManager};
 
@@ -121,6 +125,8 @@ impl<B: GqlBackend> GqlServer<B> {
             GqlServiceImpl::new(Arc::clone(&backend), sessions.clone(), transactions.clone());
 
         let database_service = DatabaseServiceImpl::new(Arc::clone(&backend));
+        let admin_service = AdminServiceImpl::new(Arc::clone(&backend));
+        let search_service = SearchServiceImpl::new(Arc::clone(&backend));
 
         // Health check service
         let (health_reporter, health_service) = tonic_health::server::health_reporter();
@@ -132,6 +138,12 @@ impl<B: GqlBackend> GqlServer<B> {
             .await;
         health_reporter
             .set_serving::<DatabaseServiceServer<DatabaseServiceImpl<B>>>()
+            .await;
+        health_reporter
+            .set_serving::<AdminServiceServer<AdminServiceImpl<B>>>()
+            .await;
+        health_reporter
+            .set_serving::<SearchServiceServer<SearchServiceImpl<B>>>()
             .await;
 
         // Idle session reaper
@@ -177,7 +189,9 @@ impl<B: GqlBackend> GqlServer<B> {
             .add_service(health_service)
             .add_service(SessionServiceServer::new(session_service))
             .add_service(GqlServiceServer::new(gql_service))
-            .add_service(DatabaseServiceServer::new(database_service));
+            .add_service(DatabaseServiceServer::new(database_service))
+            .add_service(AdminServiceServer::new(admin_service))
+            .add_service(SearchServiceServer::new(search_service));
 
         tracing::info!(%addr, "GWP server listening");
 

@@ -82,6 +82,22 @@ impl GqlError {
         }
     }
 
+    /// Convert this error to a `tonic::Status` for optional service responses
+    /// (`AdminService`, `SearchService`, `DatabaseService`).
+    ///
+    /// Maps `Protocol` to `UNIMPLEMENTED` (backend doesn't support the operation)
+    /// and `Session` containing "not found" to `NOT_FOUND`.
+    #[must_use]
+    pub fn to_optional_service_status(&self) -> tonic::Status {
+        match self {
+            Self::Session(msg) if msg.contains("not found") => {
+                tonic::Status::not_found(msg.clone())
+            }
+            Self::Protocol(msg) => tonic::Status::unimplemented(msg.clone()),
+            other => other.to_grpc_status(),
+        }
+    }
+
     /// Extract the `GqlStatus` if this is a GQL-domain error.
     #[must_use]
     pub fn gql_status(&self) -> Option<&proto::GqlStatus> {

@@ -252,11 +252,7 @@ pub trait GqlBackend: Send + Sync + 'static {
     }
 
     /// Create a schema.
-    async fn create_schema(
-        &self,
-        _name: &str,
-        _if_not_exists: bool,
-    ) -> Result<(), GqlError> {
+    async fn create_schema(&self, _name: &str, _if_not_exists: bool) -> Result<(), GqlError> {
         Err(GqlError::Protocol("catalog not supported".into()))
     }
 

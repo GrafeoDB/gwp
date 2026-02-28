@@ -5,7 +5,9 @@ use tonic::transport::Channel;
 use crate::error::GqlError;
 
 use super::GqlSession;
-use super::database::DatabaseClient;
+use super::admin::AdminClient;
+use super::catalog::CatalogClient;
+use super::search::SearchClient;
 
 /// A connection to a GQL wire protocol server.
 ///
@@ -56,10 +58,22 @@ impl GqlConnection {
         GqlSession::new(self.channel.clone()).await
     }
 
-    /// Create a database management client.
+    /// Create a catalog management client (schemas, graphs, graph types).
     #[must_use]
-    pub fn create_database_client(&self) -> DatabaseClient {
-        DatabaseClient::new(self.channel.clone())
+    pub fn create_catalog_client(&self) -> CatalogClient {
+        CatalogClient::new(self.channel.clone())
+    }
+
+    /// Create an admin client (stats, WAL, validation, indexes).
+    #[must_use]
+    pub fn create_admin_client(&self) -> AdminClient {
+        AdminClient::new(self.channel.clone())
+    }
+
+    /// Create a search client (vector, text, hybrid).
+    #[must_use]
+    pub fn create_search_client(&self) -> SearchClient {
+        SearchClient::new(self.channel.clone())
     }
 
     /// Connect to a GQL server with TLS.

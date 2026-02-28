@@ -96,6 +96,17 @@ impl Transaction {
         Ok(ResultCursor::new(stream))
     }
 
+    /// Execute a statement within this transaction with no parameters.
+    ///
+    /// Convenience wrapper around `execute()` with an empty parameter map.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the server rejects the request.
+    pub async fn execute_simple(&mut self, statement: &str) -> Result<ResultCursor, GqlError> {
+        self.execute(statement, HashMap::new()).await
+    }
+
     /// Commit the transaction.
     ///
     /// # Errors

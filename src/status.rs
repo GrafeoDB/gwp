@@ -388,6 +388,65 @@ pub fn is_exception(code: &str) -> bool {
     c >= "08"
 }
 
+// ============================================================================
+// Operation code constants (ISO/IEC 39075 Table 9)
+// ============================================================================
+
+/// Session SET SCHEMA operation.
+pub const OP_SESSION_SET_SCHEMA: i32 = 1;
+/// Session SET GRAPH operation.
+pub const OP_SESSION_SET_GRAPH: i32 = 2;
+/// Session SET TIME ZONE operation.
+pub const OP_SESSION_SET_TIME_ZONE: i32 = 3;
+/// Session SET PARAMETER operation.
+pub const OP_SESSION_SET_PARAMETER: i32 = 4;
+/// Session RESET operation.
+pub const OP_SESSION_RESET: i32 = 5;
+/// Session CLOSE operation.
+pub const OP_SESSION_CLOSE: i32 = 6;
+/// START TRANSACTION statement.
+pub const OP_START_TRANSACTION: i32 = 100;
+/// COMMIT statement.
+pub const OP_COMMIT: i32 = 101;
+/// ROLLBACK statement.
+pub const OP_ROLLBACK: i32 = 102;
+/// CREATE SCHEMA statement.
+pub const OP_CREATE_SCHEMA: i32 = 200;
+/// DROP SCHEMA statement.
+pub const OP_DROP_SCHEMA: i32 = 201;
+/// CREATE GRAPH statement.
+pub const OP_CREATE_GRAPH: i32 = 300;
+/// DROP GRAPH statement.
+pub const OP_DROP_GRAPH: i32 = 301;
+/// CREATE GRAPH TYPE statement.
+pub const OP_CREATE_GRAPH_TYPE: i32 = 400;
+/// DROP GRAPH TYPE statement.
+pub const OP_DROP_GRAPH_TYPE: i32 = 401;
+/// INSERT statement.
+pub const OP_INSERT_STATEMENT: i32 = 500;
+/// SET statement.
+pub const OP_SET_STATEMENT: i32 = 501;
+/// REMOVE statement.
+pub const OP_REMOVE_STATEMENT: i32 = 502;
+/// DELETE statement.
+pub const OP_DELETE_STATEMENT: i32 = 503;
+/// MATCH statement.
+pub const OP_MATCH_STATEMENT: i32 = 600;
+/// OPTIONAL MATCH.
+pub const OP_OPTIONAL_MATCH: i32 = 601;
+/// FILTER statement.
+pub const OP_FILTER_STATEMENT: i32 = 602;
+/// LET statement.
+pub const OP_LET_STATEMENT: i32 = 603;
+/// FOR statement.
+pub const OP_FOR_STATEMENT: i32 = 604;
+/// ORDER BY clause.
+pub const OP_ORDER_BY: i32 = 605;
+/// RETURN statement.
+pub const OP_RETURN_STATEMENT: i32 = 700;
+/// CALL procedure statement.
+pub const OP_CALL_PROCEDURE: i32 = 800;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -456,5 +515,33 @@ mod tests {
         assert_eq!(class("00000"), "00");
         assert_eq!(class("42001"), "42");
         assert_eq!(class("G2000"), "G2");
+    }
+
+    #[test]
+    fn warning_constructor() {
+        let s = warning(WARNING_GRAPH_NOT_FOUND, "graph 'test' does not exist");
+        assert_eq!(s.code, "01G03");
+        assert!(is_warning(&s.code));
+        assert!(!is_exception(&s.code));
+    }
+
+    #[test]
+    fn informational_constructor() {
+        let s = informational(INFORMATIONAL, "operation completed with information");
+        assert_eq!(s.code, "03000");
+        assert!(is_informational(&s.code));
+        assert!(!is_exception(&s.code));
+    }
+
+    #[test]
+    fn connection_exception_is_exception() {
+        assert!(is_exception(CONNECTION_EXCEPTION));
+        assert!(is_exception(TRANSACTION_RESOLUTION_UNKNOWN));
+    }
+
+    #[test]
+    fn dependent_objects_is_exception() {
+        assert!(is_exception(DEPENDENT_OBJECTS_EXIST));
+        assert!(is_exception(GRAPH_DEPENDS_ON_SCHEMA));
     }
 }

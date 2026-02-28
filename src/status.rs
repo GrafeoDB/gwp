@@ -26,6 +26,12 @@ pub const WARNING: &str = "01000";
 /// String data, right truncation.
 pub const WARNING_STRING_TRUNCATION: &str = "01004";
 
+/// Graph does not exist.
+pub const WARNING_GRAPH_NOT_FOUND: &str = "01G03";
+
+/// Graph type does not exist.
+pub const WARNING_GRAPH_TYPE_NOT_FOUND: &str = "01G04";
+
 /// Null value eliminated in set function.
 pub const WARNING_NULL_ELIMINATED: &str = "01G11";
 
@@ -35,6 +41,23 @@ pub const WARNING_NULL_ELIMINATED: &str = "01G11";
 
 /// No data - query matched nothing.
 pub const NO_DATA: &str = "02000";
+
+// ============================================================================
+// Informational (class 03)
+// ============================================================================
+
+/// Informational (no subclass).
+pub const INFORMATIONAL: &str = "03000";
+
+// ============================================================================
+// Connection exceptions (class 08)
+// ============================================================================
+
+/// Connection exception (no subclass).
+pub const CONNECTION_EXCEPTION: &str = "08000";
+
+/// Transaction resolution unknown.
+pub const TRANSACTION_RESOLUTION_UNKNOWN: &str = "08007";
 
 // ============================================================================
 // Data exceptions (class 22)
@@ -58,14 +81,56 @@ pub const INVALID_DATETIME_FORMAT: &str = "22007";
 /// Datetime field overflow.
 pub const DATETIME_OVERFLOW: &str = "22008";
 
+/// Substring error.
+pub const SUBSTRING_ERROR: &str = "22011";
+
 /// Division by zero.
 pub const DIVISION_BY_ZERO: &str = "22012";
+
+/// Interval field overflow.
+pub const INTERVAL_FIELD_OVERFLOW: &str = "22015";
+
+/// Invalid character value for cast.
+pub const INVALID_CHARACTER_VALUE_FOR_CAST: &str = "22018";
 
 /// Invalid value type.
 pub const INVALID_VALUE_TYPE: &str = "22G03";
 
 /// Values not comparable.
 pub const NOT_COMPARABLE: &str = "22G04";
+
+/// Negative limit value.
+pub const NEGATIVE_LIMIT: &str = "22G05";
+
+/// Invalid element ID.
+pub const INVALID_ELEMENT_ID: &str = "22G06";
+
+/// Duplicate node in path.
+pub const DUPLICATE_NODE_IN_PATH: &str = "22G07";
+
+/// Duplicate edge in path.
+pub const DUPLICATE_EDGE_IN_PATH: &str = "22G08";
+
+/// List data, right truncation.
+pub const LIST_DATA_RIGHT_TRUNCATION: &str = "22G09";
+
+/// Incompatible list element types.
+pub const INCOMPATIBLE_LIST_ELEMENT_TYPES: &str = "22G0A";
+
+/// Invalid property reference.
+pub const INVALID_PROPERTY_REFERENCE: &str = "22G0B";
+
+/// Property not found.
+pub const PROPERTY_NOT_FOUND: &str = "22G0C";
+
+/// Invalid label value.
+pub const INVALID_LABEL_VALUE: &str = "22G0D";
+
+/// Invalid element type.
+pub const INVALID_ELEMENT_TYPE: &str = "22G0E";
+
+/// Incompatible record field types.
+pub const INCOMPATIBLE_RECORD_FIELD_TYPES: &str = "22G0F";
 
 /// Record fields do not match.
 pub const RECORD_MISMATCH: &str = "22G0U";
@@ -83,8 +148,14 @@ pub const INVALID_TRANSACTION_STATE: &str = "25000";
 /// Active GQL-transaction already exists.
 pub const ACTIVE_TRANSACTION: &str = "25G01";
 
+/// No active GQL-transaction.
+pub const NO_ACTIVE_TRANSACTION: &str = "25G02";
+
 /// Read-only GQL-transaction.
 pub const READ_ONLY_TRANSACTION: &str = "25G03";
+
+/// GQL-transaction in failed state.
+pub const TRANSACTION_FAILED_STATE: &str = "25G04";
 
 // ============================================================================
 // Transaction termination (class 2D)
@@ -115,6 +186,58 @@ pub const INVALID_SYNTAX: &str = "42001";
 
 /// Invalid reference.
 pub const INVALID_REFERENCE: &str = "42002";
+
+/// Duplicate definition.
+pub const DUPLICATE_DEFINITION: &str = "42004";
+
+/// Ambiguous reference.
+pub const AMBIGUOUS_REFERENCE: &str = "42005";
+
+/// Unsupported feature.
+pub const UNSUPPORTED_FEATURE: &str = "42006";
+
+/// Duplicate label.
+pub const DUPLICATE_LABEL: &str = "42007";
+
+/// Invalid number of arguments.
+pub const INVALID_ARGUMENT_COUNT: &str = "42008";
+
+/// Incompatible types.
+pub const INCOMPATIBLE_TYPES: &str = "42009";
+
+/// Invalid pattern.
+pub const INVALID_PATTERN: &str = "42010";
+
+/// Invalid operand for aggregation.
+pub const INVALID_AGGREGATION_OPERAND: &str = "42011";
+
+/// Invalid ordering specification.
+pub const INVALID_ORDERING: &str = "42012";
+
+/// Missing mandatory property.
+pub const MISSING_MANDATORY_PROPERTY: &str = "42013";
+
+/// Invalid graph modification.
+pub const INVALID_GRAPH_MODIFICATION: &str = "42014";
+
+/// Procedure not found.
+pub const PROCEDURE_NOT_FOUND: &str = "42015";
+
+// ============================================================================
+// Dependent object errors (class G1)
+// ============================================================================
+
+/// Dependent objects still exist (no subclass).
+pub const DEPENDENT_OBJECTS_EXIST: &str = "G1000";
+
+/// Graph depends on schema.
+pub const GRAPH_DEPENDS_ON_SCHEMA: &str = "G1001";
+
+/// Graph type depends on schema.
+pub const GRAPH_TYPE_DEPENDS_ON_SCHEMA: &str = "G1002";
+
+/// Graph depends on graph type.
+pub const GRAPH_DEPENDS_ON_GRAPH_TYPE: &str = "G1003";
 
 // ============================================================================
 // Graph type violation (class G2)
@@ -171,6 +294,28 @@ pub fn error(code: &str, message: impl Into<String>) -> proto::GqlStatus {
     }
 }
 
+/// Create a warning `GqlStatus` with the given code and message.
+#[must_use]
+pub fn warning(code: &str, message: impl Into<String>) -> proto::GqlStatus {
+    proto::GqlStatus {
+        code: code.to_owned(),
+        message: message.into(),
+        diagnostic: None,
+        cause: None,
+    }
+}
+
+/// Create an informational `GqlStatus` with the given code and message.
+#[must_use]
+pub fn informational(code: &str, message: impl Into<String>) -> proto::GqlStatus {
+    proto::GqlStatus {
+        code: code.to_owned(),
+        message: message.into(),
+        diagnostic: None,
+        cause: None,
+    }
+}
+
 /// Create an error `GqlStatus` with diagnostic context.
 #[must_use]
 pub fn error_with_diagnostic(
@@ -185,7 +330,8 @@ pub fn error_with_diagnostic(
         diagnostic: Some(proto::DiagnosticRecord {
             operation: operation.into(),
             operation_code,
-            current_schema: String::new(),
+            current_schema: None,
+            invalid_reference: None,
         }),
         cause: None,
     }

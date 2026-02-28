@@ -179,11 +179,7 @@ impl<B: GqlBackend> CatalogService for CatalogServiceImpl<B> {
             wal_durability: options.wal_durability,
         };
 
-        let info = self
-            .backend
-            .create_graph(config)
-            .await
-            .map_err(map_error)?;
+        let info = self.backend.create_graph(config).await.map_err(map_error)?;
 
         tracing::info!(schema = %info.schema, graph = %info.name, "graph created");
 

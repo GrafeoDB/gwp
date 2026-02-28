@@ -9,7 +9,7 @@ use std::time::Duration;
 use tonic::transport::Server;
 
 use crate::proto::admin_service_server::AdminServiceServer;
-use crate::proto::database_service_server::DatabaseServiceServer;
+use crate::proto::catalog_service_server::CatalogServiceServer;
 use crate::proto::gql_service_server::GqlServiceServer;
 use crate::proto::search_service_server::SearchServiceServer;
 use crate::proto::session_service_server::SessionServiceServer;
@@ -17,7 +17,7 @@ use crate::proto::session_service_server::SessionServiceServer;
 use super::admin_service::AdminServiceImpl;
 use super::auth::AuthValidator;
 use super::backend::{GqlBackend, SessionHandle};
-use super::database_service::DatabaseServiceImpl;
+use super::catalog_service::CatalogServiceImpl;
 use super::gql_service::GqlServiceImpl;
 use super::search_service::SearchServiceImpl;
 use super::session_service::SessionServiceImpl;
@@ -124,7 +124,7 @@ impl<B: GqlBackend> GqlServer<B> {
         let gql_service =
             GqlServiceImpl::new(Arc::clone(&backend), sessions.clone(), transactions.clone());
 
-        let database_service = DatabaseServiceImpl::new(Arc::clone(&backend));
+        let catalog_service = CatalogServiceImpl::new(Arc::clone(&backend));
         let admin_service = AdminServiceImpl::new(Arc::clone(&backend));
         let search_service = SearchServiceImpl::new(Arc::clone(&backend));
 
@@ -137,7 +137,7 @@ impl<B: GqlBackend> GqlServer<B> {
             .set_serving::<GqlServiceServer<GqlServiceImpl<B>>>()
             .await;
         health_reporter
-            .set_serving::<DatabaseServiceServer<DatabaseServiceImpl<B>>>()
+            .set_serving::<CatalogServiceServer<CatalogServiceImpl<B>>>()
             .await;
         health_reporter
             .set_serving::<AdminServiceServer<AdminServiceImpl<B>>>()
@@ -189,7 +189,7 @@ impl<B: GqlBackend> GqlServer<B> {
             .add_service(health_service)
             .add_service(SessionServiceServer::new(session_service))
             .add_service(GqlServiceServer::new(gql_service))
-            .add_service(DatabaseServiceServer::new(database_service))
+            .add_service(CatalogServiceServer::new(catalog_service))
             .add_service(AdminServiceServer::new(admin_service))
             .add_service(SearchServiceServer::new(search_service));
 

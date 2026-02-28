@@ -10,8 +10,8 @@ use crate::proto;
 use crate::types::Value;
 
 use super::backend::{
-    CreateDatabaseConfig, DatabaseInfo, GqlBackend, ResetTarget, ResultFrame, ResultStream,
-    SessionConfig, SessionHandle, SessionProperty, TransactionHandle,
+    CreateGraphConfig, GqlBackend, GraphInfo, GraphTypeInfo, ResetTarget, ResultFrame,
+    ResultStream, SchemaInfo, SessionConfig, SessionHandle, SessionProperty, TransactionHandle,
 };
 
 /// A simple in-memory backend for testing.
@@ -125,25 +125,58 @@ impl GqlBackend for MockBackend {
         Ok(())
     }
 
-    async fn list_databases(&self) -> Result<Vec<DatabaseInfo>, GqlError> {
+    // =========================================================================
+    // Catalog operations
+    // =========================================================================
+
+    async fn list_schemas(&self) -> Result<Vec<SchemaInfo>, GqlError> {
+        Ok(vec![SchemaInfo {
+            name: "default".to_owned(),
+            graph_count: 2,
+            graph_type_count: 0,
+        }])
+    }
+
+    async fn create_schema(&self, name: &str, if_not_exists: bool) -> Result<(), GqlError> {
+        if name == "default" && !if_not_exists {
+            return Err(GqlError::Session(
+                "schema 'default' already exists".to_owned(),
+            ));
+        }
+        Ok(())
+    }
+
+    async fn drop_schema(&self, name: &str, if_exists: bool) -> Result<bool, GqlError> {
+        if name == "default" {
+            return Err(GqlError::Session(
+                "cannot drop the default schema".to_owned(),
+            ));
+        }
+        if name == "nonexistent" && !if_exists {
+            return Err(GqlError::Session(format!("schema '{name}' not found")));
+        }
+        Ok(name != "nonexistent")
+    }
+
+    async fn list_graphs(&self, _schema: &str) -> Result<Vec<GraphInfo>, GqlError> {
         Ok(vec![
-            DatabaseInfo {
+            GraphInfo {
+                schema: "default".to_owned(),
                 name: "default".to_owned(),
                 node_count: 100,
                 edge_count: 50,
-                persistent: false,
-                database_type: "Lpg".to_owned(),
+                graph_type: String::new(),
                 storage_mode: "InMemory".to_owned(),
                 memory_limit_bytes: None,
                 backward_edges: Some(false),
                 threads: None,
             },
-            DatabaseInfo {
+            GraphInfo {
+                schema: "default".to_owned(),
                 name: "test".to_owned(),
                 node_count: 10,
                 edge_count: 5,
-                persistent: false,
-                database_type: "Lpg".to_owned(),
+                graph_type: String::new(),
                 storage_mode: "InMemory".to_owned(),
                 memory_limit_bytes: None,
                 backward_edges: None,
@@ -152,21 +185,18 @@ impl GqlBackend for MockBackend {
         ])
     }
 
-    async fn create_database(
-        &self,
-        config: CreateDatabaseConfig,
-    ) -> Result<DatabaseInfo, GqlError> {
-        if config.name == "default" {
+    async fn create_graph(&self, config: CreateGraphConfig) -> Result<GraphInfo, GqlError> {
+        if config.name == "default" && !config.if_not_exists {
             return Err(GqlError::Session(
-                "database 'default' already exists".to_owned(),
+                "graph 'default' already exists".to_owned(),
             ));
         }
-        Ok(DatabaseInfo {
+        Ok(GraphInfo {
+            schema: config.schema,
             name: config.name,
             node_count: 0,
             edge_count: 0,
-            persistent: config.storage_mode == "Persistent",
-            database_type: config.database_type,
+            graph_type: String::new(),
             storage_mode: config.storage_mode,
             memory_limit_bytes: config.memory_limit_bytes,
             backward_edges: config.backward_edges,
@@ -174,41 +204,83 @@ impl GqlBackend for MockBackend {
         })
     }
 
-    async fn delete_database(&self, name: &str) -> Result<String, GqlError> {
+    async fn drop_graph(
+        &self,
+        _schema: &str,
+        name: &str,
+        if_exists: bool,
+    ) -> Result<bool, GqlError> {
         if name == "default" {
             return Err(GqlError::Session(
-                "cannot delete the default database".to_owned(),
+                "cannot drop the default graph".to_owned(),
             ));
         }
-        Ok(name.to_owned())
+        if name == "nonexistent" && !if_exists {
+            return Err(GqlError::Session(format!("graph '{name}' not found")));
+        }
+        Ok(name != "nonexistent")
     }
 
-    async fn get_database_info(&self, name: &str) -> Result<DatabaseInfo, GqlError> {
+    async fn get_graph_info(&self, schema: &str, name: &str) -> Result<GraphInfo, GqlError> {
         match name {
-            "default" => Ok(DatabaseInfo {
+            "default" => Ok(GraphInfo {
+                schema: schema.to_owned(),
                 name: "default".to_owned(),
                 node_count: 100,
                 edge_count: 50,
-                persistent: false,
-                database_type: "Lpg".to_owned(),
+                graph_type: String::new(),
                 storage_mode: "InMemory".to_owned(),
                 memory_limit_bytes: None,
                 backward_edges: Some(false),
                 threads: None,
             }),
-            "test" => Ok(DatabaseInfo {
+            "test" => Ok(GraphInfo {
+                schema: schema.to_owned(),
                 name: "test".to_owned(),
                 node_count: 10,
                 edge_count: 5,
-                persistent: false,
-                database_type: "Lpg".to_owned(),
+                graph_type: String::new(),
                 storage_mode: "InMemory".to_owned(),
                 memory_limit_bytes: None,
                 backward_edges: None,
                 threads: None,
             }),
-            _ => Err(GqlError::Session(format!("database '{name}' not found"))),
+            _ => Err(GqlError::Session(format!("graph '{name}' not found"))),
         }
+    }
+
+    async fn list_graph_types(&self, schema: &str) -> Result<Vec<GraphTypeInfo>, GqlError> {
+        Ok(vec![GraphTypeInfo {
+            schema: schema.to_owned(),
+            name: "PersonGraph".to_owned(),
+        }])
+    }
+
+    async fn create_graph_type(
+        &self,
+        _schema: &str,
+        name: &str,
+        if_not_exists: bool,
+        _or_replace: bool,
+    ) -> Result<(), GqlError> {
+        if name == "PersonGraph" && !if_not_exists {
+            return Err(GqlError::Session(
+                "graph type 'PersonGraph' already exists".to_owned(),
+            ));
+        }
+        Ok(())
+    }
+
+    async fn drop_graph_type(
+        &self,
+        _schema: &str,
+        name: &str,
+        if_exists: bool,
+    ) -> Result<bool, GqlError> {
+        if name == "nonexistent" && !if_exists {
+            return Err(GqlError::Session(format!("graph type '{name}' not found")));
+        }
+        Ok(name != "nonexistent")
     }
 }
 
@@ -230,6 +302,15 @@ impl MockResultStream {
                         nullable: false,
                         element_type: None,
                         fields: Vec::new(),
+                        precision: None,
+                        scale: None,
+                        min_length: None,
+                        max_length: None,
+                        max_cardinality: None,
+                        is_group: false,
+                        is_open: false,
+                        duration_qualifier: proto::DurationQualifier::DurationUnspecified.into(),
+                        component_types: Vec::new(),
                     }),
                 },
                 proto::ColumnDescriptor {
@@ -239,9 +320,19 @@ impl MockResultStream {
                         nullable: false,
                         element_type: None,
                         fields: Vec::new(),
+                        precision: None,
+                        scale: None,
+                        min_length: None,
+                        max_length: None,
+                        max_cardinality: None,
+                        is_group: false,
+                        is_open: false,
+                        duration_qualifier: proto::DurationQualifier::DurationUnspecified.into(),
+                        component_types: Vec::new(),
                     }),
                 },
             ],
+            ordered: false,
         });
 
         let batch = ResultFrame::Batch(proto::RowBatch {
@@ -278,6 +369,7 @@ impl MockResultStream {
         let header = ResultFrame::Header(proto::ResultHeader {
             result_type: proto::ResultType::Omitted.into(),
             columns: Vec::new(),
+            ordered: false,
         });
 
         let summary = ResultFrame::Summary(proto::ResultSummary {
@@ -297,6 +389,7 @@ impl MockResultStream {
         let header = ResultFrame::Header(proto::ResultHeader {
             result_type: proto::ResultType::Omitted.into(),
             columns: Vec::new(),
+            ordered: false,
         });
 
         let summary = ResultFrame::Summary(proto::ResultSummary {

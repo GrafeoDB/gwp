@@ -16,7 +16,7 @@ use gwp::client::GqlConnection;
 use gwp::proto;
 use gwp::proto::session_service_client::SessionServiceClient;
 use gwp::server::mock_backend::MockBackend;
-use gwp::server::{CreateDatabaseConfig, GqlServer};
+use gwp::server::{CreateGraphConfig, GqlServer};
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -395,22 +395,26 @@ async fn stress_config_churn() {
 }
 
 // ===========================================================================
-// 8. DATABASE CLIENT STRESS — create/list/delete under load
+// 8. CATALOG CLIENT STRESS — create/list/drop under load
 // ===========================================================================
 
 #[tokio::test]
-async fn stress_database_operations() {
+async fn stress_catalog_operations() {
     let addr = start_server(None, None).await;
     let conn = GqlConnection::connect(&format!("http://{addr}"))
         .await
         .unwrap();
-    let mut db = conn.create_database_client();
+    let mut catalog = conn.create_catalog_client();
 
-    // Create many databases
+    // Create many graphs
     for i in 0..50 {
-        let config = CreateDatabaseConfig {
-            name: format!("stress_db_{i}"),
-            database_type: String::new(),
+        let config = CreateGraphConfig {
+            schema: "default".to_owned(),
+            name: format!("stress_graph_{i}"),
+            if_not_exists: false,
+            or_replace: false,
+            type_spec: None,
+            copy_of: None,
             storage_mode: String::new(),
             memory_limit_bytes: None,
             backward_edges: None,
@@ -418,16 +422,19 @@ async fn stress_database_operations() {
             wal_enabled: None,
             wal_durability: None,
         };
-        db.create(config).await.unwrap();
+        catalog.create_graph(config).await.unwrap();
     }
 
     // List should return them
-    let list = db.list().await.unwrap();
+    let list = catalog.list_graphs("default").await.unwrap();
     assert!(!list.is_empty());
 
-    // Delete them all
+    // Drop them all
     for i in 0..50 {
-        db.delete(&format!("stress_db_{i}")).await.unwrap();
+        catalog
+            .drop_graph("default", &format!("stress_graph_{i}"), false)
+            .await
+            .unwrap();
     }
 }
 

@@ -21,6 +21,56 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Duration unit group qualifier per ISO/IEC 39075 sec 4.16.6.3.
+type DurationQualifier int32
+
+const (
+	DurationQualifier_DURATION_UNSPECIFIED   DurationQualifier = 0
+	DurationQualifier_DURATION_YEAR_TO_MONTH DurationQualifier = 1
+	DurationQualifier_DURATION_DAY_TO_SECOND DurationQualifier = 2
+)
+
+// Enum value maps for DurationQualifier.
+var (
+	DurationQualifier_name = map[int32]string{
+		0: "DURATION_UNSPECIFIED",
+		1: "DURATION_YEAR_TO_MONTH",
+		2: "DURATION_DAY_TO_SECOND",
+	}
+	DurationQualifier_value = map[string]int32{
+		"DURATION_UNSPECIFIED":   0,
+		"DURATION_YEAR_TO_MONTH": 1,
+		"DURATION_DAY_TO_SECOND": 2,
+	}
+)
+
+func (x DurationQualifier) Enum() *DurationQualifier {
+	p := new(DurationQualifier)
+	*p = x
+	return p
+}
+
+func (x DurationQualifier) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (DurationQualifier) Descriptor() protoreflect.EnumDescriptor {
+	return file_gql_types_proto_enumTypes[0].Descriptor()
+}
+
+func (DurationQualifier) Type() protoreflect.EnumType {
+	return &file_gql_types_proto_enumTypes[0]
+}
+
+func (x DurationQualifier) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use DurationQualifier.Descriptor instead.
+func (DurationQualifier) EnumDescriptor() ([]byte, []int) {
+	return file_gql_types_proto_rawDescGZIP(), []int{0}
+}
+
 // GQL type enumeration covering all types from ISO/IEC 39075.
 type GqlType int32
 
@@ -28,6 +78,7 @@ const (
 	GqlType_TYPE_UNKNOWN GqlType = 0
 	GqlType_TYPE_NULL    GqlType = 1
 	GqlType_TYPE_BOOLEAN GqlType = 2
+	GqlType_TYPE_EMPTY   GqlType = 3 // NOTHING / empty type (sec 4.16.8)
 	// Signed integers
 	GqlType_TYPE_INT8   GqlType = 10
 	GqlType_TYPE_INT16  GqlType = 11
@@ -54,12 +105,14 @@ const (
 	GqlType_TYPE_STRING GqlType = 50
 	GqlType_TYPE_BYTES  GqlType = 60
 	// Temporal
-	GqlType_TYPE_DATE           GqlType = 70
-	GqlType_TYPE_LOCAL_TIME     GqlType = 71
-	GqlType_TYPE_ZONED_TIME     GqlType = 72
-	GqlType_TYPE_LOCAL_DATETIME GqlType = 73
-	GqlType_TYPE_ZONED_DATETIME GqlType = 74
-	GqlType_TYPE_DURATION       GqlType = 75
+	GqlType_TYPE_DATE                GqlType = 70
+	GqlType_TYPE_LOCAL_TIME          GqlType = 71
+	GqlType_TYPE_ZONED_TIME          GqlType = 72
+	GqlType_TYPE_LOCAL_DATETIME      GqlType = 73
+	GqlType_TYPE_ZONED_DATETIME      GqlType = 74
+	GqlType_TYPE_DURATION            GqlType = 75 // Unqualified duration
+	GqlType_TYPE_YEAR_MONTH_DURATION GqlType = 76 // DURATION(YEAR TO MONTH) (sec 4.16.6.3)
+	GqlType_TYPE_DAY_TIME_DURATION   GqlType = 77 // DURATION(DAY TO SECOND) (sec 4.16.6.3)
 	// Constructed
 	GqlType_TYPE_LIST   GqlType = 80
 	GqlType_TYPE_RECORD GqlType = 81
@@ -67,6 +120,11 @@ const (
 	// Graph elements
 	GqlType_TYPE_NODE GqlType = 90
 	GqlType_TYPE_EDGE GqlType = 91
+	// Reference value types (sec 4.16.7)
+	GqlType_TYPE_NODE_REFERENCE          GqlType = 92
+	GqlType_TYPE_EDGE_REFERENCE          GqlType = 93
+	GqlType_TYPE_GRAPH_REFERENCE         GqlType = 100
+	GqlType_TYPE_BINDING_TABLE_REFERENCE GqlType = 101
 	// Dynamic
 	GqlType_TYPE_ANY            GqlType = 110
 	GqlType_TYPE_PROPERTY_VALUE GqlType = 111
@@ -78,6 +136,7 @@ var (
 		0:   "TYPE_UNKNOWN",
 		1:   "TYPE_NULL",
 		2:   "TYPE_BOOLEAN",
+		3:   "TYPE_EMPTY",
 		10:  "TYPE_INT8",
 		11:  "TYPE_INT16",
 		12:  "TYPE_INT32",
@@ -104,51 +163,64 @@ var (
 		73:  "TYPE_LOCAL_DATETIME",
 		74:  "TYPE_ZONED_DATETIME",
 		75:  "TYPE_DURATION",
+		76:  "TYPE_YEAR_MONTH_DURATION",
+		77:  "TYPE_DAY_TIME_DURATION",
 		80:  "TYPE_LIST",
 		81:  "TYPE_RECORD",
 		82:  "TYPE_PATH",
 		90:  "TYPE_NODE",
 		91:  "TYPE_EDGE",
+		92:  "TYPE_NODE_REFERENCE",
+		93:  "TYPE_EDGE_REFERENCE",
+		100: "TYPE_GRAPH_REFERENCE",
+		101: "TYPE_BINDING_TABLE_REFERENCE",
 		110: "TYPE_ANY",
 		111: "TYPE_PROPERTY_VALUE",
 	}
 	GqlType_value = map[string]int32{
-		"TYPE_UNKNOWN":        0,
-		"TYPE_NULL":           1,
-		"TYPE_BOOLEAN":        2,
-		"TYPE_INT8":           10,
-		"TYPE_INT16":          11,
-		"TYPE_INT32":          12,
-		"TYPE_INT64":          13,
-		"TYPE_INT128":         14,
-		"TYPE_INT256":         15,
-		"TYPE_UINT8":          20,
-		"TYPE_UINT16":         21,
-		"TYPE_UINT32":         22,
-		"TYPE_UINT64":         23,
-		"TYPE_UINT128":        24,
-		"TYPE_UINT256":        25,
-		"TYPE_FLOAT16":        30,
-		"TYPE_FLOAT32":        31,
-		"TYPE_FLOAT64":        32,
-		"TYPE_FLOAT128":       33,
-		"TYPE_FLOAT256":       34,
-		"TYPE_DECIMAL":        40,
-		"TYPE_STRING":         50,
-		"TYPE_BYTES":          60,
-		"TYPE_DATE":           70,
-		"TYPE_LOCAL_TIME":     71,
-		"TYPE_ZONED_TIME":     72,
-		"TYPE_LOCAL_DATETIME": 73,
-		"TYPE_ZONED_DATETIME": 74,
-		"TYPE_DURATION":       75,
-		"TYPE_LIST":           80,
-		"TYPE_RECORD":         81,
-		"TYPE_PATH":           82,
-		"TYPE_NODE":           90,
-		"TYPE_EDGE":           91,
-		"TYPE_ANY":            110,
-		"TYPE_PROPERTY_VALUE": 111,
+		"TYPE_UNKNOWN":                 0,
+		"TYPE_NULL":                    1,
+		"TYPE_BOOLEAN":                 2,
+		"TYPE_EMPTY":                   3,
+		"TYPE_INT8":                    10,
+		"TYPE_INT16":                   11,
+		"TYPE_INT32":                   12,
+		"TYPE_INT64":                   13,
+		"TYPE_INT128":                  14,
+		"TYPE_INT256":                  15,
+		"TYPE_UINT8":                   20,
+		"TYPE_UINT16":                  21,
+		"TYPE_UINT32":                  22,
+		"TYPE_UINT64":                  23,
+		"TYPE_UINT128":                 24,
+		"TYPE_UINT256":                 25,
+		"TYPE_FLOAT16":                 30,
+		"TYPE_FLOAT32":                 31,
+		"TYPE_FLOAT64":                 32,
+		"TYPE_FLOAT128":                33,
+		"TYPE_FLOAT256":                34,
+		"TYPE_DECIMAL":                 40,
+		"TYPE_STRING":                  50,
+		"TYPE_BYTES":                   60,
+		"TYPE_DATE":                    70,
+		"TYPE_LOCAL_TIME":              71,
+		"TYPE_ZONED_TIME":              72,
+		"TYPE_LOCAL_DATETIME":          73,
+		"TYPE_ZONED_DATETIME":          74,
+		"TYPE_DURATION":                75,
+		"TYPE_YEAR_MONTH_DURATION":     76,
+		"TYPE_DAY_TIME_DURATION":       77,
+		"TYPE_LIST":                    80,
+		"TYPE_RECORD":                  81,
+		"TYPE_PATH":                    82,
+		"TYPE_NODE":                    90,
+		"TYPE_EDGE":                    91,
+		"TYPE_NODE_REFERENCE":          92,
+		"TYPE_EDGE_REFERENCE":          93,
+		"TYPE_GRAPH_REFERENCE":         100,
+		"TYPE_BINDING_TABLE_REFERENCE": 101,
+		"TYPE_ANY":                     110,
+		"TYPE_PROPERTY_VALUE":          111,
 	}
 )
 
@@ -163,11 +235,11 @@ func (x GqlType) String() string {
 }
 
 func (GqlType) Descriptor() protoreflect.EnumDescriptor {
-	return file_gql_types_proto_enumTypes[0].Descriptor()
+	return file_gql_types_proto_enumTypes[1].Descriptor()
 }
 
 func (GqlType) Type() protoreflect.EnumType {
-	return &file_gql_types_proto_enumTypes[0]
+	return &file_gql_types_proto_enumTypes[1]
 }
 
 func (x GqlType) Number() protoreflect.EnumNumber {
@@ -176,7 +248,7 @@ func (x GqlType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use GqlType.Descriptor instead.
 func (GqlType) EnumDescriptor() ([]byte, []int) {
-	return file_gql_types_proto_rawDescGZIP(), []int{0}
+	return file_gql_types_proto_rawDescGZIP(), []int{1}
 }
 
 // Discriminated union of all GQL value types.
@@ -1469,13 +1541,28 @@ func (x *Field) GetValue() *Value {
 }
 
 type TypeDescriptor struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Type          GqlType                `protobuf:"varint,1,opt,name=type,proto3,enum=gql.GqlType" json:"type,omitempty"`
-	Nullable      bool                   `protobuf:"varint,2,opt,name=nullable,proto3" json:"nullable,omitempty"`
-	ElementType   *TypeDescriptor        `protobuf:"bytes,3,opt,name=element_type,json=elementType,proto3" json:"element_type,omitempty"` // For LIST: element type
-	Fields        []*FieldDescriptor     `protobuf:"bytes,4,rep,name=fields,proto3" json:"fields,omitempty"`                              // For RECORD: field types
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	Type        GqlType                `protobuf:"varint,1,opt,name=type,proto3,enum=gql.GqlType" json:"type,omitempty"`
+	Nullable    bool                   `protobuf:"varint,2,opt,name=nullable,proto3" json:"nullable,omitempty"`
+	ElementType *TypeDescriptor        `protobuf:"bytes,3,opt,name=element_type,json=elementType,proto3" json:"element_type,omitempty"` // For LIST: element type
+	Fields      []*FieldDescriptor     `protobuf:"bytes,4,rep,name=fields,proto3" json:"fields,omitempty"`                              // For RECORD: field types
+	// Numeric precision and scale (sec 18.9)
+	Precision *uint32 `protobuf:"varint,5,opt,name=precision,proto3,oneof" json:"precision,omitempty"` // Bits (integer/float) or digits (decimal)
+	Scale     *uint32 `protobuf:"varint,6,opt,name=scale,proto3,oneof" json:"scale,omitempty"`         // Digits after decimal point (DECIMAL only)
+	// String / byte string length constraints (sec 18.9)
+	MinLength *uint64 `protobuf:"varint,7,opt,name=min_length,json=minLength,proto3,oneof" json:"min_length,omitempty"`
+	MaxLength *uint64 `protobuf:"varint,8,opt,name=max_length,json=maxLength,proto3,oneof" json:"max_length,omitempty"`
+	// LIST qualifiers (sec 4.15.3)
+	MaxCardinality *uint64 `protobuf:"varint,9,opt,name=max_cardinality,json=maxCardinality,proto3,oneof" json:"max_cardinality,omitempty"` // Maximum number of elements
+	IsGroup        bool    `protobuf:"varint,10,opt,name=is_group,json=isGroup,proto3" json:"is_group,omitempty"`                           // GROUP LIST characteristic
+	// RECORD qualifier (sec 4.15.4)
+	IsOpen bool `protobuf:"varint,11,opt,name=is_open,json=isOpen,proto3" json:"is_open,omitempty"` // true = ANY RECORD (open), false = closed
+	// DURATION qualifier (sec 4.16.6.3)
+	DurationQualifier DurationQualifier `protobuf:"varint,12,opt,name=duration_qualifier,json=durationQualifier,proto3,enum=gql.DurationQualifier" json:"duration_qualifier,omitempty"`
+	// Closed dynamic union (sec 4.14): component types of ANY VALUE<T1 | T2>
+	ComponentTypes []*TypeDescriptor `protobuf:"bytes,13,rep,name=component_types,json=componentTypes,proto3" json:"component_types,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *TypeDescriptor) Reset() {
@@ -1532,6 +1619,69 @@ func (x *TypeDescriptor) GetElementType() *TypeDescriptor {
 func (x *TypeDescriptor) GetFields() []*FieldDescriptor {
 	if x != nil {
 		return x.Fields
+	}
+	return nil
+}
+
+func (x *TypeDescriptor) GetPrecision() uint32 {
+	if x != nil && x.Precision != nil {
+		return *x.Precision
+	}
+	return 0
+}
+
+func (x *TypeDescriptor) GetScale() uint32 {
+	if x != nil && x.Scale != nil {
+		return *x.Scale
+	}
+	return 0
+}
+
+func (x *TypeDescriptor) GetMinLength() uint64 {
+	if x != nil && x.MinLength != nil {
+		return *x.MinLength
+	}
+	return 0
+}
+
+func (x *TypeDescriptor) GetMaxLength() uint64 {
+	if x != nil && x.MaxLength != nil {
+		return *x.MaxLength
+	}
+	return 0
+}
+
+func (x *TypeDescriptor) GetMaxCardinality() uint64 {
+	if x != nil && x.MaxCardinality != nil {
+		return *x.MaxCardinality
+	}
+	return 0
+}
+
+func (x *TypeDescriptor) GetIsGroup() bool {
+	if x != nil {
+		return x.IsGroup
+	}
+	return false
+}
+
+func (x *TypeDescriptor) GetIsOpen() bool {
+	if x != nil {
+		return x.IsOpen
+	}
+	return false
+}
+
+func (x *TypeDescriptor) GetDurationQualifier() DurationQualifier {
+	if x != nil {
+		return x.DurationQualifier
+	}
+	return DurationQualifier_DURATION_UNSPECIFIED
+}
+
+func (x *TypeDescriptor) GetComponentTypes() []*TypeDescriptor {
+	if x != nil {
+		return x.ComponentTypes
 	}
 	return nil
 }
@@ -1657,14 +1807,15 @@ func (x *GqlStatus) GetCause() *GqlStatus {
 	return nil
 }
 
-// Diagnostic context for error reporting.
+// Diagnostic context for error reporting (sec 23.2).
 type DiagnosticRecord struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Operation     string                 `protobuf:"bytes,1,opt,name=operation,proto3" json:"operation,omitempty"`                               // e.g. "MATCH STATEMENT"
-	OperationCode int32                  `protobuf:"varint,2,opt,name=operation_code,json=operationCode,proto3" json:"operation_code,omitempty"` // e.g. 600
-	CurrentSchema string                 `protobuf:"bytes,3,opt,name=current_schema,json=currentSchema,proto3" json:"current_schema,omitempty"`  // Schema context
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Operation        string                 `protobuf:"bytes,1,opt,name=operation,proto3" json:"operation,omitempty"`                                             // e.g. "MATCH STATEMENT"
+	OperationCode    int32                  `protobuf:"varint,2,opt,name=operation_code,json=operationCode,proto3" json:"operation_code,omitempty"`               // e.g. 600
+	CurrentSchema    *string                `protobuf:"bytes,3,opt,name=current_schema,json=currentSchema,proto3,oneof" json:"current_schema,omitempty"`          // Schema context (null if undefined)
+	InvalidReference *string                `protobuf:"bytes,4,opt,name=invalid_reference,json=invalidReference,proto3,oneof" json:"invalid_reference,omitempty"` // Identifier that caused 42002
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *DiagnosticRecord) Reset() {
@@ -1712,8 +1863,15 @@ func (x *DiagnosticRecord) GetOperationCode() int32 {
 }
 
 func (x *DiagnosticRecord) GetCurrentSchema() string {
-	if x != nil {
-		return x.CurrentSchema
+	if x != nil && x.CurrentSchema != nil {
+		return *x.CurrentSchema
+	}
+	return ""
+}
+
+func (x *DiagnosticRecord) GetInvalidReference() string {
+	if x != nil && x.InvalidReference != nil {
+		return *x.InvalidReference
 	}
 	return ""
 }
@@ -1963,12 +2121,30 @@ const file_gql_types_proto_rawDesc = "" +
 	"\x05Field\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
 	"\x05value\x18\x02 \x01(\v2\n" +
-	".gql.ValueR\x05value\"\xb4\x01\n" +
+	".gql.ValueR\x05value\"\xeb\x04\n" +
 	"\x0eTypeDescriptor\x12 \n" +
 	"\x04type\x18\x01 \x01(\x0e2\f.gql.GqlTypeR\x04type\x12\x1a\n" +
 	"\bnullable\x18\x02 \x01(\bR\bnullable\x126\n" +
 	"\felement_type\x18\x03 \x01(\v2\x13.gql.TypeDescriptorR\velementType\x12,\n" +
-	"\x06fields\x18\x04 \x03(\v2\x14.gql.FieldDescriptorR\x06fields\"N\n" +
+	"\x06fields\x18\x04 \x03(\v2\x14.gql.FieldDescriptorR\x06fields\x12!\n" +
+	"\tprecision\x18\x05 \x01(\rH\x00R\tprecision\x88\x01\x01\x12\x19\n" +
+	"\x05scale\x18\x06 \x01(\rH\x01R\x05scale\x88\x01\x01\x12\"\n" +
+	"\n" +
+	"min_length\x18\a \x01(\x04H\x02R\tminLength\x88\x01\x01\x12\"\n" +
+	"\n" +
+	"max_length\x18\b \x01(\x04H\x03R\tmaxLength\x88\x01\x01\x12,\n" +
+	"\x0fmax_cardinality\x18\t \x01(\x04H\x04R\x0emaxCardinality\x88\x01\x01\x12\x19\n" +
+	"\bis_group\x18\n" +
+	" \x01(\bR\aisGroup\x12\x17\n" +
+	"\ais_open\x18\v \x01(\bR\x06isOpen\x12E\n" +
+	"\x12duration_qualifier\x18\f \x01(\x0e2\x16.gql.DurationQualifierR\x11durationQualifier\x12<\n" +
+	"\x0fcomponent_types\x18\r \x03(\v2\x13.gql.TypeDescriptorR\x0ecomponentTypesB\f\n" +
+	"\n" +
+	"_precisionB\b\n" +
+	"\x06_scaleB\r\n" +
+	"\v_min_lengthB\r\n" +
+	"\v_max_lengthB\x12\n" +
+	"\x10_max_cardinality\"N\n" +
 	"\x0fFieldDescriptor\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12'\n" +
 	"\x04type\x18\x02 \x01(\v2\x13.gql.TypeDescriptorR\x04type\"\x96\x01\n" +
@@ -1978,22 +2154,31 @@ const file_gql_types_proto_rawDesc = "" +
 	"\n" +
 	"diagnostic\x18\x03 \x01(\v2\x15.gql.DiagnosticRecordR\n" +
 	"diagnostic\x12$\n" +
-	"\x05cause\x18\x04 \x01(\v2\x0e.gql.GqlStatusR\x05cause\"~\n" +
+	"\x05cause\x18\x04 \x01(\v2\x0e.gql.GqlStatusR\x05cause\"\xde\x01\n" +
 	"\x10DiagnosticRecord\x12\x1c\n" +
 	"\toperation\x18\x01 \x01(\tR\toperation\x12%\n" +
-	"\x0eoperation_code\x18\x02 \x01(\x05R\roperationCode\x12%\n" +
-	"\x0ecurrent_schema\x18\x03 \x01(\tR\rcurrentSchema\"h\n" +
+	"\x0eoperation_code\x18\x02 \x01(\x05R\roperationCode\x12*\n" +
+	"\x0ecurrent_schema\x18\x03 \x01(\tH\x00R\rcurrentSchema\x88\x01\x01\x120\n" +
+	"\x11invalid_reference\x18\x04 \x01(\tH\x01R\x10invalidReference\x88\x01\x01B\x11\n" +
+	"\x0f_current_schemaB\x14\n" +
+	"\x12_invalid_reference\"h\n" +
 	"\x0fAuthCredentials\x12#\n" +
 	"\fbearer_token\x18\x01 \x01(\tH\x00R\vbearerToken\x12&\n" +
 	"\x05basic\x18\x02 \x01(\v2\x0e.gql.BasicAuthH\x00R\x05basicB\b\n" +
 	"\x06method\"C\n" +
 	"\tBasicAuth\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x1a\n" +
-	"\bpassword\x18\x02 \x01(\tR\bpassword*\x85\x05\n" +
+	"\bpassword\x18\x02 \x01(\tR\bpassword*e\n" +
+	"\x11DurationQualifier\x12\x18\n" +
+	"\x14DURATION_UNSPECIFIED\x10\x00\x12\x1a\n" +
+	"\x16DURATION_YEAR_TO_MONTH\x10\x01\x12\x1a\n" +
+	"\x16DURATION_DAY_TO_SECOND\x10\x02*\xbd\x06\n" +
 	"\aGqlType\x12\x10\n" +
 	"\fTYPE_UNKNOWN\x10\x00\x12\r\n" +
 	"\tTYPE_NULL\x10\x01\x12\x10\n" +
-	"\fTYPE_BOOLEAN\x10\x02\x12\r\n" +
+	"\fTYPE_BOOLEAN\x10\x02\x12\x0e\n" +
+	"\n" +
+	"TYPE_EMPTY\x10\x03\x12\r\n" +
 	"\tTYPE_INT8\x10\n" +
 	"\x12\x0e\n" +
 	"\n" +
@@ -2025,12 +2210,18 @@ const file_gql_types_proto_rawDesc = "" +
 	"\x0fTYPE_ZONED_TIME\x10H\x12\x17\n" +
 	"\x13TYPE_LOCAL_DATETIME\x10I\x12\x17\n" +
 	"\x13TYPE_ZONED_DATETIME\x10J\x12\x11\n" +
-	"\rTYPE_DURATION\x10K\x12\r\n" +
+	"\rTYPE_DURATION\x10K\x12\x1c\n" +
+	"\x18TYPE_YEAR_MONTH_DURATION\x10L\x12\x1a\n" +
+	"\x16TYPE_DAY_TIME_DURATION\x10M\x12\r\n" +
 	"\tTYPE_LIST\x10P\x12\x0f\n" +
 	"\vTYPE_RECORD\x10Q\x12\r\n" +
 	"\tTYPE_PATH\x10R\x12\r\n" +
 	"\tTYPE_NODE\x10Z\x12\r\n" +
-	"\tTYPE_EDGE\x10[\x12\f\n" +
+	"\tTYPE_EDGE\x10[\x12\x17\n" +
+	"\x13TYPE_NODE_REFERENCE\x10\\\x12\x17\n" +
+	"\x13TYPE_EDGE_REFERENCE\x10]\x12\x18\n" +
+	"\x14TYPE_GRAPH_REFERENCE\x10d\x12 \n" +
+	"\x1cTYPE_BINDING_TABLE_REFERENCE\x10e\x12\f\n" +
 	"\bTYPE_ANY\x10n\x12\x17\n" +
 	"\x13TYPE_PROPERTY_VALUE\x10ob\x06proto3"
 
@@ -2046,78 +2237,81 @@ func file_gql_types_proto_rawDescGZIP() []byte {
 	return file_gql_types_proto_rawDescData
 }
 
-var file_gql_types_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_gql_types_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_gql_types_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
 var file_gql_types_proto_goTypes = []any{
-	(GqlType)(0),             // 0: gql.GqlType
-	(*Value)(nil),            // 1: gql.Value
-	(*NullValue)(nil),        // 2: gql.NullValue
-	(*BigInteger)(nil),       // 3: gql.BigInteger
-	(*BigFloat)(nil),         // 4: gql.BigFloat
-	(*Decimal)(nil),          // 5: gql.Decimal
-	(*Date)(nil),             // 6: gql.Date
-	(*LocalTime)(nil),        // 7: gql.LocalTime
-	(*ZonedTime)(nil),        // 8: gql.ZonedTime
-	(*LocalDateTime)(nil),    // 9: gql.LocalDateTime
-	(*ZonedDateTime)(nil),    // 10: gql.ZonedDateTime
-	(*Duration)(nil),         // 11: gql.Duration
-	(*Node)(nil),             // 12: gql.Node
-	(*Edge)(nil),             // 13: gql.Edge
-	(*Path)(nil),             // 14: gql.Path
-	(*GqlList)(nil),          // 15: gql.GqlList
-	(*Record)(nil),           // 16: gql.Record
-	(*Field)(nil),            // 17: gql.Field
-	(*TypeDescriptor)(nil),   // 18: gql.TypeDescriptor
-	(*FieldDescriptor)(nil),  // 19: gql.FieldDescriptor
-	(*GqlStatus)(nil),        // 20: gql.GqlStatus
-	(*DiagnosticRecord)(nil), // 21: gql.DiagnosticRecord
-	(*AuthCredentials)(nil),  // 22: gql.AuthCredentials
-	(*BasicAuth)(nil),        // 23: gql.BasicAuth
-	nil,                      // 24: gql.Node.PropertiesEntry
-	nil,                      // 25: gql.Edge.PropertiesEntry
+	(DurationQualifier)(0),   // 0: gql.DurationQualifier
+	(GqlType)(0),             // 1: gql.GqlType
+	(*Value)(nil),            // 2: gql.Value
+	(*NullValue)(nil),        // 3: gql.NullValue
+	(*BigInteger)(nil),       // 4: gql.BigInteger
+	(*BigFloat)(nil),         // 5: gql.BigFloat
+	(*Decimal)(nil),          // 6: gql.Decimal
+	(*Date)(nil),             // 7: gql.Date
+	(*LocalTime)(nil),        // 8: gql.LocalTime
+	(*ZonedTime)(nil),        // 9: gql.ZonedTime
+	(*LocalDateTime)(nil),    // 10: gql.LocalDateTime
+	(*ZonedDateTime)(nil),    // 11: gql.ZonedDateTime
+	(*Duration)(nil),         // 12: gql.Duration
+	(*Node)(nil),             // 13: gql.Node
+	(*Edge)(nil),             // 14: gql.Edge
+	(*Path)(nil),             // 15: gql.Path
+	(*GqlList)(nil),          // 16: gql.GqlList
+	(*Record)(nil),           // 17: gql.Record
+	(*Field)(nil),            // 18: gql.Field
+	(*TypeDescriptor)(nil),   // 19: gql.TypeDescriptor
+	(*FieldDescriptor)(nil),  // 20: gql.FieldDescriptor
+	(*GqlStatus)(nil),        // 21: gql.GqlStatus
+	(*DiagnosticRecord)(nil), // 22: gql.DiagnosticRecord
+	(*AuthCredentials)(nil),  // 23: gql.AuthCredentials
+	(*BasicAuth)(nil),        // 24: gql.BasicAuth
+	nil,                      // 25: gql.Node.PropertiesEntry
+	nil,                      // 26: gql.Edge.PropertiesEntry
 }
 var file_gql_types_proto_depIdxs = []int32{
-	2,  // 0: gql.Value.null_value:type_name -> gql.NullValue
-	3,  // 1: gql.Value.big_integer_value:type_name -> gql.BigInteger
-	4,  // 2: gql.Value.big_float_value:type_name -> gql.BigFloat
-	5,  // 3: gql.Value.decimal_value:type_name -> gql.Decimal
-	6,  // 4: gql.Value.date_value:type_name -> gql.Date
-	7,  // 5: gql.Value.local_time_value:type_name -> gql.LocalTime
-	8,  // 6: gql.Value.zoned_time_value:type_name -> gql.ZonedTime
-	9,  // 7: gql.Value.local_datetime_value:type_name -> gql.LocalDateTime
-	10, // 8: gql.Value.zoned_datetime_value:type_name -> gql.ZonedDateTime
-	11, // 9: gql.Value.duration_value:type_name -> gql.Duration
-	15, // 10: gql.Value.list_value:type_name -> gql.GqlList
-	16, // 11: gql.Value.record_value:type_name -> gql.Record
-	12, // 12: gql.Value.node_value:type_name -> gql.Node
-	13, // 13: gql.Value.edge_value:type_name -> gql.Edge
-	14, // 14: gql.Value.path_value:type_name -> gql.Path
-	7,  // 15: gql.ZonedTime.time:type_name -> gql.LocalTime
-	6,  // 16: gql.LocalDateTime.date:type_name -> gql.Date
-	7,  // 17: gql.LocalDateTime.time:type_name -> gql.LocalTime
-	6,  // 18: gql.ZonedDateTime.date:type_name -> gql.Date
-	7,  // 19: gql.ZonedDateTime.time:type_name -> gql.LocalTime
-	24, // 20: gql.Node.properties:type_name -> gql.Node.PropertiesEntry
-	25, // 21: gql.Edge.properties:type_name -> gql.Edge.PropertiesEntry
-	12, // 22: gql.Path.nodes:type_name -> gql.Node
-	13, // 23: gql.Path.edges:type_name -> gql.Edge
-	1,  // 24: gql.GqlList.elements:type_name -> gql.Value
-	17, // 25: gql.Record.fields:type_name -> gql.Field
-	1,  // 26: gql.Field.value:type_name -> gql.Value
-	0,  // 27: gql.TypeDescriptor.type:type_name -> gql.GqlType
-	18, // 28: gql.TypeDescriptor.element_type:type_name -> gql.TypeDescriptor
-	19, // 29: gql.TypeDescriptor.fields:type_name -> gql.FieldDescriptor
-	18, // 30: gql.FieldDescriptor.type:type_name -> gql.TypeDescriptor
-	21, // 31: gql.GqlStatus.diagnostic:type_name -> gql.DiagnosticRecord
-	20, // 32: gql.GqlStatus.cause:type_name -> gql.GqlStatus
-	23, // 33: gql.AuthCredentials.basic:type_name -> gql.BasicAuth
-	1,  // 34: gql.Node.PropertiesEntry.value:type_name -> gql.Value
-	1,  // 35: gql.Edge.PropertiesEntry.value:type_name -> gql.Value
-	36, // [36:36] is the sub-list for method output_type
-	36, // [36:36] is the sub-list for method input_type
-	36, // [36:36] is the sub-list for extension type_name
-	36, // [36:36] is the sub-list for extension extendee
-	0,  // [0:36] is the sub-list for field type_name
+	3,  // 0: gql.Value.null_value:type_name -> gql.NullValue
+	4,  // 1: gql.Value.big_integer_value:type_name -> gql.BigInteger
+	5,  // 2: gql.Value.big_float_value:type_name -> gql.BigFloat
+	6,  // 3: gql.Value.decimal_value:type_name -> gql.Decimal
+	7,  // 4: gql.Value.date_value:type_name -> gql.Date
+	8,  // 5: gql.Value.local_time_value:type_name -> gql.LocalTime
+	9,  // 6: gql.Value.zoned_time_value:type_name -> gql.ZonedTime
+	10, // 7: gql.Value.local_datetime_value:type_name -> gql.LocalDateTime
+	11, // 8: gql.Value.zoned_datetime_value:type_name -> gql.ZonedDateTime
+	12, // 9: gql.Value.duration_value:type_name -> gql.Duration
+	16, // 10: gql.Value.list_value:type_name -> gql.GqlList
+	17, // 11: gql.Value.record_value:type_name -> gql.Record
+	13, // 12: gql.Value.node_value:type_name -> gql.Node
+	14, // 13: gql.Value.edge_value:type_name -> gql.Edge
+	15, // 14: gql.Value.path_value:type_name -> gql.Path
+	8,  // 15: gql.ZonedTime.time:type_name -> gql.LocalTime
+	7,  // 16: gql.LocalDateTime.date:type_name -> gql.Date
+	8,  // 17: gql.LocalDateTime.time:type_name -> gql.LocalTime
+	7,  // 18: gql.ZonedDateTime.date:type_name -> gql.Date
+	8,  // 19: gql.ZonedDateTime.time:type_name -> gql.LocalTime
+	25, // 20: gql.Node.properties:type_name -> gql.Node.PropertiesEntry
+	26, // 21: gql.Edge.properties:type_name -> gql.Edge.PropertiesEntry
+	13, // 22: gql.Path.nodes:type_name -> gql.Node
+	14, // 23: gql.Path.edges:type_name -> gql.Edge
+	2,  // 24: gql.GqlList.elements:type_name -> gql.Value
+	18, // 25: gql.Record.fields:type_name -> gql.Field
+	2,  // 26: gql.Field.value:type_name -> gql.Value
+	1,  // 27: gql.TypeDescriptor.type:type_name -> gql.GqlType
+	19, // 28: gql.TypeDescriptor.element_type:type_name -> gql.TypeDescriptor
+	20, // 29: gql.TypeDescriptor.fields:type_name -> gql.FieldDescriptor
+	0,  // 30: gql.TypeDescriptor.duration_qualifier:type_name -> gql.DurationQualifier
+	19, // 31: gql.TypeDescriptor.component_types:type_name -> gql.TypeDescriptor
+	19, // 32: gql.FieldDescriptor.type:type_name -> gql.TypeDescriptor
+	22, // 33: gql.GqlStatus.diagnostic:type_name -> gql.DiagnosticRecord
+	21, // 34: gql.GqlStatus.cause:type_name -> gql.GqlStatus
+	24, // 35: gql.AuthCredentials.basic:type_name -> gql.BasicAuth
+	2,  // 36: gql.Node.PropertiesEntry.value:type_name -> gql.Value
+	2,  // 37: gql.Edge.PropertiesEntry.value:type_name -> gql.Value
+	38, // [38:38] is the sub-list for method output_type
+	38, // [38:38] is the sub-list for method input_type
+	38, // [38:38] is the sub-list for extension type_name
+	38, // [38:38] is the sub-list for extension extendee
+	0,  // [0:38] is the sub-list for field type_name
 }
 
 func init() { file_gql_types_proto_init() }
@@ -2148,6 +2342,8 @@ func file_gql_types_proto_init() {
 		(*Value_EdgeValue)(nil),
 		(*Value_PathValue)(nil),
 	}
+	file_gql_types_proto_msgTypes[17].OneofWrappers = []any{}
+	file_gql_types_proto_msgTypes[20].OneofWrappers = []any{}
 	file_gql_types_proto_msgTypes[21].OneofWrappers = []any{
 		(*AuthCredentials_BearerToken)(nil),
 		(*AuthCredentials_Basic)(nil),
@@ -2157,7 +2353,7 @@ func file_gql_types_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_gql_types_proto_rawDesc), len(file_gql_types_proto_rawDesc)),
-			NumEnums:      1,
+			NumEnums:      2,
 			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   0,

@@ -996,6 +996,7 @@ type ResultHeader struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ResultType    ResultType             `protobuf:"varint,1,opt,name=result_type,json=resultType,proto3,enum=gql.ResultType" json:"result_type,omitempty"`
 	Columns       []*ColumnDescriptor    `protobuf:"bytes,2,rep,name=columns,proto3" json:"columns,omitempty"`
+	Ordered       bool                   `protobuf:"varint,3,opt,name=ordered,proto3" json:"ordered,omitempty"` // Whether row order is semantically meaningful (sec 4.3.6)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1042,6 +1043,13 @@ func (x *ResultHeader) GetColumns() []*ColumnDescriptor {
 		return x.Columns
 	}
 	return nil
+}
+
+func (x *ResultHeader) GetOrdered() bool {
+	if x != nil {
+		return x.Ordered
+	}
+	return false
 }
 
 type ColumnDescriptor struct {
@@ -1550,26 +1558,26 @@ func (x *RollbackResponse) GetStatus() *GqlStatus {
 	return nil
 }
 
-type ListDatabasesRequest struct {
+type ListSchemasRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListDatabasesRequest) Reset() {
-	*x = ListDatabasesRequest{}
+func (x *ListSchemasRequest) Reset() {
+	*x = ListSchemasRequest{}
 	mi := &file_gql_service_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListDatabasesRequest) String() string {
+func (x *ListSchemasRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListDatabasesRequest) ProtoMessage() {}
+func (*ListSchemasRequest) ProtoMessage() {}
 
-func (x *ListDatabasesRequest) ProtoReflect() protoreflect.Message {
+func (x *ListSchemasRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_gql_service_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1581,36 +1589,34 @@ func (x *ListDatabasesRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListDatabasesRequest.ProtoReflect.Descriptor instead.
-func (*ListDatabasesRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListSchemasRequest.ProtoReflect.Descriptor instead.
+func (*ListSchemasRequest) Descriptor() ([]byte, []int) {
 	return file_gql_service_proto_rawDescGZIP(), []int{25}
 }
 
-type DatabaseSummary struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	NodeCount     uint64                 `protobuf:"varint,2,opt,name=node_count,json=nodeCount,proto3" json:"node_count,omitempty"`
-	EdgeCount     uint64                 `protobuf:"varint,3,opt,name=edge_count,json=edgeCount,proto3" json:"edge_count,omitempty"`
-	Persistent    bool                   `protobuf:"varint,4,opt,name=persistent,proto3" json:"persistent,omitempty"`
-	DatabaseType  string                 `protobuf:"bytes,5,opt,name=database_type,json=databaseType,proto3" json:"database_type,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+type SchemaInfo struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Name           string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	GraphCount     uint32                 `protobuf:"varint,2,opt,name=graph_count,json=graphCount,proto3" json:"graph_count,omitempty"`
+	GraphTypeCount uint32                 `protobuf:"varint,3,opt,name=graph_type_count,json=graphTypeCount,proto3" json:"graph_type_count,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
-func (x *DatabaseSummary) Reset() {
-	*x = DatabaseSummary{}
+func (x *SchemaInfo) Reset() {
+	*x = SchemaInfo{}
 	mi := &file_gql_service_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DatabaseSummary) String() string {
+func (x *SchemaInfo) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DatabaseSummary) ProtoMessage() {}
+func (*SchemaInfo) ProtoMessage() {}
 
-func (x *DatabaseSummary) ProtoReflect() protoreflect.Message {
+func (x *SchemaInfo) ProtoReflect() protoreflect.Message {
 	mi := &file_gql_service_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1622,68 +1628,402 @@ func (x *DatabaseSummary) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DatabaseSummary.ProtoReflect.Descriptor instead.
-func (*DatabaseSummary) Descriptor() ([]byte, []int) {
+// Deprecated: Use SchemaInfo.ProtoReflect.Descriptor instead.
+func (*SchemaInfo) Descriptor() ([]byte, []int) {
 	return file_gql_service_proto_rawDescGZIP(), []int{26}
 }
 
-func (x *DatabaseSummary) GetName() string {
+func (x *SchemaInfo) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *DatabaseSummary) GetNodeCount() uint64 {
+func (x *SchemaInfo) GetGraphCount() uint32 {
+	if x != nil {
+		return x.GraphCount
+	}
+	return 0
+}
+
+func (x *SchemaInfo) GetGraphTypeCount() uint32 {
+	if x != nil {
+		return x.GraphTypeCount
+	}
+	return 0
+}
+
+type ListSchemasResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Schemas       []*SchemaInfo          `protobuf:"bytes,1,rep,name=schemas,proto3" json:"schemas,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListSchemasResponse) Reset() {
+	*x = ListSchemasResponse{}
+	mi := &file_gql_service_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListSchemasResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListSchemasResponse) ProtoMessage() {}
+
+func (x *ListSchemasResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListSchemasResponse.ProtoReflect.Descriptor instead.
+func (*ListSchemasResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *ListSchemasResponse) GetSchemas() []*SchemaInfo {
+	if x != nil {
+		return x.Schemas
+	}
+	return nil
+}
+
+type CreateSchemaRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	IfNotExists   bool                   `protobuf:"varint,2,opt,name=if_not_exists,json=ifNotExists,proto3" json:"if_not_exists,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateSchemaRequest) Reset() {
+	*x = CreateSchemaRequest{}
+	mi := &file_gql_service_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateSchemaRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateSchemaRequest) ProtoMessage() {}
+
+func (x *CreateSchemaRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateSchemaRequest.ProtoReflect.Descriptor instead.
+func (*CreateSchemaRequest) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *CreateSchemaRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CreateSchemaRequest) GetIfNotExists() bool {
+	if x != nil {
+		return x.IfNotExists
+	}
+	return false
+}
+
+type CreateSchemaResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateSchemaResponse) Reset() {
+	*x = CreateSchemaResponse{}
+	mi := &file_gql_service_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateSchemaResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateSchemaResponse) ProtoMessage() {}
+
+func (x *CreateSchemaResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateSchemaResponse.ProtoReflect.Descriptor instead.
+func (*CreateSchemaResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{29}
+}
+
+type DropSchemaRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	IfExists      bool                   `protobuf:"varint,2,opt,name=if_exists,json=ifExists,proto3" json:"if_exists,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DropSchemaRequest) Reset() {
+	*x = DropSchemaRequest{}
+	mi := &file_gql_service_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DropSchemaRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DropSchemaRequest) ProtoMessage() {}
+
+func (x *DropSchemaRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DropSchemaRequest.ProtoReflect.Descriptor instead.
+func (*DropSchemaRequest) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *DropSchemaRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *DropSchemaRequest) GetIfExists() bool {
+	if x != nil {
+		return x.IfExists
+	}
+	return false
+}
+
+type DropSchemaResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Existed       bool                   `protobuf:"varint,1,opt,name=existed,proto3" json:"existed,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DropSchemaResponse) Reset() {
+	*x = DropSchemaResponse{}
+	mi := &file_gql_service_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DropSchemaResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DropSchemaResponse) ProtoMessage() {}
+
+func (x *DropSchemaResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DropSchemaResponse.ProtoReflect.Descriptor instead.
+func (*DropSchemaResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *DropSchemaResponse) GetExisted() bool {
+	if x != nil {
+		return x.Existed
+	}
+	return false
+}
+
+type ListGraphsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Schema        string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"` // Schema to list graphs from
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListGraphsRequest) Reset() {
+	*x = ListGraphsRequest{}
+	mi := &file_gql_service_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListGraphsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListGraphsRequest) ProtoMessage() {}
+
+func (x *ListGraphsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListGraphsRequest.ProtoReflect.Descriptor instead.
+func (*ListGraphsRequest) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *ListGraphsRequest) GetSchema() string {
+	if x != nil {
+		return x.Schema
+	}
+	return ""
+}
+
+type GraphSummary struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Schema        string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	NodeCount     uint64                 `protobuf:"varint,3,opt,name=node_count,json=nodeCount,proto3" json:"node_count,omitempty"`
+	EdgeCount     uint64                 `protobuf:"varint,4,opt,name=edge_count,json=edgeCount,proto3" json:"edge_count,omitempty"`
+	GraphType     string                 `protobuf:"bytes,5,opt,name=graph_type,json=graphType,proto3" json:"graph_type,omitempty"` // Graph type name (empty if open)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GraphSummary) Reset() {
+	*x = GraphSummary{}
+	mi := &file_gql_service_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GraphSummary) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GraphSummary) ProtoMessage() {}
+
+func (x *GraphSummary) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GraphSummary.ProtoReflect.Descriptor instead.
+func (*GraphSummary) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *GraphSummary) GetSchema() string {
+	if x != nil {
+		return x.Schema
+	}
+	return ""
+}
+
+func (x *GraphSummary) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *GraphSummary) GetNodeCount() uint64 {
 	if x != nil {
 		return x.NodeCount
 	}
 	return 0
 }
 
-func (x *DatabaseSummary) GetEdgeCount() uint64 {
+func (x *GraphSummary) GetEdgeCount() uint64 {
 	if x != nil {
 		return x.EdgeCount
 	}
 	return 0
 }
 
-func (x *DatabaseSummary) GetPersistent() bool {
+func (x *GraphSummary) GetGraphType() string {
 	if x != nil {
-		return x.Persistent
-	}
-	return false
-}
-
-func (x *DatabaseSummary) GetDatabaseType() string {
-	if x != nil {
-		return x.DatabaseType
+		return x.GraphType
 	}
 	return ""
 }
 
-type ListDatabasesResponse struct {
+type ListGraphsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Databases     []*DatabaseSummary     `protobuf:"bytes,1,rep,name=databases,proto3" json:"databases,omitempty"`
+	Graphs        []*GraphSummary        `protobuf:"bytes,1,rep,name=graphs,proto3" json:"graphs,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListDatabasesResponse) Reset() {
-	*x = ListDatabasesResponse{}
-	mi := &file_gql_service_proto_msgTypes[27]
+func (x *ListGraphsResponse) Reset() {
+	*x = ListGraphsResponse{}
+	mi := &file_gql_service_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListDatabasesResponse) String() string {
+func (x *ListGraphsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListDatabasesResponse) ProtoMessage() {}
+func (*ListGraphsResponse) ProtoMessage() {}
 
-func (x *ListDatabasesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_gql_service_proto_msgTypes[27]
+func (x *ListGraphsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1694,43 +2034,55 @@ func (x *ListDatabasesResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListDatabasesResponse.ProtoReflect.Descriptor instead.
-func (*ListDatabasesResponse) Descriptor() ([]byte, []int) {
-	return file_gql_service_proto_rawDescGZIP(), []int{27}
+// Deprecated: Use ListGraphsResponse.ProtoReflect.Descriptor instead.
+func (*ListGraphsResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{34}
 }
 
-func (x *ListDatabasesResponse) GetDatabases() []*DatabaseSummary {
+func (x *ListGraphsResponse) GetGraphs() []*GraphSummary {
 	if x != nil {
-		return x.Databases
+		return x.Graphs
 	}
 	return nil
 }
 
-type CreateDatabaseRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	DatabaseType  string                 `protobuf:"bytes,2,opt,name=database_type,json=databaseType,proto3" json:"database_type,omitempty"` // "Lpg", "Rdf", etc.
-	StorageMode   string                 `protobuf:"bytes,3,opt,name=storage_mode,json=storageMode,proto3" json:"storage_mode,omitempty"`    // "InMemory" or "Persistent"
-	Options       *DatabaseOptions       `protobuf:"bytes,4,opt,name=options,proto3" json:"options,omitempty"`
+type CreateGraphRequest struct {
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	Schema      string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"`
+	Name        string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	IfNotExists bool                   `protobuf:"varint,3,opt,name=if_not_exists,json=ifNotExists,proto3" json:"if_not_exists,omitempty"`
+	OrReplace   bool                   `protobuf:"varint,4,opt,name=or_replace,json=orReplace,proto3" json:"or_replace,omitempty"`
+	// Graph type (sec 12.4)
+	//
+	// Types that are valid to be assigned to TypeSpec:
+	//
+	//	*CreateGraphRequest_OpenType
+	//	*CreateGraphRequest_GraphTypeRef
+	TypeSpec isCreateGraphRequest_TypeSpec `protobuf_oneof:"type_spec"`
+	// Optional: copy contents from source graph
+	CopyOf *string `protobuf:"bytes,7,opt,name=copy_of,json=copyOf,proto3,oneof" json:"copy_of,omitempty"` // "schema.graph" qualified name
+	// Engine-specific options (GrafeoDB extensions)
+	StorageMode   string        `protobuf:"bytes,10,opt,name=storage_mode,json=storageMode,proto3" json:"storage_mode,omitempty"` // "InMemory" or "Persistent"
+	Options       *GraphOptions `protobuf:"bytes,11,opt,name=options,proto3" json:"options,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CreateDatabaseRequest) Reset() {
-	*x = CreateDatabaseRequest{}
-	mi := &file_gql_service_proto_msgTypes[28]
+func (x *CreateGraphRequest) Reset() {
+	*x = CreateGraphRequest{}
+	mi := &file_gql_service_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CreateDatabaseRequest) String() string {
+func (x *CreateGraphRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateDatabaseRequest) ProtoMessage() {}
+func (*CreateGraphRequest) ProtoMessage() {}
 
-func (x *CreateDatabaseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_gql_service_proto_msgTypes[28]
+func (x *CreateGraphRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1741,40 +2093,102 @@ func (x *CreateDatabaseRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateDatabaseRequest.ProtoReflect.Descriptor instead.
-func (*CreateDatabaseRequest) Descriptor() ([]byte, []int) {
-	return file_gql_service_proto_rawDescGZIP(), []int{28}
+// Deprecated: Use CreateGraphRequest.ProtoReflect.Descriptor instead.
+func (*CreateGraphRequest) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{35}
 }
 
-func (x *CreateDatabaseRequest) GetName() string {
+func (x *CreateGraphRequest) GetSchema() string {
+	if x != nil {
+		return x.Schema
+	}
+	return ""
+}
+
+func (x *CreateGraphRequest) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *CreateDatabaseRequest) GetDatabaseType() string {
+func (x *CreateGraphRequest) GetIfNotExists() bool {
 	if x != nil {
-		return x.DatabaseType
+		return x.IfNotExists
+	}
+	return false
+}
+
+func (x *CreateGraphRequest) GetOrReplace() bool {
+	if x != nil {
+		return x.OrReplace
+	}
+	return false
+}
+
+func (x *CreateGraphRequest) GetTypeSpec() isCreateGraphRequest_TypeSpec {
+	if x != nil {
+		return x.TypeSpec
+	}
+	return nil
+}
+
+func (x *CreateGraphRequest) GetOpenType() bool {
+	if x != nil {
+		if x, ok := x.TypeSpec.(*CreateGraphRequest_OpenType); ok {
+			return x.OpenType
+		}
+	}
+	return false
+}
+
+func (x *CreateGraphRequest) GetGraphTypeRef() string {
+	if x != nil {
+		if x, ok := x.TypeSpec.(*CreateGraphRequest_GraphTypeRef); ok {
+			return x.GraphTypeRef
+		}
 	}
 	return ""
 }
 
-func (x *CreateDatabaseRequest) GetStorageMode() string {
+func (x *CreateGraphRequest) GetCopyOf() string {
+	if x != nil && x.CopyOf != nil {
+		return *x.CopyOf
+	}
+	return ""
+}
+
+func (x *CreateGraphRequest) GetStorageMode() string {
 	if x != nil {
 		return x.StorageMode
 	}
 	return ""
 }
 
-func (x *CreateDatabaseRequest) GetOptions() *DatabaseOptions {
+func (x *CreateGraphRequest) GetOptions() *GraphOptions {
 	if x != nil {
 		return x.Options
 	}
 	return nil
 }
 
-type DatabaseOptions struct {
+type isCreateGraphRequest_TypeSpec interface {
+	isCreateGraphRequest_TypeSpec()
+}
+
+type CreateGraphRequest_OpenType struct {
+	OpenType bool `protobuf:"varint,5,opt,name=open_type,json=openType,proto3,oneof"` // true = ANY GRAPH (open graph type)
+}
+
+type CreateGraphRequest_GraphTypeRef struct {
+	GraphTypeRef string `protobuf:"bytes,6,opt,name=graph_type_ref,json=graphTypeRef,proto3,oneof"` // Reference to a named graph type
+}
+
+func (*CreateGraphRequest_OpenType) isCreateGraphRequest_TypeSpec() {}
+
+func (*CreateGraphRequest_GraphTypeRef) isCreateGraphRequest_TypeSpec() {}
+
+type GraphOptions struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	MemoryLimitBytes *uint64                `protobuf:"varint,1,opt,name=memory_limit_bytes,json=memoryLimitBytes,proto3,oneof" json:"memory_limit_bytes,omitempty"`
 	BackwardEdges    *bool                  `protobuf:"varint,2,opt,name=backward_edges,json=backwardEdges,proto3,oneof" json:"backward_edges,omitempty"`
@@ -1785,21 +2199,21 @@ type DatabaseOptions struct {
 	sizeCache        protoimpl.SizeCache
 }
 
-func (x *DatabaseOptions) Reset() {
-	*x = DatabaseOptions{}
-	mi := &file_gql_service_proto_msgTypes[29]
+func (x *GraphOptions) Reset() {
+	*x = GraphOptions{}
+	mi := &file_gql_service_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DatabaseOptions) String() string {
+func (x *GraphOptions) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DatabaseOptions) ProtoMessage() {}
+func (*GraphOptions) ProtoMessage() {}
 
-func (x *DatabaseOptions) ProtoReflect() protoreflect.Message {
-	mi := &file_gql_service_proto_msgTypes[29]
+func (x *GraphOptions) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1810,68 +2224,68 @@ func (x *DatabaseOptions) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DatabaseOptions.ProtoReflect.Descriptor instead.
-func (*DatabaseOptions) Descriptor() ([]byte, []int) {
-	return file_gql_service_proto_rawDescGZIP(), []int{29}
+// Deprecated: Use GraphOptions.ProtoReflect.Descriptor instead.
+func (*GraphOptions) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{36}
 }
 
-func (x *DatabaseOptions) GetMemoryLimitBytes() uint64 {
+func (x *GraphOptions) GetMemoryLimitBytes() uint64 {
 	if x != nil && x.MemoryLimitBytes != nil {
 		return *x.MemoryLimitBytes
 	}
 	return 0
 }
 
-func (x *DatabaseOptions) GetBackwardEdges() bool {
+func (x *GraphOptions) GetBackwardEdges() bool {
 	if x != nil && x.BackwardEdges != nil {
 		return *x.BackwardEdges
 	}
 	return false
 }
 
-func (x *DatabaseOptions) GetThreads() uint32 {
+func (x *GraphOptions) GetThreads() uint32 {
 	if x != nil && x.Threads != nil {
 		return *x.Threads
 	}
 	return 0
 }
 
-func (x *DatabaseOptions) GetWalEnabled() bool {
+func (x *GraphOptions) GetWalEnabled() bool {
 	if x != nil && x.WalEnabled != nil {
 		return *x.WalEnabled
 	}
 	return false
 }
 
-func (x *DatabaseOptions) GetWalDurability() string {
+func (x *GraphOptions) GetWalDurability() string {
 	if x != nil && x.WalDurability != nil {
 		return *x.WalDurability
 	}
 	return ""
 }
 
-type CreateDatabaseResponse struct {
+type CreateGraphResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Database      *DatabaseSummary       `protobuf:"bytes,1,opt,name=database,proto3" json:"database,omitempty"`
+	Graph         *GraphSummary          `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CreateDatabaseResponse) Reset() {
-	*x = CreateDatabaseResponse{}
-	mi := &file_gql_service_proto_msgTypes[30]
+func (x *CreateGraphResponse) Reset() {
+	*x = CreateGraphResponse{}
+	mi := &file_gql_service_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CreateDatabaseResponse) String() string {
+func (x *CreateGraphResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateDatabaseResponse) ProtoMessage() {}
+func (*CreateGraphResponse) ProtoMessage() {}
 
-func (x *CreateDatabaseResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_gql_service_proto_msgTypes[30]
+func (x *CreateGraphResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1882,40 +2296,42 @@ func (x *CreateDatabaseResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateDatabaseResponse.ProtoReflect.Descriptor instead.
-func (*CreateDatabaseResponse) Descriptor() ([]byte, []int) {
-	return file_gql_service_proto_rawDescGZIP(), []int{30}
+// Deprecated: Use CreateGraphResponse.ProtoReflect.Descriptor instead.
+func (*CreateGraphResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{37}
 }
 
-func (x *CreateDatabaseResponse) GetDatabase() *DatabaseSummary {
+func (x *CreateGraphResponse) GetGraph() *GraphSummary {
 	if x != nil {
-		return x.Database
+		return x.Graph
 	}
 	return nil
 }
 
-type DeleteDatabaseRequest struct {
+type DropGraphRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Schema        string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	IfExists      bool                   `protobuf:"varint,3,opt,name=if_exists,json=ifExists,proto3" json:"if_exists,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *DeleteDatabaseRequest) Reset() {
-	*x = DeleteDatabaseRequest{}
-	mi := &file_gql_service_proto_msgTypes[31]
+func (x *DropGraphRequest) Reset() {
+	*x = DropGraphRequest{}
+	mi := &file_gql_service_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DeleteDatabaseRequest) String() string {
+func (x *DropGraphRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DeleteDatabaseRequest) ProtoMessage() {}
+func (*DropGraphRequest) ProtoMessage() {}
 
-func (x *DeleteDatabaseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_gql_service_proto_msgTypes[31]
+func (x *DropGraphRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1926,40 +2342,54 @@ func (x *DeleteDatabaseRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DeleteDatabaseRequest.ProtoReflect.Descriptor instead.
-func (*DeleteDatabaseRequest) Descriptor() ([]byte, []int) {
-	return file_gql_service_proto_rawDescGZIP(), []int{31}
+// Deprecated: Use DropGraphRequest.ProtoReflect.Descriptor instead.
+func (*DropGraphRequest) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{38}
 }
 
-func (x *DeleteDatabaseRequest) GetName() string {
+func (x *DropGraphRequest) GetSchema() string {
+	if x != nil {
+		return x.Schema
+	}
+	return ""
+}
+
+func (x *DropGraphRequest) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-type DeleteDatabaseResponse struct {
+func (x *DropGraphRequest) GetIfExists() bool {
+	if x != nil {
+		return x.IfExists
+	}
+	return false
+}
+
+type DropGraphResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Deleted       string                 `protobuf:"bytes,1,opt,name=deleted,proto3" json:"deleted,omitempty"`
+	Existed       bool                   `protobuf:"varint,1,opt,name=existed,proto3" json:"existed,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *DeleteDatabaseResponse) Reset() {
-	*x = DeleteDatabaseResponse{}
-	mi := &file_gql_service_proto_msgTypes[32]
+func (x *DropGraphResponse) Reset() {
+	*x = DropGraphResponse{}
+	mi := &file_gql_service_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DeleteDatabaseResponse) String() string {
+func (x *DropGraphResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DeleteDatabaseResponse) ProtoMessage() {}
+func (*DropGraphResponse) ProtoMessage() {}
 
-func (x *DeleteDatabaseResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_gql_service_proto_msgTypes[32]
+func (x *DropGraphResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1970,69 +2400,77 @@ func (x *DeleteDatabaseResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DeleteDatabaseResponse.ProtoReflect.Descriptor instead.
-func (*DeleteDatabaseResponse) Descriptor() ([]byte, []int) {
-	return file_gql_service_proto_rawDescGZIP(), []int{32}
+// Deprecated: Use DropGraphResponse.ProtoReflect.Descriptor instead.
+func (*DropGraphResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{39}
 }
 
-func (x *DeleteDatabaseResponse) GetDeleted() string {
+func (x *DropGraphResponse) GetExisted() bool {
 	if x != nil {
-		return x.Deleted
+		return x.Existed
+	}
+	return false
+}
+
+type GetGraphInfoRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Schema        string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetGraphInfoRequest) Reset() {
+	*x = GetGraphInfoRequest{}
+	mi := &file_gql_service_proto_msgTypes[40]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetGraphInfoRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetGraphInfoRequest) ProtoMessage() {}
+
+func (x *GetGraphInfoRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[40]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetGraphInfoRequest.ProtoReflect.Descriptor instead.
+func (*GetGraphInfoRequest) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{40}
+}
+
+func (x *GetGraphInfoRequest) GetSchema() string {
+	if x != nil {
+		return x.Schema
 	}
 	return ""
 }
 
-type GetDatabaseInfoRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetDatabaseInfoRequest) Reset() {
-	*x = GetDatabaseInfoRequest{}
-	mi := &file_gql_service_proto_msgTypes[33]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetDatabaseInfoRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetDatabaseInfoRequest) ProtoMessage() {}
-
-func (x *GetDatabaseInfoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_gql_service_proto_msgTypes[33]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetDatabaseInfoRequest.ProtoReflect.Descriptor instead.
-func (*GetDatabaseInfoRequest) Descriptor() ([]byte, []int) {
-	return file_gql_service_proto_rawDescGZIP(), []int{33}
-}
-
-func (x *GetDatabaseInfoRequest) GetName() string {
+func (x *GetGraphInfoRequest) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-type GetDatabaseInfoResponse struct {
+type GetGraphInfoResponse struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
-	Name             string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	NodeCount        uint64                 `protobuf:"varint,2,opt,name=node_count,json=nodeCount,proto3" json:"node_count,omitempty"`
-	EdgeCount        uint64                 `protobuf:"varint,3,opt,name=edge_count,json=edgeCount,proto3" json:"edge_count,omitempty"`
-	Persistent       bool                   `protobuf:"varint,4,opt,name=persistent,proto3" json:"persistent,omitempty"`
-	DatabaseType     string                 `protobuf:"bytes,5,opt,name=database_type,json=databaseType,proto3" json:"database_type,omitempty"`
+	Schema           string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"`
+	Name             string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	NodeCount        uint64                 `protobuf:"varint,3,opt,name=node_count,json=nodeCount,proto3" json:"node_count,omitempty"`
+	EdgeCount        uint64                 `protobuf:"varint,4,opt,name=edge_count,json=edgeCount,proto3" json:"edge_count,omitempty"`
+	GraphType        string                 `protobuf:"bytes,5,opt,name=graph_type,json=graphType,proto3" json:"graph_type,omitempty"`
 	StorageMode      string                 `protobuf:"bytes,6,opt,name=storage_mode,json=storageMode,proto3" json:"storage_mode,omitempty"`
 	MemoryLimitBytes uint64                 `protobuf:"varint,7,opt,name=memory_limit_bytes,json=memoryLimitBytes,proto3" json:"memory_limit_bytes,omitempty"`
 	BackwardEdges    bool                   `protobuf:"varint,8,opt,name=backward_edges,json=backwardEdges,proto3" json:"backward_edges,omitempty"`
@@ -2041,21 +2479,21 @@ type GetDatabaseInfoResponse struct {
 	sizeCache        protoimpl.SizeCache
 }
 
-func (x *GetDatabaseInfoResponse) Reset() {
-	*x = GetDatabaseInfoResponse{}
-	mi := &file_gql_service_proto_msgTypes[34]
+func (x *GetGraphInfoResponse) Reset() {
+	*x = GetGraphInfoResponse{}
+	mi := &file_gql_service_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetDatabaseInfoResponse) String() string {
+func (x *GetGraphInfoResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetDatabaseInfoResponse) ProtoMessage() {}
+func (*GetGraphInfoResponse) ProtoMessage() {}
 
-func (x *GetDatabaseInfoResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_gql_service_proto_msgTypes[34]
+func (x *GetGraphInfoResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2066,72 +2504,1922 @@ func (x *GetDatabaseInfoResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetDatabaseInfoResponse.ProtoReflect.Descriptor instead.
-func (*GetDatabaseInfoResponse) Descriptor() ([]byte, []int) {
-	return file_gql_service_proto_rawDescGZIP(), []int{34}
+// Deprecated: Use GetGraphInfoResponse.ProtoReflect.Descriptor instead.
+func (*GetGraphInfoResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{41}
 }
 
-func (x *GetDatabaseInfoResponse) GetName() string {
+func (x *GetGraphInfoResponse) GetSchema() string {
+	if x != nil {
+		return x.Schema
+	}
+	return ""
+}
+
+func (x *GetGraphInfoResponse) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *GetDatabaseInfoResponse) GetNodeCount() uint64 {
+func (x *GetGraphInfoResponse) GetNodeCount() uint64 {
 	if x != nil {
 		return x.NodeCount
 	}
 	return 0
 }
 
-func (x *GetDatabaseInfoResponse) GetEdgeCount() uint64 {
+func (x *GetGraphInfoResponse) GetEdgeCount() uint64 {
 	if x != nil {
 		return x.EdgeCount
 	}
 	return 0
 }
 
-func (x *GetDatabaseInfoResponse) GetPersistent() bool {
+func (x *GetGraphInfoResponse) GetGraphType() string {
 	if x != nil {
-		return x.Persistent
-	}
-	return false
-}
-
-func (x *GetDatabaseInfoResponse) GetDatabaseType() string {
-	if x != nil {
-		return x.DatabaseType
+		return x.GraphType
 	}
 	return ""
 }
 
-func (x *GetDatabaseInfoResponse) GetStorageMode() string {
+func (x *GetGraphInfoResponse) GetStorageMode() string {
 	if x != nil {
 		return x.StorageMode
 	}
 	return ""
 }
 
-func (x *GetDatabaseInfoResponse) GetMemoryLimitBytes() uint64 {
+func (x *GetGraphInfoResponse) GetMemoryLimitBytes() uint64 {
 	if x != nil {
 		return x.MemoryLimitBytes
 	}
 	return 0
 }
 
-func (x *GetDatabaseInfoResponse) GetBackwardEdges() bool {
+func (x *GetGraphInfoResponse) GetBackwardEdges() bool {
 	if x != nil {
 		return x.BackwardEdges
 	}
 	return false
 }
 
-func (x *GetDatabaseInfoResponse) GetThreads() uint32 {
+func (x *GetGraphInfoResponse) GetThreads() uint32 {
 	if x != nil {
 		return x.Threads
 	}
 	return 0
+}
+
+type ListGraphTypesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Schema        string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListGraphTypesRequest) Reset() {
+	*x = ListGraphTypesRequest{}
+	mi := &file_gql_service_proto_msgTypes[42]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListGraphTypesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListGraphTypesRequest) ProtoMessage() {}
+
+func (x *ListGraphTypesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[42]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListGraphTypesRequest.ProtoReflect.Descriptor instead.
+func (*ListGraphTypesRequest) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{42}
+}
+
+func (x *ListGraphTypesRequest) GetSchema() string {
+	if x != nil {
+		return x.Schema
+	}
+	return ""
+}
+
+type GraphTypeInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Schema        string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GraphTypeInfo) Reset() {
+	*x = GraphTypeInfo{}
+	mi := &file_gql_service_proto_msgTypes[43]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GraphTypeInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GraphTypeInfo) ProtoMessage() {}
+
+func (x *GraphTypeInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[43]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GraphTypeInfo.ProtoReflect.Descriptor instead.
+func (*GraphTypeInfo) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{43}
+}
+
+func (x *GraphTypeInfo) GetSchema() string {
+	if x != nil {
+		return x.Schema
+	}
+	return ""
+}
+
+func (x *GraphTypeInfo) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type ListGraphTypesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	GraphTypes    []*GraphTypeInfo       `protobuf:"bytes,1,rep,name=graph_types,json=graphTypes,proto3" json:"graph_types,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListGraphTypesResponse) Reset() {
+	*x = ListGraphTypesResponse{}
+	mi := &file_gql_service_proto_msgTypes[44]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListGraphTypesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListGraphTypesResponse) ProtoMessage() {}
+
+func (x *ListGraphTypesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[44]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListGraphTypesResponse.ProtoReflect.Descriptor instead.
+func (*ListGraphTypesResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{44}
+}
+
+func (x *ListGraphTypesResponse) GetGraphTypes() []*GraphTypeInfo {
+	if x != nil {
+		return x.GraphTypes
+	}
+	return nil
+}
+
+type CreateGraphTypeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Schema        string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	IfNotExists   bool                   `protobuf:"varint,3,opt,name=if_not_exists,json=ifNotExists,proto3" json:"if_not_exists,omitempty"`
+	OrReplace     bool                   `protobuf:"varint,4,opt,name=or_replace,json=orReplace,proto3" json:"or_replace,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateGraphTypeRequest) Reset() {
+	*x = CreateGraphTypeRequest{}
+	mi := &file_gql_service_proto_msgTypes[45]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateGraphTypeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateGraphTypeRequest) ProtoMessage() {}
+
+func (x *CreateGraphTypeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[45]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateGraphTypeRequest.ProtoReflect.Descriptor instead.
+func (*CreateGraphTypeRequest) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{45}
+}
+
+func (x *CreateGraphTypeRequest) GetSchema() string {
+	if x != nil {
+		return x.Schema
+	}
+	return ""
+}
+
+func (x *CreateGraphTypeRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CreateGraphTypeRequest) GetIfNotExists() bool {
+	if x != nil {
+		return x.IfNotExists
+	}
+	return false
+}
+
+func (x *CreateGraphTypeRequest) GetOrReplace() bool {
+	if x != nil {
+		return x.OrReplace
+	}
+	return false
+}
+
+type CreateGraphTypeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateGraphTypeResponse) Reset() {
+	*x = CreateGraphTypeResponse{}
+	mi := &file_gql_service_proto_msgTypes[46]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateGraphTypeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateGraphTypeResponse) ProtoMessage() {}
+
+func (x *CreateGraphTypeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[46]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateGraphTypeResponse.ProtoReflect.Descriptor instead.
+func (*CreateGraphTypeResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{46}
+}
+
+type DropGraphTypeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Schema        string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	IfExists      bool                   `protobuf:"varint,3,opt,name=if_exists,json=ifExists,proto3" json:"if_exists,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DropGraphTypeRequest) Reset() {
+	*x = DropGraphTypeRequest{}
+	mi := &file_gql_service_proto_msgTypes[47]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DropGraphTypeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DropGraphTypeRequest) ProtoMessage() {}
+
+func (x *DropGraphTypeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[47]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DropGraphTypeRequest.ProtoReflect.Descriptor instead.
+func (*DropGraphTypeRequest) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{47}
+}
+
+func (x *DropGraphTypeRequest) GetSchema() string {
+	if x != nil {
+		return x.Schema
+	}
+	return ""
+}
+
+func (x *DropGraphTypeRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *DropGraphTypeRequest) GetIfExists() bool {
+	if x != nil {
+		return x.IfExists
+	}
+	return false
+}
+
+type DropGraphTypeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Existed       bool                   `protobuf:"varint,1,opt,name=existed,proto3" json:"existed,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DropGraphTypeResponse) Reset() {
+	*x = DropGraphTypeResponse{}
+	mi := &file_gql_service_proto_msgTypes[48]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DropGraphTypeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DropGraphTypeResponse) ProtoMessage() {}
+
+func (x *DropGraphTypeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[48]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DropGraphTypeResponse.ProtoReflect.Descriptor instead.
+func (*DropGraphTypeResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{48}
+}
+
+func (x *DropGraphTypeResponse) GetExisted() bool {
+	if x != nil {
+		return x.Existed
+	}
+	return false
+}
+
+type GetGraphStatsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Graph         string                 `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetGraphStatsRequest) Reset() {
+	*x = GetGraphStatsRequest{}
+	mi := &file_gql_service_proto_msgTypes[49]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetGraphStatsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetGraphStatsRequest) ProtoMessage() {}
+
+func (x *GetGraphStatsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[49]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetGraphStatsRequest.ProtoReflect.Descriptor instead.
+func (*GetGraphStatsRequest) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{49}
+}
+
+func (x *GetGraphStatsRequest) GetGraph() string {
+	if x != nil {
+		return x.Graph
+	}
+	return ""
+}
+
+type GetGraphStatsResponse struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	NodeCount        uint64                 `protobuf:"varint,1,opt,name=node_count,json=nodeCount,proto3" json:"node_count,omitempty"`
+	EdgeCount        uint64                 `protobuf:"varint,2,opt,name=edge_count,json=edgeCount,proto3" json:"edge_count,omitempty"`
+	LabelCount       uint64                 `protobuf:"varint,3,opt,name=label_count,json=labelCount,proto3" json:"label_count,omitempty"`
+	EdgeTypeCount    uint64                 `protobuf:"varint,4,opt,name=edge_type_count,json=edgeTypeCount,proto3" json:"edge_type_count,omitempty"`
+	PropertyKeyCount uint64                 `protobuf:"varint,5,opt,name=property_key_count,json=propertyKeyCount,proto3" json:"property_key_count,omitempty"`
+	IndexCount       uint64                 `protobuf:"varint,6,opt,name=index_count,json=indexCount,proto3" json:"index_count,omitempty"`
+	MemoryBytes      uint64                 `protobuf:"varint,7,opt,name=memory_bytes,json=memoryBytes,proto3" json:"memory_bytes,omitempty"`
+	DiskBytes        *uint64                `protobuf:"varint,8,opt,name=disk_bytes,json=diskBytes,proto3,oneof" json:"disk_bytes,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *GetGraphStatsResponse) Reset() {
+	*x = GetGraphStatsResponse{}
+	mi := &file_gql_service_proto_msgTypes[50]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetGraphStatsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetGraphStatsResponse) ProtoMessage() {}
+
+func (x *GetGraphStatsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[50]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetGraphStatsResponse.ProtoReflect.Descriptor instead.
+func (*GetGraphStatsResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{50}
+}
+
+func (x *GetGraphStatsResponse) GetNodeCount() uint64 {
+	if x != nil {
+		return x.NodeCount
+	}
+	return 0
+}
+
+func (x *GetGraphStatsResponse) GetEdgeCount() uint64 {
+	if x != nil {
+		return x.EdgeCount
+	}
+	return 0
+}
+
+func (x *GetGraphStatsResponse) GetLabelCount() uint64 {
+	if x != nil {
+		return x.LabelCount
+	}
+	return 0
+}
+
+func (x *GetGraphStatsResponse) GetEdgeTypeCount() uint64 {
+	if x != nil {
+		return x.EdgeTypeCount
+	}
+	return 0
+}
+
+func (x *GetGraphStatsResponse) GetPropertyKeyCount() uint64 {
+	if x != nil {
+		return x.PropertyKeyCount
+	}
+	return 0
+}
+
+func (x *GetGraphStatsResponse) GetIndexCount() uint64 {
+	if x != nil {
+		return x.IndexCount
+	}
+	return 0
+}
+
+func (x *GetGraphStatsResponse) GetMemoryBytes() uint64 {
+	if x != nil {
+		return x.MemoryBytes
+	}
+	return 0
+}
+
+func (x *GetGraphStatsResponse) GetDiskBytes() uint64 {
+	if x != nil && x.DiskBytes != nil {
+		return *x.DiskBytes
+	}
+	return 0
+}
+
+type WalStatusRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Graph         string                 `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WalStatusRequest) Reset() {
+	*x = WalStatusRequest{}
+	mi := &file_gql_service_proto_msgTypes[51]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WalStatusRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WalStatusRequest) ProtoMessage() {}
+
+func (x *WalStatusRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[51]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WalStatusRequest.ProtoReflect.Descriptor instead.
+func (*WalStatusRequest) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{51}
+}
+
+func (x *WalStatusRequest) GetGraph() string {
+	if x != nil {
+		return x.Graph
+	}
+	return ""
+}
+
+type WalStatusResponse struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Enabled        bool                   `protobuf:"varint,1,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	Path           *string                `protobuf:"bytes,2,opt,name=path,proto3,oneof" json:"path,omitempty"`
+	SizeBytes      uint64                 `protobuf:"varint,3,opt,name=size_bytes,json=sizeBytes,proto3" json:"size_bytes,omitempty"`
+	RecordCount    uint64                 `protobuf:"varint,4,opt,name=record_count,json=recordCount,proto3" json:"record_count,omitempty"`
+	LastCheckpoint *uint64                `protobuf:"varint,5,opt,name=last_checkpoint,json=lastCheckpoint,proto3,oneof" json:"last_checkpoint,omitempty"`
+	CurrentEpoch   uint64                 `protobuf:"varint,6,opt,name=current_epoch,json=currentEpoch,proto3" json:"current_epoch,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *WalStatusResponse) Reset() {
+	*x = WalStatusResponse{}
+	mi := &file_gql_service_proto_msgTypes[52]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WalStatusResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WalStatusResponse) ProtoMessage() {}
+
+func (x *WalStatusResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[52]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WalStatusResponse.ProtoReflect.Descriptor instead.
+func (*WalStatusResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{52}
+}
+
+func (x *WalStatusResponse) GetEnabled() bool {
+	if x != nil {
+		return x.Enabled
+	}
+	return false
+}
+
+func (x *WalStatusResponse) GetPath() string {
+	if x != nil && x.Path != nil {
+		return *x.Path
+	}
+	return ""
+}
+
+func (x *WalStatusResponse) GetSizeBytes() uint64 {
+	if x != nil {
+		return x.SizeBytes
+	}
+	return 0
+}
+
+func (x *WalStatusResponse) GetRecordCount() uint64 {
+	if x != nil {
+		return x.RecordCount
+	}
+	return 0
+}
+
+func (x *WalStatusResponse) GetLastCheckpoint() uint64 {
+	if x != nil && x.LastCheckpoint != nil {
+		return *x.LastCheckpoint
+	}
+	return 0
+}
+
+func (x *WalStatusResponse) GetCurrentEpoch() uint64 {
+	if x != nil {
+		return x.CurrentEpoch
+	}
+	return 0
+}
+
+type WalCheckpointRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Graph         string                 `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WalCheckpointRequest) Reset() {
+	*x = WalCheckpointRequest{}
+	mi := &file_gql_service_proto_msgTypes[53]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WalCheckpointRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WalCheckpointRequest) ProtoMessage() {}
+
+func (x *WalCheckpointRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[53]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WalCheckpointRequest.ProtoReflect.Descriptor instead.
+func (*WalCheckpointRequest) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{53}
+}
+
+func (x *WalCheckpointRequest) GetGraph() string {
+	if x != nil {
+		return x.Graph
+	}
+	return ""
+}
+
+type WalCheckpointResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WalCheckpointResponse) Reset() {
+	*x = WalCheckpointResponse{}
+	mi := &file_gql_service_proto_msgTypes[54]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WalCheckpointResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WalCheckpointResponse) ProtoMessage() {}
+
+func (x *WalCheckpointResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[54]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WalCheckpointResponse.ProtoReflect.Descriptor instead.
+func (*WalCheckpointResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{54}
+}
+
+type ValidateRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Graph         string                 `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ValidateRequest) Reset() {
+	*x = ValidateRequest{}
+	mi := &file_gql_service_proto_msgTypes[55]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ValidateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ValidateRequest) ProtoMessage() {}
+
+func (x *ValidateRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[55]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ValidateRequest.ProtoReflect.Descriptor instead.
+func (*ValidateRequest) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{55}
+}
+
+func (x *ValidateRequest) GetGraph() string {
+	if x != nil {
+		return x.Graph
+	}
+	return ""
+}
+
+type ValidateResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Valid         bool                   `protobuf:"varint,1,opt,name=valid,proto3" json:"valid,omitempty"`
+	Errors        []*ValidationError     `protobuf:"bytes,2,rep,name=errors,proto3" json:"errors,omitempty"`
+	Warnings      []*ValidationWarning   `protobuf:"bytes,3,rep,name=warnings,proto3" json:"warnings,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ValidateResponse) Reset() {
+	*x = ValidateResponse{}
+	mi := &file_gql_service_proto_msgTypes[56]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ValidateResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ValidateResponse) ProtoMessage() {}
+
+func (x *ValidateResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[56]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ValidateResponse.ProtoReflect.Descriptor instead.
+func (*ValidateResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{56}
+}
+
+func (x *ValidateResponse) GetValid() bool {
+	if x != nil {
+		return x.Valid
+	}
+	return false
+}
+
+func (x *ValidateResponse) GetErrors() []*ValidationError {
+	if x != nil {
+		return x.Errors
+	}
+	return nil
+}
+
+func (x *ValidateResponse) GetWarnings() []*ValidationWarning {
+	if x != nil {
+		return x.Warnings
+	}
+	return nil
+}
+
+type ValidationError struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	Context       *string                `protobuf:"bytes,3,opt,name=context,proto3,oneof" json:"context,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ValidationError) Reset() {
+	*x = ValidationError{}
+	mi := &file_gql_service_proto_msgTypes[57]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ValidationError) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ValidationError) ProtoMessage() {}
+
+func (x *ValidationError) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[57]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ValidationError.ProtoReflect.Descriptor instead.
+func (*ValidationError) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{57}
+}
+
+func (x *ValidationError) GetCode() string {
+	if x != nil {
+		return x.Code
+	}
+	return ""
+}
+
+func (x *ValidationError) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *ValidationError) GetContext() string {
+	if x != nil && x.Context != nil {
+		return *x.Context
+	}
+	return ""
+}
+
+type ValidationWarning struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	Context       *string                `protobuf:"bytes,3,opt,name=context,proto3,oneof" json:"context,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ValidationWarning) Reset() {
+	*x = ValidationWarning{}
+	mi := &file_gql_service_proto_msgTypes[58]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ValidationWarning) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ValidationWarning) ProtoMessage() {}
+
+func (x *ValidationWarning) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[58]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ValidationWarning.ProtoReflect.Descriptor instead.
+func (*ValidationWarning) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{58}
+}
+
+func (x *ValidationWarning) GetCode() string {
+	if x != nil {
+		return x.Code
+	}
+	return ""
+}
+
+func (x *ValidationWarning) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *ValidationWarning) GetContext() string {
+	if x != nil && x.Context != nil {
+		return *x.Context
+	}
+	return ""
+}
+
+type CreateIndexRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Graph string                 `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
+	// Types that are valid to be assigned to Index:
+	//
+	//	*CreateIndexRequest_PropertyIndex
+	//	*CreateIndexRequest_VectorIndex
+	//	*CreateIndexRequest_TextIndex
+	Index         isCreateIndexRequest_Index `protobuf_oneof:"index"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateIndexRequest) Reset() {
+	*x = CreateIndexRequest{}
+	mi := &file_gql_service_proto_msgTypes[59]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateIndexRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateIndexRequest) ProtoMessage() {}
+
+func (x *CreateIndexRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[59]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateIndexRequest.ProtoReflect.Descriptor instead.
+func (*CreateIndexRequest) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{59}
+}
+
+func (x *CreateIndexRequest) GetGraph() string {
+	if x != nil {
+		return x.Graph
+	}
+	return ""
+}
+
+func (x *CreateIndexRequest) GetIndex() isCreateIndexRequest_Index {
+	if x != nil {
+		return x.Index
+	}
+	return nil
+}
+
+func (x *CreateIndexRequest) GetPropertyIndex() *PropertyIndexDef {
+	if x != nil {
+		if x, ok := x.Index.(*CreateIndexRequest_PropertyIndex); ok {
+			return x.PropertyIndex
+		}
+	}
+	return nil
+}
+
+func (x *CreateIndexRequest) GetVectorIndex() *VectorIndexDef {
+	if x != nil {
+		if x, ok := x.Index.(*CreateIndexRequest_VectorIndex); ok {
+			return x.VectorIndex
+		}
+	}
+	return nil
+}
+
+func (x *CreateIndexRequest) GetTextIndex() *TextIndexDef {
+	if x != nil {
+		if x, ok := x.Index.(*CreateIndexRequest_TextIndex); ok {
+			return x.TextIndex
+		}
+	}
+	return nil
+}
+
+type isCreateIndexRequest_Index interface {
+	isCreateIndexRequest_Index()
+}
+
+type CreateIndexRequest_PropertyIndex struct {
+	PropertyIndex *PropertyIndexDef `protobuf:"bytes,2,opt,name=property_index,json=propertyIndex,proto3,oneof"`
+}
+
+type CreateIndexRequest_VectorIndex struct {
+	VectorIndex *VectorIndexDef `protobuf:"bytes,3,opt,name=vector_index,json=vectorIndex,proto3,oneof"`
+}
+
+type CreateIndexRequest_TextIndex struct {
+	TextIndex *TextIndexDef `protobuf:"bytes,4,opt,name=text_index,json=textIndex,proto3,oneof"`
+}
+
+func (*CreateIndexRequest_PropertyIndex) isCreateIndexRequest_Index() {}
+
+func (*CreateIndexRequest_VectorIndex) isCreateIndexRequest_Index() {}
+
+func (*CreateIndexRequest_TextIndex) isCreateIndexRequest_Index() {}
+
+type PropertyIndexDef struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Property      string                 `protobuf:"bytes,1,opt,name=property,proto3" json:"property,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PropertyIndexDef) Reset() {
+	*x = PropertyIndexDef{}
+	mi := &file_gql_service_proto_msgTypes[60]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PropertyIndexDef) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PropertyIndexDef) ProtoMessage() {}
+
+func (x *PropertyIndexDef) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[60]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PropertyIndexDef.ProtoReflect.Descriptor instead.
+func (*PropertyIndexDef) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{60}
+}
+
+func (x *PropertyIndexDef) GetProperty() string {
+	if x != nil {
+		return x.Property
+	}
+	return ""
+}
+
+type VectorIndexDef struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Label          string                 `protobuf:"bytes,1,opt,name=label,proto3" json:"label,omitempty"`
+	Property       string                 `protobuf:"bytes,2,opt,name=property,proto3" json:"property,omitempty"`
+	Dimensions     *uint32                `protobuf:"varint,3,opt,name=dimensions,proto3,oneof" json:"dimensions,omitempty"`
+	Metric         *string                `protobuf:"bytes,4,opt,name=metric,proto3,oneof" json:"metric,omitempty"` // cosine, euclidean, dot_product, manhattan
+	M              *uint32                `protobuf:"varint,5,opt,name=m,proto3,oneof" json:"m,omitempty"`          // HNSW links per node
+	EfConstruction *uint32                `protobuf:"varint,6,opt,name=ef_construction,json=efConstruction,proto3,oneof" json:"ef_construction,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *VectorIndexDef) Reset() {
+	*x = VectorIndexDef{}
+	mi := &file_gql_service_proto_msgTypes[61]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VectorIndexDef) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VectorIndexDef) ProtoMessage() {}
+
+func (x *VectorIndexDef) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[61]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VectorIndexDef.ProtoReflect.Descriptor instead.
+func (*VectorIndexDef) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{61}
+}
+
+func (x *VectorIndexDef) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+func (x *VectorIndexDef) GetProperty() string {
+	if x != nil {
+		return x.Property
+	}
+	return ""
+}
+
+func (x *VectorIndexDef) GetDimensions() uint32 {
+	if x != nil && x.Dimensions != nil {
+		return *x.Dimensions
+	}
+	return 0
+}
+
+func (x *VectorIndexDef) GetMetric() string {
+	if x != nil && x.Metric != nil {
+		return *x.Metric
+	}
+	return ""
+}
+
+func (x *VectorIndexDef) GetM() uint32 {
+	if x != nil && x.M != nil {
+		return *x.M
+	}
+	return 0
+}
+
+func (x *VectorIndexDef) GetEfConstruction() uint32 {
+	if x != nil && x.EfConstruction != nil {
+		return *x.EfConstruction
+	}
+	return 0
+}
+
+type TextIndexDef struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Label         string                 `protobuf:"bytes,1,opt,name=label,proto3" json:"label,omitempty"`
+	Property      string                 `protobuf:"bytes,2,opt,name=property,proto3" json:"property,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TextIndexDef) Reset() {
+	*x = TextIndexDef{}
+	mi := &file_gql_service_proto_msgTypes[62]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TextIndexDef) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TextIndexDef) ProtoMessage() {}
+
+func (x *TextIndexDef) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[62]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TextIndexDef.ProtoReflect.Descriptor instead.
+func (*TextIndexDef) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{62}
+}
+
+func (x *TextIndexDef) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+func (x *TextIndexDef) GetProperty() string {
+	if x != nil {
+		return x.Property
+	}
+	return ""
+}
+
+type CreateIndexResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateIndexResponse) Reset() {
+	*x = CreateIndexResponse{}
+	mi := &file_gql_service_proto_msgTypes[63]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateIndexResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateIndexResponse) ProtoMessage() {}
+
+func (x *CreateIndexResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[63]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateIndexResponse.ProtoReflect.Descriptor instead.
+func (*CreateIndexResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{63}
+}
+
+type DropIndexRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Graph string                 `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
+	// Types that are valid to be assigned to Index:
+	//
+	//	*DropIndexRequest_PropertyIndex
+	//	*DropIndexRequest_VectorIndex
+	//	*DropIndexRequest_TextIndex
+	Index         isDropIndexRequest_Index `protobuf_oneof:"index"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DropIndexRequest) Reset() {
+	*x = DropIndexRequest{}
+	mi := &file_gql_service_proto_msgTypes[64]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DropIndexRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DropIndexRequest) ProtoMessage() {}
+
+func (x *DropIndexRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[64]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DropIndexRequest.ProtoReflect.Descriptor instead.
+func (*DropIndexRequest) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{64}
+}
+
+func (x *DropIndexRequest) GetGraph() string {
+	if x != nil {
+		return x.Graph
+	}
+	return ""
+}
+
+func (x *DropIndexRequest) GetIndex() isDropIndexRequest_Index {
+	if x != nil {
+		return x.Index
+	}
+	return nil
+}
+
+func (x *DropIndexRequest) GetPropertyIndex() *PropertyIndexDef {
+	if x != nil {
+		if x, ok := x.Index.(*DropIndexRequest_PropertyIndex); ok {
+			return x.PropertyIndex
+		}
+	}
+	return nil
+}
+
+func (x *DropIndexRequest) GetVectorIndex() *VectorIndexDef {
+	if x != nil {
+		if x, ok := x.Index.(*DropIndexRequest_VectorIndex); ok {
+			return x.VectorIndex
+		}
+	}
+	return nil
+}
+
+func (x *DropIndexRequest) GetTextIndex() *TextIndexDef {
+	if x != nil {
+		if x, ok := x.Index.(*DropIndexRequest_TextIndex); ok {
+			return x.TextIndex
+		}
+	}
+	return nil
+}
+
+type isDropIndexRequest_Index interface {
+	isDropIndexRequest_Index()
+}
+
+type DropIndexRequest_PropertyIndex struct {
+	PropertyIndex *PropertyIndexDef `protobuf:"bytes,2,opt,name=property_index,json=propertyIndex,proto3,oneof"`
+}
+
+type DropIndexRequest_VectorIndex struct {
+	VectorIndex *VectorIndexDef `protobuf:"bytes,3,opt,name=vector_index,json=vectorIndex,proto3,oneof"`
+}
+
+type DropIndexRequest_TextIndex struct {
+	TextIndex *TextIndexDef `protobuf:"bytes,4,opt,name=text_index,json=textIndex,proto3,oneof"`
+}
+
+func (*DropIndexRequest_PropertyIndex) isDropIndexRequest_Index() {}
+
+func (*DropIndexRequest_VectorIndex) isDropIndexRequest_Index() {}
+
+func (*DropIndexRequest_TextIndex) isDropIndexRequest_Index() {}
+
+type DropIndexResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Existed       bool                   `protobuf:"varint,1,opt,name=existed,proto3" json:"existed,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DropIndexResponse) Reset() {
+	*x = DropIndexResponse{}
+	mi := &file_gql_service_proto_msgTypes[65]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DropIndexResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DropIndexResponse) ProtoMessage() {}
+
+func (x *DropIndexResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[65]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DropIndexResponse.ProtoReflect.Descriptor instead.
+func (*DropIndexResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{65}
+}
+
+func (x *DropIndexResponse) GetExisted() bool {
+	if x != nil {
+		return x.Existed
+	}
+	return false
+}
+
+type VectorSearchRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Graph         string                 `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
+	Label         string                 `protobuf:"bytes,2,opt,name=label,proto3" json:"label,omitempty"`
+	Property      string                 `protobuf:"bytes,3,opt,name=property,proto3" json:"property,omitempty"`
+	QueryVector   []float32              `protobuf:"fixed32,4,rep,packed,name=query_vector,json=queryVector,proto3" json:"query_vector,omitempty"`
+	K             uint32                 `protobuf:"varint,5,opt,name=k,proto3" json:"k,omitempty"`
+	Ef            *uint32                `protobuf:"varint,6,opt,name=ef,proto3,oneof" json:"ef,omitempty"`
+	Filters       map[string]*Value      `protobuf:"bytes,7,rep,name=filters,proto3" json:"filters,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VectorSearchRequest) Reset() {
+	*x = VectorSearchRequest{}
+	mi := &file_gql_service_proto_msgTypes[66]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VectorSearchRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VectorSearchRequest) ProtoMessage() {}
+
+func (x *VectorSearchRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[66]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VectorSearchRequest.ProtoReflect.Descriptor instead.
+func (*VectorSearchRequest) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{66}
+}
+
+func (x *VectorSearchRequest) GetGraph() string {
+	if x != nil {
+		return x.Graph
+	}
+	return ""
+}
+
+func (x *VectorSearchRequest) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+func (x *VectorSearchRequest) GetProperty() string {
+	if x != nil {
+		return x.Property
+	}
+	return ""
+}
+
+func (x *VectorSearchRequest) GetQueryVector() []float32 {
+	if x != nil {
+		return x.QueryVector
+	}
+	return nil
+}
+
+func (x *VectorSearchRequest) GetK() uint32 {
+	if x != nil {
+		return x.K
+	}
+	return 0
+}
+
+func (x *VectorSearchRequest) GetEf() uint32 {
+	if x != nil && x.Ef != nil {
+		return *x.Ef
+	}
+	return 0
+}
+
+func (x *VectorSearchRequest) GetFilters() map[string]*Value {
+	if x != nil {
+		return x.Filters
+	}
+	return nil
+}
+
+type TextSearchRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Graph         string                 `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
+	Label         string                 `protobuf:"bytes,2,opt,name=label,proto3" json:"label,omitempty"`
+	Property      string                 `protobuf:"bytes,3,opt,name=property,proto3" json:"property,omitempty"`
+	Query         string                 `protobuf:"bytes,4,opt,name=query,proto3" json:"query,omitempty"`
+	K             uint32                 `protobuf:"varint,5,opt,name=k,proto3" json:"k,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TextSearchRequest) Reset() {
+	*x = TextSearchRequest{}
+	mi := &file_gql_service_proto_msgTypes[67]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TextSearchRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TextSearchRequest) ProtoMessage() {}
+
+func (x *TextSearchRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[67]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TextSearchRequest.ProtoReflect.Descriptor instead.
+func (*TextSearchRequest) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{67}
+}
+
+func (x *TextSearchRequest) GetGraph() string {
+	if x != nil {
+		return x.Graph
+	}
+	return ""
+}
+
+func (x *TextSearchRequest) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+func (x *TextSearchRequest) GetProperty() string {
+	if x != nil {
+		return x.Property
+	}
+	return ""
+}
+
+func (x *TextSearchRequest) GetQuery() string {
+	if x != nil {
+		return x.Query
+	}
+	return ""
+}
+
+func (x *TextSearchRequest) GetK() uint32 {
+	if x != nil {
+		return x.K
+	}
+	return 0
+}
+
+type HybridSearchRequest struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Graph          string                 `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
+	Label          string                 `protobuf:"bytes,2,opt,name=label,proto3" json:"label,omitempty"`
+	TextProperty   string                 `protobuf:"bytes,3,opt,name=text_property,json=textProperty,proto3" json:"text_property,omitempty"`
+	VectorProperty string                 `protobuf:"bytes,4,opt,name=vector_property,json=vectorProperty,proto3" json:"vector_property,omitempty"`
+	QueryText      string                 `protobuf:"bytes,5,opt,name=query_text,json=queryText,proto3" json:"query_text,omitempty"`
+	QueryVector    []float32              `protobuf:"fixed32,6,rep,packed,name=query_vector,json=queryVector,proto3" json:"query_vector,omitempty"`
+	K              uint32                 `protobuf:"varint,7,opt,name=k,proto3" json:"k,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *HybridSearchRequest) Reset() {
+	*x = HybridSearchRequest{}
+	mi := &file_gql_service_proto_msgTypes[68]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HybridSearchRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HybridSearchRequest) ProtoMessage() {}
+
+func (x *HybridSearchRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[68]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HybridSearchRequest.ProtoReflect.Descriptor instead.
+func (*HybridSearchRequest) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{68}
+}
+
+func (x *HybridSearchRequest) GetGraph() string {
+	if x != nil {
+		return x.Graph
+	}
+	return ""
+}
+
+func (x *HybridSearchRequest) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+func (x *HybridSearchRequest) GetTextProperty() string {
+	if x != nil {
+		return x.TextProperty
+	}
+	return ""
+}
+
+func (x *HybridSearchRequest) GetVectorProperty() string {
+	if x != nil {
+		return x.VectorProperty
+	}
+	return ""
+}
+
+func (x *HybridSearchRequest) GetQueryText() string {
+	if x != nil {
+		return x.QueryText
+	}
+	return ""
+}
+
+func (x *HybridSearchRequest) GetQueryVector() []float32 {
+	if x != nil {
+		return x.QueryVector
+	}
+	return nil
+}
+
+func (x *HybridSearchRequest) GetK() uint32 {
+	if x != nil {
+		return x.K
+	}
+	return 0
+}
+
+// A single search result. node_id is an internal numeric identifier
+// (not the opaque bytes element ID from the GQL type system).
+type SearchHit struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	NodeId        uint64                 `protobuf:"varint,1,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	Score         float64                `protobuf:"fixed64,2,opt,name=score,proto3" json:"score,omitempty"`
+	Properties    map[string]*Value      `protobuf:"bytes,3,rep,name=properties,proto3" json:"properties,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SearchHit) Reset() {
+	*x = SearchHit{}
+	mi := &file_gql_service_proto_msgTypes[69]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SearchHit) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SearchHit) ProtoMessage() {}
+
+func (x *SearchHit) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[69]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SearchHit.ProtoReflect.Descriptor instead.
+func (*SearchHit) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{69}
+}
+
+func (x *SearchHit) GetNodeId() uint64 {
+	if x != nil {
+		return x.NodeId
+	}
+	return 0
+}
+
+func (x *SearchHit) GetScore() float64 {
+	if x != nil {
+		return x.Score
+	}
+	return 0
+}
+
+func (x *SearchHit) GetProperties() map[string]*Value {
+	if x != nil {
+		return x.Properties
+	}
+	return nil
+}
+
+type VectorSearchResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Hits          []*SearchHit           `protobuf:"bytes,1,rep,name=hits,proto3" json:"hits,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VectorSearchResponse) Reset() {
+	*x = VectorSearchResponse{}
+	mi := &file_gql_service_proto_msgTypes[70]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VectorSearchResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VectorSearchResponse) ProtoMessage() {}
+
+func (x *VectorSearchResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[70]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VectorSearchResponse.ProtoReflect.Descriptor instead.
+func (*VectorSearchResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{70}
+}
+
+func (x *VectorSearchResponse) GetHits() []*SearchHit {
+	if x != nil {
+		return x.Hits
+	}
+	return nil
+}
+
+type TextSearchResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Hits          []*SearchHit           `protobuf:"bytes,1,rep,name=hits,proto3" json:"hits,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TextSearchResponse) Reset() {
+	*x = TextSearchResponse{}
+	mi := &file_gql_service_proto_msgTypes[71]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TextSearchResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TextSearchResponse) ProtoMessage() {}
+
+func (x *TextSearchResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[71]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TextSearchResponse.ProtoReflect.Descriptor instead.
+func (*TextSearchResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{71}
+}
+
+func (x *TextSearchResponse) GetHits() []*SearchHit {
+	if x != nil {
+		return x.Hits
+	}
+	return nil
+}
+
+type HybridSearchResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Hits          []*SearchHit           `protobuf:"bytes,1,rep,name=hits,proto3" json:"hits,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HybridSearchResponse) Reset() {
+	*x = HybridSearchResponse{}
+	mi := &file_gql_service_proto_msgTypes[72]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HybridSearchResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HybridSearchResponse) ProtoMessage() {}
+
+func (x *HybridSearchResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gql_service_proto_msgTypes[72]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HybridSearchResponse.ProtoReflect.Descriptor instead.
+func (*HybridSearchResponse) Descriptor() ([]byte, []int) {
+	return file_gql_service_proto_rawDescGZIP(), []int{72}
+}
+
+func (x *HybridSearchResponse) GetHits() []*SearchHit {
+	if x != nil {
+		return x.Hits
+	}
+	return nil
 }
 
 var File_gql_service_proto protoreflect.FileDescriptor
@@ -2207,11 +4495,12 @@ const file_gql_service_proto_rawDesc = "" +
 	"\x06header\x18\x01 \x01(\v2\x11.gql.ResultHeaderH\x00R\x06header\x12,\n" +
 	"\trow_batch\x18\x02 \x01(\v2\r.gql.RowBatchH\x00R\browBatch\x12.\n" +
 	"\asummary\x18\x03 \x01(\v2\x12.gql.ResultSummaryH\x00R\asummaryB\a\n" +
-	"\x05frame\"q\n" +
+	"\x05frame\"\x8b\x01\n" +
 	"\fResultHeader\x120\n" +
 	"\vresult_type\x18\x01 \x01(\x0e2\x0f.gql.ResultTypeR\n" +
 	"resultType\x12/\n" +
-	"\acolumns\x18\x02 \x03(\v2\x15.gql.ColumnDescriptorR\acolumns\"O\n" +
+	"\acolumns\x18\x02 \x03(\v2\x15.gql.ColumnDescriptorR\acolumns\x12\x18\n" +
+	"\aordered\x18\x03 \x01(\bR\aordered\"O\n" +
 	"\x10ColumnDescriptor\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12'\n" +
 	"\x04type\x18\x02 \x01(\v2\x13.gql.TypeDescriptorR\x04type\"(\n" +
@@ -2246,26 +4535,54 @@ const file_gql_service_proto_rawDesc = "" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12%\n" +
 	"\x0etransaction_id\x18\x02 \x01(\tR\rtransactionId\":\n" +
 	"\x10RollbackResponse\x12&\n" +
-	"\x06status\x18\x01 \x01(\v2\x0e.gql.GqlStatusR\x06status\"\x16\n" +
-	"\x14ListDatabasesRequest\"\xa8\x01\n" +
-	"\x0fDatabaseSummary\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1d\n" +
+	"\x06status\x18\x01 \x01(\v2\x0e.gql.GqlStatusR\x06status\"\x14\n" +
+	"\x12ListSchemasRequest\"k\n" +
 	"\n" +
-	"node_count\x18\x02 \x01(\x04R\tnodeCount\x12\x1d\n" +
+	"SchemaInfo\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1f\n" +
+	"\vgraph_count\x18\x02 \x01(\rR\n" +
+	"graphCount\x12(\n" +
+	"\x10graph_type_count\x18\x03 \x01(\rR\x0egraphTypeCount\"@\n" +
+	"\x13ListSchemasResponse\x12)\n" +
+	"\aschemas\x18\x01 \x03(\v2\x0f.gql.SchemaInfoR\aschemas\"M\n" +
+	"\x13CreateSchemaRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\"\n" +
+	"\rif_not_exists\x18\x02 \x01(\bR\vifNotExists\"\x16\n" +
+	"\x14CreateSchemaResponse\"D\n" +
+	"\x11DropSchemaRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1b\n" +
+	"\tif_exists\x18\x02 \x01(\bR\bifExists\".\n" +
+	"\x12DropSchemaResponse\x12\x18\n" +
+	"\aexisted\x18\x01 \x01(\bR\aexisted\"+\n" +
+	"\x11ListGraphsRequest\x12\x16\n" +
+	"\x06schema\x18\x01 \x01(\tR\x06schema\"\x97\x01\n" +
+	"\fGraphSummary\x12\x16\n" +
+	"\x06schema\x18\x01 \x01(\tR\x06schema\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1d\n" +
 	"\n" +
-	"edge_count\x18\x03 \x01(\x04R\tedgeCount\x12\x1e\n" +
+	"node_count\x18\x03 \x01(\x04R\tnodeCount\x12\x1d\n" +
 	"\n" +
-	"persistent\x18\x04 \x01(\bR\n" +
-	"persistent\x12#\n" +
-	"\rdatabase_type\x18\x05 \x01(\tR\fdatabaseType\"K\n" +
-	"\x15ListDatabasesResponse\x122\n" +
-	"\tdatabases\x18\x01 \x03(\v2\x14.gql.DatabaseSummaryR\tdatabases\"\xa3\x01\n" +
-	"\x15CreateDatabaseRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12#\n" +
-	"\rdatabase_type\x18\x02 \x01(\tR\fdatabaseType\x12!\n" +
-	"\fstorage_mode\x18\x03 \x01(\tR\vstorageMode\x12.\n" +
-	"\aoptions\x18\x04 \x01(\v2\x14.gql.DatabaseOptionsR\aoptions\"\xba\x02\n" +
-	"\x0fDatabaseOptions\x121\n" +
+	"edge_count\x18\x04 \x01(\x04R\tedgeCount\x12\x1d\n" +
+	"\n" +
+	"graph_type\x18\x05 \x01(\tR\tgraphType\"?\n" +
+	"\x12ListGraphsResponse\x12)\n" +
+	"\x06graphs\x18\x01 \x03(\v2\x11.gql.GraphSummaryR\x06graphs\"\xd1\x02\n" +
+	"\x12CreateGraphRequest\x12\x16\n" +
+	"\x06schema\x18\x01 \x01(\tR\x06schema\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\"\n" +
+	"\rif_not_exists\x18\x03 \x01(\bR\vifNotExists\x12\x1d\n" +
+	"\n" +
+	"or_replace\x18\x04 \x01(\bR\torReplace\x12\x1d\n" +
+	"\topen_type\x18\x05 \x01(\bH\x00R\bopenType\x12&\n" +
+	"\x0egraph_type_ref\x18\x06 \x01(\tH\x00R\fgraphTypeRef\x12\x1c\n" +
+	"\acopy_of\x18\a \x01(\tH\x01R\x06copyOf\x88\x01\x01\x12!\n" +
+	"\fstorage_mode\x18\n" +
+	" \x01(\tR\vstorageMode\x12+\n" +
+	"\aoptions\x18\v \x01(\v2\x11.gql.GraphOptionsR\aoptionsB\v\n" +
+	"\ttype_specB\n" +
+	"\n" +
+	"\b_copy_of\"\xb7\x02\n" +
+	"\fGraphOptions\x121\n" +
 	"\x12memory_limit_bytes\x18\x01 \x01(\x04H\x00R\x10memoryLimitBytes\x88\x01\x01\x12*\n" +
 	"\x0ebackward_edges\x18\x02 \x01(\bH\x01R\rbackwardEdges\x88\x01\x01\x12\x1d\n" +
 	"\athreads\x18\x03 \x01(\rH\x02R\athreads\x88\x01\x01\x12$\n" +
@@ -2277,29 +4594,181 @@ const file_gql_service_proto_rawDesc = "" +
 	"\n" +
 	"\b_threadsB\x0e\n" +
 	"\f_wal_enabledB\x11\n" +
-	"\x0f_wal_durability\"J\n" +
-	"\x16CreateDatabaseResponse\x120\n" +
-	"\bdatabase\x18\x01 \x01(\v2\x14.gql.DatabaseSummaryR\bdatabase\"+\n" +
-	"\x15DeleteDatabaseRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\"2\n" +
-	"\x16DeleteDatabaseResponse\x12\x18\n" +
-	"\adeleted\x18\x01 \x01(\tR\adeleted\",\n" +
-	"\x16GetDatabaseInfoRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\"\xc2\x02\n" +
-	"\x17GetDatabaseInfoResponse\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1d\n" +
+	"\x0f_wal_durability\">\n" +
+	"\x13CreateGraphResponse\x12'\n" +
+	"\x05graph\x18\x01 \x01(\v2\x11.gql.GraphSummaryR\x05graph\"[\n" +
+	"\x10DropGraphRequest\x12\x16\n" +
+	"\x06schema\x18\x01 \x01(\tR\x06schema\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1b\n" +
+	"\tif_exists\x18\x03 \x01(\bR\bifExists\"-\n" +
+	"\x11DropGraphResponse\x12\x18\n" +
+	"\aexisted\x18\x01 \x01(\bR\aexisted\"A\n" +
+	"\x13GetGraphInfoRequest\x12\x16\n" +
+	"\x06schema\x18\x01 \x01(\tR\x06schema\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\"\xb1\x02\n" +
+	"\x14GetGraphInfoResponse\x12\x16\n" +
+	"\x06schema\x18\x01 \x01(\tR\x06schema\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1d\n" +
 	"\n" +
-	"node_count\x18\x02 \x01(\x04R\tnodeCount\x12\x1d\n" +
+	"node_count\x18\x03 \x01(\x04R\tnodeCount\x12\x1d\n" +
 	"\n" +
-	"edge_count\x18\x03 \x01(\x04R\tedgeCount\x12\x1e\n" +
+	"edge_count\x18\x04 \x01(\x04R\tedgeCount\x12\x1d\n" +
 	"\n" +
-	"persistent\x18\x04 \x01(\bR\n" +
-	"persistent\x12#\n" +
-	"\rdatabase_type\x18\x05 \x01(\tR\fdatabaseType\x12!\n" +
+	"graph_type\x18\x05 \x01(\tR\tgraphType\x12!\n" +
 	"\fstorage_mode\x18\x06 \x01(\tR\vstorageMode\x12,\n" +
 	"\x12memory_limit_bytes\x18\a \x01(\x04R\x10memoryLimitBytes\x12%\n" +
 	"\x0ebackward_edges\x18\b \x01(\bR\rbackwardEdges\x12\x18\n" +
-	"\athreads\x18\t \x01(\rR\athreads*j\n" +
+	"\athreads\x18\t \x01(\rR\athreads\"/\n" +
+	"\x15ListGraphTypesRequest\x12\x16\n" +
+	"\x06schema\x18\x01 \x01(\tR\x06schema\";\n" +
+	"\rGraphTypeInfo\x12\x16\n" +
+	"\x06schema\x18\x01 \x01(\tR\x06schema\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\"M\n" +
+	"\x16ListGraphTypesResponse\x123\n" +
+	"\vgraph_types\x18\x01 \x03(\v2\x12.gql.GraphTypeInfoR\n" +
+	"graphTypes\"\x87\x01\n" +
+	"\x16CreateGraphTypeRequest\x12\x16\n" +
+	"\x06schema\x18\x01 \x01(\tR\x06schema\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\"\n" +
+	"\rif_not_exists\x18\x03 \x01(\bR\vifNotExists\x12\x1d\n" +
+	"\n" +
+	"or_replace\x18\x04 \x01(\bR\torReplace\"\x19\n" +
+	"\x17CreateGraphTypeResponse\"_\n" +
+	"\x14DropGraphTypeRequest\x12\x16\n" +
+	"\x06schema\x18\x01 \x01(\tR\x06schema\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1b\n" +
+	"\tif_exists\x18\x03 \x01(\bR\bifExists\"1\n" +
+	"\x15DropGraphTypeResponse\x12\x18\n" +
+	"\aexisted\x18\x01 \x01(\bR\aexisted\",\n" +
+	"\x14GetGraphStatsRequest\x12\x14\n" +
+	"\x05graph\x18\x01 \x01(\tR\x05graph\"\xc3\x02\n" +
+	"\x15GetGraphStatsResponse\x12\x1d\n" +
+	"\n" +
+	"node_count\x18\x01 \x01(\x04R\tnodeCount\x12\x1d\n" +
+	"\n" +
+	"edge_count\x18\x02 \x01(\x04R\tedgeCount\x12\x1f\n" +
+	"\vlabel_count\x18\x03 \x01(\x04R\n" +
+	"labelCount\x12&\n" +
+	"\x0fedge_type_count\x18\x04 \x01(\x04R\redgeTypeCount\x12,\n" +
+	"\x12property_key_count\x18\x05 \x01(\x04R\x10propertyKeyCount\x12\x1f\n" +
+	"\vindex_count\x18\x06 \x01(\x04R\n" +
+	"indexCount\x12!\n" +
+	"\fmemory_bytes\x18\a \x01(\x04R\vmemoryBytes\x12\"\n" +
+	"\n" +
+	"disk_bytes\x18\b \x01(\x04H\x00R\tdiskBytes\x88\x01\x01B\r\n" +
+	"\v_disk_bytes\"(\n" +
+	"\x10WalStatusRequest\x12\x14\n" +
+	"\x05graph\x18\x01 \x01(\tR\x05graph\"\xf8\x01\n" +
+	"\x11WalStatusResponse\x12\x18\n" +
+	"\aenabled\x18\x01 \x01(\bR\aenabled\x12\x17\n" +
+	"\x04path\x18\x02 \x01(\tH\x00R\x04path\x88\x01\x01\x12\x1d\n" +
+	"\n" +
+	"size_bytes\x18\x03 \x01(\x04R\tsizeBytes\x12!\n" +
+	"\frecord_count\x18\x04 \x01(\x04R\vrecordCount\x12,\n" +
+	"\x0flast_checkpoint\x18\x05 \x01(\x04H\x01R\x0elastCheckpoint\x88\x01\x01\x12#\n" +
+	"\rcurrent_epoch\x18\x06 \x01(\x04R\fcurrentEpochB\a\n" +
+	"\x05_pathB\x12\n" +
+	"\x10_last_checkpoint\",\n" +
+	"\x14WalCheckpointRequest\x12\x14\n" +
+	"\x05graph\x18\x01 \x01(\tR\x05graph\"\x17\n" +
+	"\x15WalCheckpointResponse\"'\n" +
+	"\x0fValidateRequest\x12\x14\n" +
+	"\x05graph\x18\x01 \x01(\tR\x05graph\"\x8a\x01\n" +
+	"\x10ValidateResponse\x12\x14\n" +
+	"\x05valid\x18\x01 \x01(\bR\x05valid\x12,\n" +
+	"\x06errors\x18\x02 \x03(\v2\x14.gql.ValidationErrorR\x06errors\x122\n" +
+	"\bwarnings\x18\x03 \x03(\v2\x16.gql.ValidationWarningR\bwarnings\"j\n" +
+	"\x0fValidationError\x12\x12\n" +
+	"\x04code\x18\x01 \x01(\tR\x04code\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\x12\x1d\n" +
+	"\acontext\x18\x03 \x01(\tH\x00R\acontext\x88\x01\x01B\n" +
+	"\n" +
+	"\b_context\"l\n" +
+	"\x11ValidationWarning\x12\x12\n" +
+	"\x04code\x18\x01 \x01(\tR\x04code\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\x12\x1d\n" +
+	"\acontext\x18\x03 \x01(\tH\x00R\acontext\x88\x01\x01B\n" +
+	"\n" +
+	"\b_context\"\xe1\x01\n" +
+	"\x12CreateIndexRequest\x12\x14\n" +
+	"\x05graph\x18\x01 \x01(\tR\x05graph\x12>\n" +
+	"\x0eproperty_index\x18\x02 \x01(\v2\x15.gql.PropertyIndexDefH\x00R\rpropertyIndex\x128\n" +
+	"\fvector_index\x18\x03 \x01(\v2\x13.gql.VectorIndexDefH\x00R\vvectorIndex\x122\n" +
+	"\n" +
+	"text_index\x18\x04 \x01(\v2\x11.gql.TextIndexDefH\x00R\ttextIndexB\a\n" +
+	"\x05index\".\n" +
+	"\x10PropertyIndexDef\x12\x1a\n" +
+	"\bproperty\x18\x01 \x01(\tR\bproperty\"\xf9\x01\n" +
+	"\x0eVectorIndexDef\x12\x14\n" +
+	"\x05label\x18\x01 \x01(\tR\x05label\x12\x1a\n" +
+	"\bproperty\x18\x02 \x01(\tR\bproperty\x12#\n" +
+	"\n" +
+	"dimensions\x18\x03 \x01(\rH\x00R\n" +
+	"dimensions\x88\x01\x01\x12\x1b\n" +
+	"\x06metric\x18\x04 \x01(\tH\x01R\x06metric\x88\x01\x01\x12\x11\n" +
+	"\x01m\x18\x05 \x01(\rH\x02R\x01m\x88\x01\x01\x12,\n" +
+	"\x0fef_construction\x18\x06 \x01(\rH\x03R\x0eefConstruction\x88\x01\x01B\r\n" +
+	"\v_dimensionsB\t\n" +
+	"\a_metricB\x04\n" +
+	"\x02_mB\x12\n" +
+	"\x10_ef_construction\"@\n" +
+	"\fTextIndexDef\x12\x14\n" +
+	"\x05label\x18\x01 \x01(\tR\x05label\x12\x1a\n" +
+	"\bproperty\x18\x02 \x01(\tR\bproperty\"\x15\n" +
+	"\x13CreateIndexResponse\"\xdf\x01\n" +
+	"\x10DropIndexRequest\x12\x14\n" +
+	"\x05graph\x18\x01 \x01(\tR\x05graph\x12>\n" +
+	"\x0eproperty_index\x18\x02 \x01(\v2\x15.gql.PropertyIndexDefH\x00R\rpropertyIndex\x128\n" +
+	"\fvector_index\x18\x03 \x01(\v2\x13.gql.VectorIndexDefH\x00R\vvectorIndex\x122\n" +
+	"\n" +
+	"text_index\x18\x04 \x01(\v2\x11.gql.TextIndexDefH\x00R\ttextIndexB\a\n" +
+	"\x05index\"-\n" +
+	"\x11DropIndexResponse\x12\x18\n" +
+	"\aexisted\x18\x01 \x01(\bR\aexisted\"\xb3\x02\n" +
+	"\x13VectorSearchRequest\x12\x14\n" +
+	"\x05graph\x18\x01 \x01(\tR\x05graph\x12\x14\n" +
+	"\x05label\x18\x02 \x01(\tR\x05label\x12\x1a\n" +
+	"\bproperty\x18\x03 \x01(\tR\bproperty\x12!\n" +
+	"\fquery_vector\x18\x04 \x03(\x02R\vqueryVector\x12\f\n" +
+	"\x01k\x18\x05 \x01(\rR\x01k\x12\x13\n" +
+	"\x02ef\x18\x06 \x01(\rH\x00R\x02ef\x88\x01\x01\x12?\n" +
+	"\afilters\x18\a \x03(\v2%.gql.VectorSearchRequest.FiltersEntryR\afilters\x1aF\n" +
+	"\fFiltersEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12 \n" +
+	"\x05value\x18\x02 \x01(\v2\n" +
+	".gql.ValueR\x05value:\x028\x01B\x05\n" +
+	"\x03_ef\"\x7f\n" +
+	"\x11TextSearchRequest\x12\x14\n" +
+	"\x05graph\x18\x01 \x01(\tR\x05graph\x12\x14\n" +
+	"\x05label\x18\x02 \x01(\tR\x05label\x12\x1a\n" +
+	"\bproperty\x18\x03 \x01(\tR\bproperty\x12\x14\n" +
+	"\x05query\x18\x04 \x01(\tR\x05query\x12\f\n" +
+	"\x01k\x18\x05 \x01(\rR\x01k\"\xdf\x01\n" +
+	"\x13HybridSearchRequest\x12\x14\n" +
+	"\x05graph\x18\x01 \x01(\tR\x05graph\x12\x14\n" +
+	"\x05label\x18\x02 \x01(\tR\x05label\x12#\n" +
+	"\rtext_property\x18\x03 \x01(\tR\ftextProperty\x12'\n" +
+	"\x0fvector_property\x18\x04 \x01(\tR\x0evectorProperty\x12\x1d\n" +
+	"\n" +
+	"query_text\x18\x05 \x01(\tR\tqueryText\x12!\n" +
+	"\fquery_vector\x18\x06 \x03(\x02R\vqueryVector\x12\f\n" +
+	"\x01k\x18\a \x01(\rR\x01k\"\xc5\x01\n" +
+	"\tSearchHit\x12\x17\n" +
+	"\anode_id\x18\x01 \x01(\x04R\x06nodeId\x12\x14\n" +
+	"\x05score\x18\x02 \x01(\x01R\x05score\x12>\n" +
+	"\n" +
+	"properties\x18\x03 \x03(\v2\x1e.gql.SearchHit.PropertiesEntryR\n" +
+	"properties\x1aI\n" +
+	"\x0fPropertiesEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12 \n" +
+	"\x05value\x18\x02 \x01(\v2\n" +
+	".gql.ValueR\x05value:\x028\x01\":\n" +
+	"\x14VectorSearchResponse\x12\"\n" +
+	"\x04hits\x18\x01 \x03(\v2\x0e.gql.SearchHitR\x04hits\"8\n" +
+	"\x12TextSearchResponse\x12\"\n" +
+	"\x04hits\x18\x01 \x03(\v2\x0e.gql.SearchHitR\x04hits\":\n" +
+	"\x14HybridSearchResponse\x12\"\n" +
+	"\x04hits\x18\x01 \x03(\v2\x0e.gql.SearchHitR\x04hits*j\n" +
 	"\vResetTarget\x12\r\n" +
 	"\tRESET_ALL\x10\x00\x12\x10\n" +
 	"\fRESET_SCHEMA\x10\x01\x12\x0f\n" +
@@ -2326,12 +4795,32 @@ const file_gql_service_proto_rawDesc = "" +
 	"\aExecute\x12\x13.gql.ExecuteRequest\x1a\x14.gql.ExecuteResponse0\x01\x129\n" +
 	"\x10BeginTransaction\x12\x11.gql.BeginRequest\x1a\x12.gql.BeginResponse\x121\n" +
 	"\x06Commit\x12\x12.gql.CommitRequest\x1a\x13.gql.CommitResponse\x127\n" +
-	"\bRollback\x12\x14.gql.RollbackRequest\x1a\x15.gql.RollbackResponse2\xbd\x02\n" +
-	"\x0fDatabaseService\x12F\n" +
-	"\rListDatabases\x12\x19.gql.ListDatabasesRequest\x1a\x1a.gql.ListDatabasesResponse\x12I\n" +
-	"\x0eCreateDatabase\x12\x1a.gql.CreateDatabaseRequest\x1a\x1b.gql.CreateDatabaseResponse\x12I\n" +
-	"\x0eDeleteDatabase\x12\x1a.gql.DeleteDatabaseRequest\x1a\x1b.gql.DeleteDatabaseResponse\x12L\n" +
-	"\x0fGetDatabaseInfo\x12\x1b.gql.GetDatabaseInfoRequest\x1a\x1c.gql.GetDatabaseInfoResponseb\x06proto3"
+	"\bRollback\x12\x14.gql.RollbackRequest\x1a\x15.gql.RollbackResponse2\xb9\x05\n" +
+	"\x0eCatalogService\x12@\n" +
+	"\vListSchemas\x12\x17.gql.ListSchemasRequest\x1a\x18.gql.ListSchemasResponse\x12C\n" +
+	"\fCreateSchema\x12\x18.gql.CreateSchemaRequest\x1a\x19.gql.CreateSchemaResponse\x12=\n" +
+	"\n" +
+	"DropSchema\x12\x16.gql.DropSchemaRequest\x1a\x17.gql.DropSchemaResponse\x12=\n" +
+	"\n" +
+	"ListGraphs\x12\x16.gql.ListGraphsRequest\x1a\x17.gql.ListGraphsResponse\x12@\n" +
+	"\vCreateGraph\x12\x17.gql.CreateGraphRequest\x1a\x18.gql.CreateGraphResponse\x12:\n" +
+	"\tDropGraph\x12\x15.gql.DropGraphRequest\x1a\x16.gql.DropGraphResponse\x12C\n" +
+	"\fGetGraphInfo\x12\x18.gql.GetGraphInfoRequest\x1a\x19.gql.GetGraphInfoResponse\x12I\n" +
+	"\x0eListGraphTypes\x12\x1a.gql.ListGraphTypesRequest\x1a\x1b.gql.ListGraphTypesResponse\x12L\n" +
+	"\x0fCreateGraphType\x12\x1b.gql.CreateGraphTypeRequest\x1a\x1c.gql.CreateGraphTypeResponse\x12F\n" +
+	"\rDropGraphType\x12\x19.gql.DropGraphTypeRequest\x1a\x1a.gql.DropGraphTypeResponse2\x91\x03\n" +
+	"\fAdminService\x12F\n" +
+	"\rGetGraphStats\x12\x19.gql.GetGraphStatsRequest\x1a\x1a.gql.GetGraphStatsResponse\x12:\n" +
+	"\tWalStatus\x12\x15.gql.WalStatusRequest\x1a\x16.gql.WalStatusResponse\x12F\n" +
+	"\rWalCheckpoint\x12\x19.gql.WalCheckpointRequest\x1a\x1a.gql.WalCheckpointResponse\x127\n" +
+	"\bValidate\x12\x14.gql.ValidateRequest\x1a\x15.gql.ValidateResponse\x12@\n" +
+	"\vCreateIndex\x12\x17.gql.CreateIndexRequest\x1a\x18.gql.CreateIndexResponse\x12:\n" +
+	"\tDropIndex\x12\x15.gql.DropIndexRequest\x1a\x16.gql.DropIndexResponse2\xd8\x01\n" +
+	"\rSearchService\x12C\n" +
+	"\fVectorSearch\x12\x18.gql.VectorSearchRequest\x1a\x19.gql.VectorSearchResponse\x12=\n" +
+	"\n" +
+	"TextSearch\x12\x16.gql.TextSearchRequest\x1a\x17.gql.TextSearchResponse\x12C\n" +
+	"\fHybridSearch\x12\x18.gql.HybridSearchRequest\x1a\x19.gql.HybridSearchResponseb\x06proto3"
 
 var (
 	file_gql_service_proto_rawDescOnce sync.Once
@@ -2346,7 +4835,7 @@ func file_gql_service_proto_rawDescGZIP() []byte {
 }
 
 var file_gql_service_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_gql_service_proto_msgTypes = make([]protoimpl.MessageInfo, 39)
+var file_gql_service_proto_msgTypes = make([]protoimpl.MessageInfo, 79)
 var file_gql_service_proto_goTypes = []any{
 	(ResetTarget)(0),                // 0: gql.ResetTarget
 	(ResultType)(0),                 // 1: gql.ResultType
@@ -2376,84 +4865,171 @@ var file_gql_service_proto_goTypes = []any{
 	(*CommitResponse)(nil),          // 25: gql.CommitResponse
 	(*RollbackRequest)(nil),         // 26: gql.RollbackRequest
 	(*RollbackResponse)(nil),        // 27: gql.RollbackResponse
-	(*ListDatabasesRequest)(nil),    // 28: gql.ListDatabasesRequest
-	(*DatabaseSummary)(nil),         // 29: gql.DatabaseSummary
-	(*ListDatabasesResponse)(nil),   // 30: gql.ListDatabasesResponse
-	(*CreateDatabaseRequest)(nil),   // 31: gql.CreateDatabaseRequest
-	(*DatabaseOptions)(nil),         // 32: gql.DatabaseOptions
-	(*CreateDatabaseResponse)(nil),  // 33: gql.CreateDatabaseResponse
-	(*DeleteDatabaseRequest)(nil),   // 34: gql.DeleteDatabaseRequest
-	(*DeleteDatabaseResponse)(nil),  // 35: gql.DeleteDatabaseResponse
-	(*GetDatabaseInfoRequest)(nil),  // 36: gql.GetDatabaseInfoRequest
-	(*GetDatabaseInfoResponse)(nil), // 37: gql.GetDatabaseInfoResponse
-	nil,                             // 38: gql.HandshakeRequest.ClientInfoEntry
-	nil,                             // 39: gql.HandshakeResponse.LimitsEntry
-	nil,                             // 40: gql.ExecuteRequest.ParametersEntry
-	nil,                             // 41: gql.ResultSummary.CountersEntry
-	(*AuthCredentials)(nil),         // 42: gql.AuthCredentials
-	(*Value)(nil),                   // 43: gql.Value
-	(*TypeDescriptor)(nil),          // 44: gql.TypeDescriptor
-	(*GqlStatus)(nil),               // 45: gql.GqlStatus
+	(*ListSchemasRequest)(nil),      // 28: gql.ListSchemasRequest
+	(*SchemaInfo)(nil),              // 29: gql.SchemaInfo
+	(*ListSchemasResponse)(nil),     // 30: gql.ListSchemasResponse
+	(*CreateSchemaRequest)(nil),     // 31: gql.CreateSchemaRequest
+	(*CreateSchemaResponse)(nil),    // 32: gql.CreateSchemaResponse
+	(*DropSchemaRequest)(nil),       // 33: gql.DropSchemaRequest
+	(*DropSchemaResponse)(nil),      // 34: gql.DropSchemaResponse
+	(*ListGraphsRequest)(nil),       // 35: gql.ListGraphsRequest
+	(*GraphSummary)(nil),            // 36: gql.GraphSummary
+	(*ListGraphsResponse)(nil),      // 37: gql.ListGraphsResponse
+	(*CreateGraphRequest)(nil),      // 38: gql.CreateGraphRequest
+	(*GraphOptions)(nil),            // 39: gql.GraphOptions
+	(*CreateGraphResponse)(nil),     // 40: gql.CreateGraphResponse
+	(*DropGraphRequest)(nil),        // 41: gql.DropGraphRequest
+	(*DropGraphResponse)(nil),       // 42: gql.DropGraphResponse
+	(*GetGraphInfoRequest)(nil),     // 43: gql.GetGraphInfoRequest
+	(*GetGraphInfoResponse)(nil),    // 44: gql.GetGraphInfoResponse
+	(*ListGraphTypesRequest)(nil),   // 45: gql.ListGraphTypesRequest
+	(*GraphTypeInfo)(nil),           // 46: gql.GraphTypeInfo
+	(*ListGraphTypesResponse)(nil),  // 47: gql.ListGraphTypesResponse
+	(*CreateGraphTypeRequest)(nil),  // 48: gql.CreateGraphTypeRequest
+	(*CreateGraphTypeResponse)(nil), // 49: gql.CreateGraphTypeResponse
+	(*DropGraphTypeRequest)(nil),    // 50: gql.DropGraphTypeRequest
+	(*DropGraphTypeResponse)(nil),   // 51: gql.DropGraphTypeResponse
+	(*GetGraphStatsRequest)(nil),    // 52: gql.GetGraphStatsRequest
+	(*GetGraphStatsResponse)(nil),   // 53: gql.GetGraphStatsResponse
+	(*WalStatusRequest)(nil),        // 54: gql.WalStatusRequest
+	(*WalStatusResponse)(nil),       // 55: gql.WalStatusResponse
+	(*WalCheckpointRequest)(nil),    // 56: gql.WalCheckpointRequest
+	(*WalCheckpointResponse)(nil),   // 57: gql.WalCheckpointResponse
+	(*ValidateRequest)(nil),         // 58: gql.ValidateRequest
+	(*ValidateResponse)(nil),        // 59: gql.ValidateResponse
+	(*ValidationError)(nil),         // 60: gql.ValidationError
+	(*ValidationWarning)(nil),       // 61: gql.ValidationWarning
+	(*CreateIndexRequest)(nil),      // 62: gql.CreateIndexRequest
+	(*PropertyIndexDef)(nil),        // 63: gql.PropertyIndexDef
+	(*VectorIndexDef)(nil),          // 64: gql.VectorIndexDef
+	(*TextIndexDef)(nil),            // 65: gql.TextIndexDef
+	(*CreateIndexResponse)(nil),     // 66: gql.CreateIndexResponse
+	(*DropIndexRequest)(nil),        // 67: gql.DropIndexRequest
+	(*DropIndexResponse)(nil),       // 68: gql.DropIndexResponse
+	(*VectorSearchRequest)(nil),     // 69: gql.VectorSearchRequest
+	(*TextSearchRequest)(nil),       // 70: gql.TextSearchRequest
+	(*HybridSearchRequest)(nil),     // 71: gql.HybridSearchRequest
+	(*SearchHit)(nil),               // 72: gql.SearchHit
+	(*VectorSearchResponse)(nil),    // 73: gql.VectorSearchResponse
+	(*TextSearchResponse)(nil),      // 74: gql.TextSearchResponse
+	(*HybridSearchResponse)(nil),    // 75: gql.HybridSearchResponse
+	nil,                             // 76: gql.HandshakeRequest.ClientInfoEntry
+	nil,                             // 77: gql.HandshakeResponse.LimitsEntry
+	nil,                             // 78: gql.ExecuteRequest.ParametersEntry
+	nil,                             // 79: gql.ResultSummary.CountersEntry
+	nil,                             // 80: gql.VectorSearchRequest.FiltersEntry
+	nil,                             // 81: gql.SearchHit.PropertiesEntry
+	(*AuthCredentials)(nil),         // 82: gql.AuthCredentials
+	(*Value)(nil),                   // 83: gql.Value
+	(*TypeDescriptor)(nil),          // 84: gql.TypeDescriptor
+	(*GqlStatus)(nil),               // 85: gql.GqlStatus
 }
 var file_gql_service_proto_depIdxs = []int32{
-	42, // 0: gql.HandshakeRequest.credentials:type_name -> gql.AuthCredentials
-	38, // 1: gql.HandshakeRequest.client_info:type_name -> gql.HandshakeRequest.ClientInfoEntry
+	82, // 0: gql.HandshakeRequest.credentials:type_name -> gql.AuthCredentials
+	76, // 1: gql.HandshakeRequest.client_info:type_name -> gql.HandshakeRequest.ClientInfoEntry
 	5,  // 2: gql.HandshakeResponse.server_info:type_name -> gql.ServerInfo
-	39, // 3: gql.HandshakeResponse.limits:type_name -> gql.HandshakeResponse.LimitsEntry
+	77, // 3: gql.HandshakeResponse.limits:type_name -> gql.HandshakeResponse.LimitsEntry
 	7,  // 4: gql.ConfigureRequest.parameter:type_name -> gql.SessionParameter
-	43, // 5: gql.SessionParameter.value:type_name -> gql.Value
+	83, // 5: gql.SessionParameter.value:type_name -> gql.Value
 	0,  // 6: gql.ResetRequest.target:type_name -> gql.ResetTarget
-	40, // 7: gql.ExecuteRequest.parameters:type_name -> gql.ExecuteRequest.ParametersEntry
+	78, // 7: gql.ExecuteRequest.parameters:type_name -> gql.ExecuteRequest.ParametersEntry
 	17, // 8: gql.ExecuteResponse.header:type_name -> gql.ResultHeader
 	19, // 9: gql.ExecuteResponse.row_batch:type_name -> gql.RowBatch
 	21, // 10: gql.ExecuteResponse.summary:type_name -> gql.ResultSummary
 	1,  // 11: gql.ResultHeader.result_type:type_name -> gql.ResultType
 	18, // 12: gql.ResultHeader.columns:type_name -> gql.ColumnDescriptor
-	44, // 13: gql.ColumnDescriptor.type:type_name -> gql.TypeDescriptor
+	84, // 13: gql.ColumnDescriptor.type:type_name -> gql.TypeDescriptor
 	20, // 14: gql.RowBatch.rows:type_name -> gql.Row
-	43, // 15: gql.Row.values:type_name -> gql.Value
-	45, // 16: gql.ResultSummary.status:type_name -> gql.GqlStatus
-	45, // 17: gql.ResultSummary.warnings:type_name -> gql.GqlStatus
-	41, // 18: gql.ResultSummary.counters:type_name -> gql.ResultSummary.CountersEntry
+	83, // 15: gql.Row.values:type_name -> gql.Value
+	85, // 16: gql.ResultSummary.status:type_name -> gql.GqlStatus
+	85, // 17: gql.ResultSummary.warnings:type_name -> gql.GqlStatus
+	79, // 18: gql.ResultSummary.counters:type_name -> gql.ResultSummary.CountersEntry
 	2,  // 19: gql.BeginRequest.mode:type_name -> gql.TransactionMode
-	45, // 20: gql.BeginResponse.status:type_name -> gql.GqlStatus
-	45, // 21: gql.CommitResponse.status:type_name -> gql.GqlStatus
-	45, // 22: gql.RollbackResponse.status:type_name -> gql.GqlStatus
-	29, // 23: gql.ListDatabasesResponse.databases:type_name -> gql.DatabaseSummary
-	32, // 24: gql.CreateDatabaseRequest.options:type_name -> gql.DatabaseOptions
-	29, // 25: gql.CreateDatabaseResponse.database:type_name -> gql.DatabaseSummary
-	43, // 26: gql.ExecuteRequest.ParametersEntry.value:type_name -> gql.Value
-	3,  // 27: gql.SessionService.Handshake:input_type -> gql.HandshakeRequest
-	6,  // 28: gql.SessionService.Configure:input_type -> gql.ConfigureRequest
-	9,  // 29: gql.SessionService.Reset:input_type -> gql.ResetRequest
-	11, // 30: gql.SessionService.Close:input_type -> gql.CloseRequest
-	13, // 31: gql.SessionService.Ping:input_type -> gql.PingRequest
-	15, // 32: gql.GqlService.Execute:input_type -> gql.ExecuteRequest
-	22, // 33: gql.GqlService.BeginTransaction:input_type -> gql.BeginRequest
-	24, // 34: gql.GqlService.Commit:input_type -> gql.CommitRequest
-	26, // 35: gql.GqlService.Rollback:input_type -> gql.RollbackRequest
-	28, // 36: gql.DatabaseService.ListDatabases:input_type -> gql.ListDatabasesRequest
-	31, // 37: gql.DatabaseService.CreateDatabase:input_type -> gql.CreateDatabaseRequest
-	34, // 38: gql.DatabaseService.DeleteDatabase:input_type -> gql.DeleteDatabaseRequest
-	36, // 39: gql.DatabaseService.GetDatabaseInfo:input_type -> gql.GetDatabaseInfoRequest
-	4,  // 40: gql.SessionService.Handshake:output_type -> gql.HandshakeResponse
-	8,  // 41: gql.SessionService.Configure:output_type -> gql.ConfigureResponse
-	10, // 42: gql.SessionService.Reset:output_type -> gql.ResetResponse
-	12, // 43: gql.SessionService.Close:output_type -> gql.CloseResponse
-	14, // 44: gql.SessionService.Ping:output_type -> gql.PongResponse
-	16, // 45: gql.GqlService.Execute:output_type -> gql.ExecuteResponse
-	23, // 46: gql.GqlService.BeginTransaction:output_type -> gql.BeginResponse
-	25, // 47: gql.GqlService.Commit:output_type -> gql.CommitResponse
-	27, // 48: gql.GqlService.Rollback:output_type -> gql.RollbackResponse
-	30, // 49: gql.DatabaseService.ListDatabases:output_type -> gql.ListDatabasesResponse
-	33, // 50: gql.DatabaseService.CreateDatabase:output_type -> gql.CreateDatabaseResponse
-	35, // 51: gql.DatabaseService.DeleteDatabase:output_type -> gql.DeleteDatabaseResponse
-	37, // 52: gql.DatabaseService.GetDatabaseInfo:output_type -> gql.GetDatabaseInfoResponse
-	40, // [40:53] is the sub-list for method output_type
-	27, // [27:40] is the sub-list for method input_type
-	27, // [27:27] is the sub-list for extension type_name
-	27, // [27:27] is the sub-list for extension extendee
-	0,  // [0:27] is the sub-list for field type_name
+	85, // 20: gql.BeginResponse.status:type_name -> gql.GqlStatus
+	85, // 21: gql.CommitResponse.status:type_name -> gql.GqlStatus
+	85, // 22: gql.RollbackResponse.status:type_name -> gql.GqlStatus
+	29, // 23: gql.ListSchemasResponse.schemas:type_name -> gql.SchemaInfo
+	36, // 24: gql.ListGraphsResponse.graphs:type_name -> gql.GraphSummary
+	39, // 25: gql.CreateGraphRequest.options:type_name -> gql.GraphOptions
+	36, // 26: gql.CreateGraphResponse.graph:type_name -> gql.GraphSummary
+	46, // 27: gql.ListGraphTypesResponse.graph_types:type_name -> gql.GraphTypeInfo
+	60, // 28: gql.ValidateResponse.errors:type_name -> gql.ValidationError
+	61, // 29: gql.ValidateResponse.warnings:type_name -> gql.ValidationWarning
+	63, // 30: gql.CreateIndexRequest.property_index:type_name -> gql.PropertyIndexDef
+	64, // 31: gql.CreateIndexRequest.vector_index:type_name -> gql.VectorIndexDef
+	65, // 32: gql.CreateIndexRequest.text_index:type_name -> gql.TextIndexDef
+	63, // 33: gql.DropIndexRequest.property_index:type_name -> gql.PropertyIndexDef
+	64, // 34: gql.DropIndexRequest.vector_index:type_name -> gql.VectorIndexDef
+	65, // 35: gql.DropIndexRequest.text_index:type_name -> gql.TextIndexDef
+	80, // 36: gql.VectorSearchRequest.filters:type_name -> gql.VectorSearchRequest.FiltersEntry
+	81, // 37: gql.SearchHit.properties:type_name -> gql.SearchHit.PropertiesEntry
+	72, // 38: gql.VectorSearchResponse.hits:type_name -> gql.SearchHit
+	72, // 39: gql.TextSearchResponse.hits:type_name -> gql.SearchHit
+	72, // 40: gql.HybridSearchResponse.hits:type_name -> gql.SearchHit
+	83, // 41: gql.ExecuteRequest.ParametersEntry.value:type_name -> gql.Value
+	83, // 42: gql.VectorSearchRequest.FiltersEntry.value:type_name -> gql.Value
+	83, // 43: gql.SearchHit.PropertiesEntry.value:type_name -> gql.Value
+	3,  // 44: gql.SessionService.Handshake:input_type -> gql.HandshakeRequest
+	6,  // 45: gql.SessionService.Configure:input_type -> gql.ConfigureRequest
+	9,  // 46: gql.SessionService.Reset:input_type -> gql.ResetRequest
+	11, // 47: gql.SessionService.Close:input_type -> gql.CloseRequest
+	13, // 48: gql.SessionService.Ping:input_type -> gql.PingRequest
+	15, // 49: gql.GqlService.Execute:input_type -> gql.ExecuteRequest
+	22, // 50: gql.GqlService.BeginTransaction:input_type -> gql.BeginRequest
+	24, // 51: gql.GqlService.Commit:input_type -> gql.CommitRequest
+	26, // 52: gql.GqlService.Rollback:input_type -> gql.RollbackRequest
+	28, // 53: gql.CatalogService.ListSchemas:input_type -> gql.ListSchemasRequest
+	31, // 54: gql.CatalogService.CreateSchema:input_type -> gql.CreateSchemaRequest
+	33, // 55: gql.CatalogService.DropSchema:input_type -> gql.DropSchemaRequest
+	35, // 56: gql.CatalogService.ListGraphs:input_type -> gql.ListGraphsRequest
+	38, // 57: gql.CatalogService.CreateGraph:input_type -> gql.CreateGraphRequest
+	41, // 58: gql.CatalogService.DropGraph:input_type -> gql.DropGraphRequest
+	43, // 59: gql.CatalogService.GetGraphInfo:input_type -> gql.GetGraphInfoRequest
+	45, // 60: gql.CatalogService.ListGraphTypes:input_type -> gql.ListGraphTypesRequest
+	48, // 61: gql.CatalogService.CreateGraphType:input_type -> gql.CreateGraphTypeRequest
+	50, // 62: gql.CatalogService.DropGraphType:input_type -> gql.DropGraphTypeRequest
+	52, // 63: gql.AdminService.GetGraphStats:input_type -> gql.GetGraphStatsRequest
+	54, // 64: gql.AdminService.WalStatus:input_type -> gql.WalStatusRequest
+	56, // 65: gql.AdminService.WalCheckpoint:input_type -> gql.WalCheckpointRequest
+	58, // 66: gql.AdminService.Validate:input_type -> gql.ValidateRequest
+	62, // 67: gql.AdminService.CreateIndex:input_type -> gql.CreateIndexRequest
+	67, // 68: gql.AdminService.DropIndex:input_type -> gql.DropIndexRequest
+	69, // 69: gql.SearchService.VectorSearch:input_type -> gql.VectorSearchRequest
+	70, // 70: gql.SearchService.TextSearch:input_type -> gql.TextSearchRequest
+	71, // 71: gql.SearchService.HybridSearch:input_type -> gql.HybridSearchRequest
+	4,  // 72: gql.SessionService.Handshake:output_type -> gql.HandshakeResponse
+	8,  // 73: gql.SessionService.Configure:output_type -> gql.ConfigureResponse
+	10, // 74: gql.SessionService.Reset:output_type -> gql.ResetResponse
+	12, // 75: gql.SessionService.Close:output_type -> gql.CloseResponse
+	14, // 76: gql.SessionService.Ping:output_type -> gql.PongResponse
+	16, // 77: gql.GqlService.Execute:output_type -> gql.ExecuteResponse
+	23, // 78: gql.GqlService.BeginTransaction:output_type -> gql.BeginResponse
+	25, // 79: gql.GqlService.Commit:output_type -> gql.CommitResponse
+	27, // 80: gql.GqlService.Rollback:output_type -> gql.RollbackResponse
+	30, // 81: gql.CatalogService.ListSchemas:output_type -> gql.ListSchemasResponse
+	32, // 82: gql.CatalogService.CreateSchema:output_type -> gql.CreateSchemaResponse
+	34, // 83: gql.CatalogService.DropSchema:output_type -> gql.DropSchemaResponse
+	37, // 84: gql.CatalogService.ListGraphs:output_type -> gql.ListGraphsResponse
+	40, // 85: gql.CatalogService.CreateGraph:output_type -> gql.CreateGraphResponse
+	42, // 86: gql.CatalogService.DropGraph:output_type -> gql.DropGraphResponse
+	44, // 87: gql.CatalogService.GetGraphInfo:output_type -> gql.GetGraphInfoResponse
+	47, // 88: gql.CatalogService.ListGraphTypes:output_type -> gql.ListGraphTypesResponse
+	49, // 89: gql.CatalogService.CreateGraphType:output_type -> gql.CreateGraphTypeResponse
+	51, // 90: gql.CatalogService.DropGraphType:output_type -> gql.DropGraphTypeResponse
+	53, // 91: gql.AdminService.GetGraphStats:output_type -> gql.GetGraphStatsResponse
+	55, // 92: gql.AdminService.WalStatus:output_type -> gql.WalStatusResponse
+	57, // 93: gql.AdminService.WalCheckpoint:output_type -> gql.WalCheckpointResponse
+	59, // 94: gql.AdminService.Validate:output_type -> gql.ValidateResponse
+	66, // 95: gql.AdminService.CreateIndex:output_type -> gql.CreateIndexResponse
+	68, // 96: gql.AdminService.DropIndex:output_type -> gql.DropIndexResponse
+	73, // 97: gql.SearchService.VectorSearch:output_type -> gql.VectorSearchResponse
+	74, // 98: gql.SearchService.TextSearch:output_type -> gql.TextSearchResponse
+	75, // 99: gql.SearchService.HybridSearch:output_type -> gql.HybridSearchResponse
+	72, // [72:100] is the sub-list for method output_type
+	44, // [44:72] is the sub-list for method input_type
+	44, // [44:44] is the sub-list for extension type_name
+	44, // [44:44] is the sub-list for extension extendee
+	0,  // [0:44] is the sub-list for field type_name
 }
 
 func init() { file_gql_service_proto_init() }
@@ -2474,16 +5050,36 @@ func file_gql_service_proto_init() {
 		(*ExecuteResponse_RowBatch)(nil),
 		(*ExecuteResponse_Summary)(nil),
 	}
-	file_gql_service_proto_msgTypes[29].OneofWrappers = []any{}
+	file_gql_service_proto_msgTypes[35].OneofWrappers = []any{
+		(*CreateGraphRequest_OpenType)(nil),
+		(*CreateGraphRequest_GraphTypeRef)(nil),
+	}
+	file_gql_service_proto_msgTypes[36].OneofWrappers = []any{}
+	file_gql_service_proto_msgTypes[50].OneofWrappers = []any{}
+	file_gql_service_proto_msgTypes[52].OneofWrappers = []any{}
+	file_gql_service_proto_msgTypes[57].OneofWrappers = []any{}
+	file_gql_service_proto_msgTypes[58].OneofWrappers = []any{}
+	file_gql_service_proto_msgTypes[59].OneofWrappers = []any{
+		(*CreateIndexRequest_PropertyIndex)(nil),
+		(*CreateIndexRequest_VectorIndex)(nil),
+		(*CreateIndexRequest_TextIndex)(nil),
+	}
+	file_gql_service_proto_msgTypes[61].OneofWrappers = []any{}
+	file_gql_service_proto_msgTypes[64].OneofWrappers = []any{
+		(*DropIndexRequest_PropertyIndex)(nil),
+		(*DropIndexRequest_VectorIndex)(nil),
+		(*DropIndexRequest_TextIndex)(nil),
+	}
+	file_gql_service_proto_msgTypes[66].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_gql_service_proto_rawDesc), len(file_gql_service_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   39,
+			NumMessages:   79,
 			NumExtensions: 0,
-			NumServices:   3,
+			NumServices:   5,
 		},
 		GoTypes:           file_gql_service_proto_goTypes,
 		DependencyIndexes: file_gql_service_proto_depIdxs,

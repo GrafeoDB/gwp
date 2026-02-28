@@ -517,223 +517,937 @@ var GqlService_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	DatabaseService_ListDatabases_FullMethodName   = "/gql.DatabaseService/ListDatabases"
-	DatabaseService_CreateDatabase_FullMethodName  = "/gql.DatabaseService/CreateDatabase"
-	DatabaseService_DeleteDatabase_FullMethodName  = "/gql.DatabaseService/DeleteDatabase"
-	DatabaseService_GetDatabaseInfo_FullMethodName = "/gql.DatabaseService/GetDatabaseInfo"
+	CatalogService_ListSchemas_FullMethodName     = "/gql.CatalogService/ListSchemas"
+	CatalogService_CreateSchema_FullMethodName    = "/gql.CatalogService/CreateSchema"
+	CatalogService_DropSchema_FullMethodName      = "/gql.CatalogService/DropSchema"
+	CatalogService_ListGraphs_FullMethodName      = "/gql.CatalogService/ListGraphs"
+	CatalogService_CreateGraph_FullMethodName     = "/gql.CatalogService/CreateGraph"
+	CatalogService_DropGraph_FullMethodName       = "/gql.CatalogService/DropGraph"
+	CatalogService_GetGraphInfo_FullMethodName    = "/gql.CatalogService/GetGraphInfo"
+	CatalogService_ListGraphTypes_FullMethodName  = "/gql.CatalogService/ListGraphTypes"
+	CatalogService_CreateGraphType_FullMethodName = "/gql.CatalogService/CreateGraphType"
+	CatalogService_DropGraphType_FullMethodName   = "/gql.CatalogService/DropGraphType"
 )
 
-// DatabaseServiceClient is the client API for DatabaseService service.
+// CatalogServiceClient is the client API for CatalogService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type DatabaseServiceClient interface {
-	// List all databases with summary info.
-	ListDatabases(ctx context.Context, in *ListDatabasesRequest, opts ...grpc.CallOption) (*ListDatabasesResponse, error)
-	// Create a new named database.
-	CreateDatabase(ctx context.Context, in *CreateDatabaseRequest, opts ...grpc.CallOption) (*CreateDatabaseResponse, error)
-	// Delete a database by name. Cannot delete "default".
-	DeleteDatabase(ctx context.Context, in *DeleteDatabaseRequest, opts ...grpc.CallOption) (*DeleteDatabaseResponse, error)
-	// Get database info (node/edge counts, metadata).
-	GetDatabaseInfo(ctx context.Context, in *GetDatabaseInfoRequest, opts ...grpc.CallOption) (*GetDatabaseInfoResponse, error)
+type CatalogServiceClient interface {
+	// Schema management (sec 12.2, 12.3 - Feature GC01)
+	ListSchemas(ctx context.Context, in *ListSchemasRequest, opts ...grpc.CallOption) (*ListSchemasResponse, error)
+	CreateSchema(ctx context.Context, in *CreateSchemaRequest, opts ...grpc.CallOption) (*CreateSchemaResponse, error)
+	DropSchema(ctx context.Context, in *DropSchemaRequest, opts ...grpc.CallOption) (*DropSchemaResponse, error)
+	// Graph management (sec 12.4, 12.5 - Feature GC04)
+	ListGraphs(ctx context.Context, in *ListGraphsRequest, opts ...grpc.CallOption) (*ListGraphsResponse, error)
+	CreateGraph(ctx context.Context, in *CreateGraphRequest, opts ...grpc.CallOption) (*CreateGraphResponse, error)
+	DropGraph(ctx context.Context, in *DropGraphRequest, opts ...grpc.CallOption) (*DropGraphResponse, error)
+	GetGraphInfo(ctx context.Context, in *GetGraphInfoRequest, opts ...grpc.CallOption) (*GetGraphInfoResponse, error)
+	// Graph type management (sec 12.6, 12.7 - Feature GG02)
+	ListGraphTypes(ctx context.Context, in *ListGraphTypesRequest, opts ...grpc.CallOption) (*ListGraphTypesResponse, error)
+	CreateGraphType(ctx context.Context, in *CreateGraphTypeRequest, opts ...grpc.CallOption) (*CreateGraphTypeResponse, error)
+	DropGraphType(ctx context.Context, in *DropGraphTypeRequest, opts ...grpc.CallOption) (*DropGraphTypeResponse, error)
 }
 
-type databaseServiceClient struct {
+type catalogServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewDatabaseServiceClient(cc grpc.ClientConnInterface) DatabaseServiceClient {
-	return &databaseServiceClient{cc}
+func NewCatalogServiceClient(cc grpc.ClientConnInterface) CatalogServiceClient {
+	return &catalogServiceClient{cc}
 }
 
-func (c *databaseServiceClient) ListDatabases(ctx context.Context, in *ListDatabasesRequest, opts ...grpc.CallOption) (*ListDatabasesResponse, error) {
+func (c *catalogServiceClient) ListSchemas(ctx context.Context, in *ListSchemasRequest, opts ...grpc.CallOption) (*ListSchemasResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListDatabasesResponse)
-	err := c.cc.Invoke(ctx, DatabaseService_ListDatabases_FullMethodName, in, out, cOpts...)
+	out := new(ListSchemasResponse)
+	err := c.cc.Invoke(ctx, CatalogService_ListSchemas_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *databaseServiceClient) CreateDatabase(ctx context.Context, in *CreateDatabaseRequest, opts ...grpc.CallOption) (*CreateDatabaseResponse, error) {
+func (c *catalogServiceClient) CreateSchema(ctx context.Context, in *CreateSchemaRequest, opts ...grpc.CallOption) (*CreateSchemaResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CreateDatabaseResponse)
-	err := c.cc.Invoke(ctx, DatabaseService_CreateDatabase_FullMethodName, in, out, cOpts...)
+	out := new(CreateSchemaResponse)
+	err := c.cc.Invoke(ctx, CatalogService_CreateSchema_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *databaseServiceClient) DeleteDatabase(ctx context.Context, in *DeleteDatabaseRequest, opts ...grpc.CallOption) (*DeleteDatabaseResponse, error) {
+func (c *catalogServiceClient) DropSchema(ctx context.Context, in *DropSchemaRequest, opts ...grpc.CallOption) (*DropSchemaResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DeleteDatabaseResponse)
-	err := c.cc.Invoke(ctx, DatabaseService_DeleteDatabase_FullMethodName, in, out, cOpts...)
+	out := new(DropSchemaResponse)
+	err := c.cc.Invoke(ctx, CatalogService_DropSchema_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *databaseServiceClient) GetDatabaseInfo(ctx context.Context, in *GetDatabaseInfoRequest, opts ...grpc.CallOption) (*GetDatabaseInfoResponse, error) {
+func (c *catalogServiceClient) ListGraphs(ctx context.Context, in *ListGraphsRequest, opts ...grpc.CallOption) (*ListGraphsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetDatabaseInfoResponse)
-	err := c.cc.Invoke(ctx, DatabaseService_GetDatabaseInfo_FullMethodName, in, out, cOpts...)
+	out := new(ListGraphsResponse)
+	err := c.cc.Invoke(ctx, CatalogService_ListGraphs_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// DatabaseServiceServer is the server API for DatabaseService service.
-// All implementations must embed UnimplementedDatabaseServiceServer
+func (c *catalogServiceClient) CreateGraph(ctx context.Context, in *CreateGraphRequest, opts ...grpc.CallOption) (*CreateGraphResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateGraphResponse)
+	err := c.cc.Invoke(ctx, CatalogService_CreateGraph_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) DropGraph(ctx context.Context, in *DropGraphRequest, opts ...grpc.CallOption) (*DropGraphResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DropGraphResponse)
+	err := c.cc.Invoke(ctx, CatalogService_DropGraph_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) GetGraphInfo(ctx context.Context, in *GetGraphInfoRequest, opts ...grpc.CallOption) (*GetGraphInfoResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetGraphInfoResponse)
+	err := c.cc.Invoke(ctx, CatalogService_GetGraphInfo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) ListGraphTypes(ctx context.Context, in *ListGraphTypesRequest, opts ...grpc.CallOption) (*ListGraphTypesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListGraphTypesResponse)
+	err := c.cc.Invoke(ctx, CatalogService_ListGraphTypes_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) CreateGraphType(ctx context.Context, in *CreateGraphTypeRequest, opts ...grpc.CallOption) (*CreateGraphTypeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateGraphTypeResponse)
+	err := c.cc.Invoke(ctx, CatalogService_CreateGraphType_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) DropGraphType(ctx context.Context, in *DropGraphTypeRequest, opts ...grpc.CallOption) (*DropGraphTypeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DropGraphTypeResponse)
+	err := c.cc.Invoke(ctx, CatalogService_DropGraphType_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// CatalogServiceServer is the server API for CatalogService service.
+// All implementations must embed UnimplementedCatalogServiceServer
 // for forward compatibility.
-type DatabaseServiceServer interface {
-	// List all databases with summary info.
-	ListDatabases(context.Context, *ListDatabasesRequest) (*ListDatabasesResponse, error)
-	// Create a new named database.
-	CreateDatabase(context.Context, *CreateDatabaseRequest) (*CreateDatabaseResponse, error)
-	// Delete a database by name. Cannot delete "default".
-	DeleteDatabase(context.Context, *DeleteDatabaseRequest) (*DeleteDatabaseResponse, error)
-	// Get database info (node/edge counts, metadata).
-	GetDatabaseInfo(context.Context, *GetDatabaseInfoRequest) (*GetDatabaseInfoResponse, error)
-	mustEmbedUnimplementedDatabaseServiceServer()
+type CatalogServiceServer interface {
+	// Schema management (sec 12.2, 12.3 - Feature GC01)
+	ListSchemas(context.Context, *ListSchemasRequest) (*ListSchemasResponse, error)
+	CreateSchema(context.Context, *CreateSchemaRequest) (*CreateSchemaResponse, error)
+	DropSchema(context.Context, *DropSchemaRequest) (*DropSchemaResponse, error)
+	// Graph management (sec 12.4, 12.5 - Feature GC04)
+	ListGraphs(context.Context, *ListGraphsRequest) (*ListGraphsResponse, error)
+	CreateGraph(context.Context, *CreateGraphRequest) (*CreateGraphResponse, error)
+	DropGraph(context.Context, *DropGraphRequest) (*DropGraphResponse, error)
+	GetGraphInfo(context.Context, *GetGraphInfoRequest) (*GetGraphInfoResponse, error)
+	// Graph type management (sec 12.6, 12.7 - Feature GG02)
+	ListGraphTypes(context.Context, *ListGraphTypesRequest) (*ListGraphTypesResponse, error)
+	CreateGraphType(context.Context, *CreateGraphTypeRequest) (*CreateGraphTypeResponse, error)
+	DropGraphType(context.Context, *DropGraphTypeRequest) (*DropGraphTypeResponse, error)
+	mustEmbedUnimplementedCatalogServiceServer()
 }
 
-// UnimplementedDatabaseServiceServer must be embedded to have
+// UnimplementedCatalogServiceServer must be embedded to have
 // forward compatible implementations.
 //
 // NOTE: this should be embedded by value instead of pointer to avoid a nil
 // pointer dereference when methods are called.
-type UnimplementedDatabaseServiceServer struct{}
+type UnimplementedCatalogServiceServer struct{}
 
-func (UnimplementedDatabaseServiceServer) ListDatabases(context.Context, *ListDatabasesRequest) (*ListDatabasesResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListDatabases not implemented")
+func (UnimplementedCatalogServiceServer) ListSchemas(context.Context, *ListSchemasRequest) (*ListSchemasResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListSchemas not implemented")
 }
-func (UnimplementedDatabaseServiceServer) CreateDatabase(context.Context, *CreateDatabaseRequest) (*CreateDatabaseResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CreateDatabase not implemented")
+func (UnimplementedCatalogServiceServer) CreateSchema(context.Context, *CreateSchemaRequest) (*CreateSchemaResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateSchema not implemented")
 }
-func (UnimplementedDatabaseServiceServer) DeleteDatabase(context.Context, *DeleteDatabaseRequest) (*DeleteDatabaseResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method DeleteDatabase not implemented")
+func (UnimplementedCatalogServiceServer) DropSchema(context.Context, *DropSchemaRequest) (*DropSchemaResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DropSchema not implemented")
 }
-func (UnimplementedDatabaseServiceServer) GetDatabaseInfo(context.Context, *GetDatabaseInfoRequest) (*GetDatabaseInfoResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetDatabaseInfo not implemented")
+func (UnimplementedCatalogServiceServer) ListGraphs(context.Context, *ListGraphsRequest) (*ListGraphsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListGraphs not implemented")
 }
-func (UnimplementedDatabaseServiceServer) mustEmbedUnimplementedDatabaseServiceServer() {}
-func (UnimplementedDatabaseServiceServer) testEmbeddedByValue()                         {}
+func (UnimplementedCatalogServiceServer) CreateGraph(context.Context, *CreateGraphRequest) (*CreateGraphResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateGraph not implemented")
+}
+func (UnimplementedCatalogServiceServer) DropGraph(context.Context, *DropGraphRequest) (*DropGraphResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DropGraph not implemented")
+}
+func (UnimplementedCatalogServiceServer) GetGraphInfo(context.Context, *GetGraphInfoRequest) (*GetGraphInfoResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetGraphInfo not implemented")
+}
+func (UnimplementedCatalogServiceServer) ListGraphTypes(context.Context, *ListGraphTypesRequest) (*ListGraphTypesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListGraphTypes not implemented")
+}
+func (UnimplementedCatalogServiceServer) CreateGraphType(context.Context, *CreateGraphTypeRequest) (*CreateGraphTypeResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateGraphType not implemented")
+}
+func (UnimplementedCatalogServiceServer) DropGraphType(context.Context, *DropGraphTypeRequest) (*DropGraphTypeResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DropGraphType not implemented")
+}
+func (UnimplementedCatalogServiceServer) mustEmbedUnimplementedCatalogServiceServer() {}
+func (UnimplementedCatalogServiceServer) testEmbeddedByValue()                        {}
 
-// UnsafeDatabaseServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to DatabaseServiceServer will
+// UnsafeCatalogServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to CatalogServiceServer will
 // result in compilation errors.
-type UnsafeDatabaseServiceServer interface {
-	mustEmbedUnimplementedDatabaseServiceServer()
+type UnsafeCatalogServiceServer interface {
+	mustEmbedUnimplementedCatalogServiceServer()
 }
 
-func RegisterDatabaseServiceServer(s grpc.ServiceRegistrar, srv DatabaseServiceServer) {
-	// If the following call panics, it indicates UnimplementedDatabaseServiceServer was
+func RegisterCatalogServiceServer(s grpc.ServiceRegistrar, srv CatalogServiceServer) {
+	// If the following call panics, it indicates UnimplementedCatalogServiceServer was
 	// embedded by pointer and is nil.  This will cause panics if an
 	// unimplemented method is ever invoked, so we test this at initialization
 	// time to prevent it from happening at runtime later due to I/O.
 	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
 		t.testEmbeddedByValue()
 	}
-	s.RegisterService(&DatabaseService_ServiceDesc, srv)
+	s.RegisterService(&CatalogService_ServiceDesc, srv)
 }
 
-func _DatabaseService_ListDatabases_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListDatabasesRequest)
+func _CatalogService_ListSchemas_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListSchemasRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DatabaseServiceServer).ListDatabases(ctx, in)
+		return srv.(CatalogServiceServer).ListSchemas(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: DatabaseService_ListDatabases_FullMethodName,
+		FullMethod: CatalogService_ListSchemas_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DatabaseServiceServer).ListDatabases(ctx, req.(*ListDatabasesRequest))
+		return srv.(CatalogServiceServer).ListSchemas(ctx, req.(*ListSchemasRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DatabaseService_CreateDatabase_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateDatabaseRequest)
+func _CatalogService_CreateSchema_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateSchemaRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DatabaseServiceServer).CreateDatabase(ctx, in)
+		return srv.(CatalogServiceServer).CreateSchema(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: DatabaseService_CreateDatabase_FullMethodName,
+		FullMethod: CatalogService_CreateSchema_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DatabaseServiceServer).CreateDatabase(ctx, req.(*CreateDatabaseRequest))
+		return srv.(CatalogServiceServer).CreateSchema(ctx, req.(*CreateSchemaRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DatabaseService_DeleteDatabase_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteDatabaseRequest)
+func _CatalogService_DropSchema_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DropSchemaRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DatabaseServiceServer).DeleteDatabase(ctx, in)
+		return srv.(CatalogServiceServer).DropSchema(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: DatabaseService_DeleteDatabase_FullMethodName,
+		FullMethod: CatalogService_DropSchema_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DatabaseServiceServer).DeleteDatabase(ctx, req.(*DeleteDatabaseRequest))
+		return srv.(CatalogServiceServer).DropSchema(ctx, req.(*DropSchemaRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DatabaseService_GetDatabaseInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetDatabaseInfoRequest)
+func _CatalogService_ListGraphs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListGraphsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DatabaseServiceServer).GetDatabaseInfo(ctx, in)
+		return srv.(CatalogServiceServer).ListGraphs(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: DatabaseService_GetDatabaseInfo_FullMethodName,
+		FullMethod: CatalogService_ListGraphs_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DatabaseServiceServer).GetDatabaseInfo(ctx, req.(*GetDatabaseInfoRequest))
+		return srv.(CatalogServiceServer).ListGraphs(ctx, req.(*ListGraphsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// DatabaseService_ServiceDesc is the grpc.ServiceDesc for DatabaseService service.
+func _CatalogService_CreateGraph_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateGraphRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).CreateGraph(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_CreateGraph_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).CreateGraph(ctx, req.(*CreateGraphRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_DropGraph_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DropGraphRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).DropGraph(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_DropGraph_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).DropGraph(ctx, req.(*DropGraphRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_GetGraphInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetGraphInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).GetGraphInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_GetGraphInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).GetGraphInfo(ctx, req.(*GetGraphInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_ListGraphTypes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListGraphTypesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).ListGraphTypes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_ListGraphTypes_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).ListGraphTypes(ctx, req.(*ListGraphTypesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_CreateGraphType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateGraphTypeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).CreateGraphType(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_CreateGraphType_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).CreateGraphType(ctx, req.(*CreateGraphTypeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_DropGraphType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DropGraphTypeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).DropGraphType(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_DropGraphType_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).DropGraphType(ctx, req.(*DropGraphTypeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// CatalogService_ServiceDesc is the grpc.ServiceDesc for CatalogService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var DatabaseService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "gql.DatabaseService",
-	HandlerType: (*DatabaseServiceServer)(nil),
+var CatalogService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "gql.CatalogService",
+	HandlerType: (*CatalogServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ListDatabases",
-			Handler:    _DatabaseService_ListDatabases_Handler,
+			MethodName: "ListSchemas",
+			Handler:    _CatalogService_ListSchemas_Handler,
 		},
 		{
-			MethodName: "CreateDatabase",
-			Handler:    _DatabaseService_CreateDatabase_Handler,
+			MethodName: "CreateSchema",
+			Handler:    _CatalogService_CreateSchema_Handler,
 		},
 		{
-			MethodName: "DeleteDatabase",
-			Handler:    _DatabaseService_DeleteDatabase_Handler,
+			MethodName: "DropSchema",
+			Handler:    _CatalogService_DropSchema_Handler,
 		},
 		{
-			MethodName: "GetDatabaseInfo",
-			Handler:    _DatabaseService_GetDatabaseInfo_Handler,
+			MethodName: "ListGraphs",
+			Handler:    _CatalogService_ListGraphs_Handler,
+		},
+		{
+			MethodName: "CreateGraph",
+			Handler:    _CatalogService_CreateGraph_Handler,
+		},
+		{
+			MethodName: "DropGraph",
+			Handler:    _CatalogService_DropGraph_Handler,
+		},
+		{
+			MethodName: "GetGraphInfo",
+			Handler:    _CatalogService_GetGraphInfo_Handler,
+		},
+		{
+			MethodName: "ListGraphTypes",
+			Handler:    _CatalogService_ListGraphTypes_Handler,
+		},
+		{
+			MethodName: "CreateGraphType",
+			Handler:    _CatalogService_CreateGraphType_Handler,
+		},
+		{
+			MethodName: "DropGraphType",
+			Handler:    _CatalogService_DropGraphType_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "gql_service.proto",
+}
+
+const (
+	AdminService_GetGraphStats_FullMethodName = "/gql.AdminService/GetGraphStats"
+	AdminService_WalStatus_FullMethodName     = "/gql.AdminService/WalStatus"
+	AdminService_WalCheckpoint_FullMethodName = "/gql.AdminService/WalCheckpoint"
+	AdminService_Validate_FullMethodName      = "/gql.AdminService/Validate"
+	AdminService_CreateIndex_FullMethodName   = "/gql.AdminService/CreateIndex"
+	AdminService_DropIndex_FullMethodName     = "/gql.AdminService/DropIndex"
+)
+
+// AdminServiceClient is the client API for AdminService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type AdminServiceClient interface {
+	// Get detailed graph statistics (counts, memory, disk, indexes).
+	GetGraphStats(ctx context.Context, in *GetGraphStatsRequest, opts ...grpc.CallOption) (*GetGraphStatsResponse, error)
+	// Get WAL (Write-Ahead Log) status.
+	WalStatus(ctx context.Context, in *WalStatusRequest, opts ...grpc.CallOption) (*WalStatusResponse, error)
+	// Force a WAL checkpoint (flush pending records to storage).
+	WalCheckpoint(ctx context.Context, in *WalCheckpointRequest, opts ...grpc.CallOption) (*WalCheckpointResponse, error)
+	// Validate graph integrity (dangling edges, index consistency).
+	Validate(ctx context.Context, in *ValidateRequest, opts ...grpc.CallOption) (*ValidateResponse, error)
+	// Create an index (property, vector, or text).
+	CreateIndex(ctx context.Context, in *CreateIndexRequest, opts ...grpc.CallOption) (*CreateIndexResponse, error)
+	// Drop an index.
+	DropIndex(ctx context.Context, in *DropIndexRequest, opts ...grpc.CallOption) (*DropIndexResponse, error)
+}
+
+type adminServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewAdminServiceClient(cc grpc.ClientConnInterface) AdminServiceClient {
+	return &adminServiceClient{cc}
+}
+
+func (c *adminServiceClient) GetGraphStats(ctx context.Context, in *GetGraphStatsRequest, opts ...grpc.CallOption) (*GetGraphStatsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetGraphStatsResponse)
+	err := c.cc.Invoke(ctx, AdminService_GetGraphStats_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) WalStatus(ctx context.Context, in *WalStatusRequest, opts ...grpc.CallOption) (*WalStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(WalStatusResponse)
+	err := c.cc.Invoke(ctx, AdminService_WalStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) WalCheckpoint(ctx context.Context, in *WalCheckpointRequest, opts ...grpc.CallOption) (*WalCheckpointResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(WalCheckpointResponse)
+	err := c.cc.Invoke(ctx, AdminService_WalCheckpoint_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) Validate(ctx context.Context, in *ValidateRequest, opts ...grpc.CallOption) (*ValidateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ValidateResponse)
+	err := c.cc.Invoke(ctx, AdminService_Validate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) CreateIndex(ctx context.Context, in *CreateIndexRequest, opts ...grpc.CallOption) (*CreateIndexResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateIndexResponse)
+	err := c.cc.Invoke(ctx, AdminService_CreateIndex_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) DropIndex(ctx context.Context, in *DropIndexRequest, opts ...grpc.CallOption) (*DropIndexResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DropIndexResponse)
+	err := c.cc.Invoke(ctx, AdminService_DropIndex_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// AdminServiceServer is the server API for AdminService service.
+// All implementations must embed UnimplementedAdminServiceServer
+// for forward compatibility.
+type AdminServiceServer interface {
+	// Get detailed graph statistics (counts, memory, disk, indexes).
+	GetGraphStats(context.Context, *GetGraphStatsRequest) (*GetGraphStatsResponse, error)
+	// Get WAL (Write-Ahead Log) status.
+	WalStatus(context.Context, *WalStatusRequest) (*WalStatusResponse, error)
+	// Force a WAL checkpoint (flush pending records to storage).
+	WalCheckpoint(context.Context, *WalCheckpointRequest) (*WalCheckpointResponse, error)
+	// Validate graph integrity (dangling edges, index consistency).
+	Validate(context.Context, *ValidateRequest) (*ValidateResponse, error)
+	// Create an index (property, vector, or text).
+	CreateIndex(context.Context, *CreateIndexRequest) (*CreateIndexResponse, error)
+	// Drop an index.
+	DropIndex(context.Context, *DropIndexRequest) (*DropIndexResponse, error)
+	mustEmbedUnimplementedAdminServiceServer()
+}
+
+// UnimplementedAdminServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedAdminServiceServer struct{}
+
+func (UnimplementedAdminServiceServer) GetGraphStats(context.Context, *GetGraphStatsRequest) (*GetGraphStatsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetGraphStats not implemented")
+}
+func (UnimplementedAdminServiceServer) WalStatus(context.Context, *WalStatusRequest) (*WalStatusResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method WalStatus not implemented")
+}
+func (UnimplementedAdminServiceServer) WalCheckpoint(context.Context, *WalCheckpointRequest) (*WalCheckpointResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method WalCheckpoint not implemented")
+}
+func (UnimplementedAdminServiceServer) Validate(context.Context, *ValidateRequest) (*ValidateResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Validate not implemented")
+}
+func (UnimplementedAdminServiceServer) CreateIndex(context.Context, *CreateIndexRequest) (*CreateIndexResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateIndex not implemented")
+}
+func (UnimplementedAdminServiceServer) DropIndex(context.Context, *DropIndexRequest) (*DropIndexResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DropIndex not implemented")
+}
+func (UnimplementedAdminServiceServer) mustEmbedUnimplementedAdminServiceServer() {}
+func (UnimplementedAdminServiceServer) testEmbeddedByValue()                      {}
+
+// UnsafeAdminServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to AdminServiceServer will
+// result in compilation errors.
+type UnsafeAdminServiceServer interface {
+	mustEmbedUnimplementedAdminServiceServer()
+}
+
+func RegisterAdminServiceServer(s grpc.ServiceRegistrar, srv AdminServiceServer) {
+	// If the following call panics, it indicates UnimplementedAdminServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&AdminService_ServiceDesc, srv)
+}
+
+func _AdminService_GetGraphStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetGraphStatsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).GetGraphStats(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_GetGraphStats_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).GetGraphStats(ctx, req.(*GetGraphStatsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_WalStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WalStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).WalStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_WalStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).WalStatus(ctx, req.(*WalStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_WalCheckpoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WalCheckpointRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).WalCheckpoint(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_WalCheckpoint_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).WalCheckpoint(ctx, req.(*WalCheckpointRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_Validate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ValidateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).Validate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_Validate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).Validate(ctx, req.(*ValidateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_CreateIndex_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateIndexRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).CreateIndex(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_CreateIndex_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).CreateIndex(ctx, req.(*CreateIndexRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_DropIndex_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DropIndexRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).DropIndex(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_DropIndex_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).DropIndex(ctx, req.(*DropIndexRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// AdminService_ServiceDesc is the grpc.ServiceDesc for AdminService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var AdminService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "gql.AdminService",
+	HandlerType: (*AdminServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetGraphStats",
+			Handler:    _AdminService_GetGraphStats_Handler,
+		},
+		{
+			MethodName: "WalStatus",
+			Handler:    _AdminService_WalStatus_Handler,
+		},
+		{
+			MethodName: "WalCheckpoint",
+			Handler:    _AdminService_WalCheckpoint_Handler,
+		},
+		{
+			MethodName: "Validate",
+			Handler:    _AdminService_Validate_Handler,
+		},
+		{
+			MethodName: "CreateIndex",
+			Handler:    _AdminService_CreateIndex_Handler,
+		},
+		{
+			MethodName: "DropIndex",
+			Handler:    _AdminService_DropIndex_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "gql_service.proto",
+}
+
+const (
+	SearchService_VectorSearch_FullMethodName = "/gql.SearchService/VectorSearch"
+	SearchService_TextSearch_FullMethodName   = "/gql.SearchService/TextSearch"
+	SearchService_HybridSearch_FullMethodName = "/gql.SearchService/HybridSearch"
+)
+
+// SearchServiceClient is the client API for SearchService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type SearchServiceClient interface {
+	// Vector similarity search (KNN via HNSW index).
+	VectorSearch(ctx context.Context, in *VectorSearchRequest, opts ...grpc.CallOption) (*VectorSearchResponse, error)
+	// Full-text search (BM25 scoring).
+	TextSearch(ctx context.Context, in *TextSearchRequest, opts ...grpc.CallOption) (*TextSearchResponse, error)
+	// Hybrid search combining text and vector results with rank fusion.
+	HybridSearch(ctx context.Context, in *HybridSearchRequest, opts ...grpc.CallOption) (*HybridSearchResponse, error)
+}
+
+type searchServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewSearchServiceClient(cc grpc.ClientConnInterface) SearchServiceClient {
+	return &searchServiceClient{cc}
+}
+
+func (c *searchServiceClient) VectorSearch(ctx context.Context, in *VectorSearchRequest, opts ...grpc.CallOption) (*VectorSearchResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(VectorSearchResponse)
+	err := c.cc.Invoke(ctx, SearchService_VectorSearch_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *searchServiceClient) TextSearch(ctx context.Context, in *TextSearchRequest, opts ...grpc.CallOption) (*TextSearchResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TextSearchResponse)
+	err := c.cc.Invoke(ctx, SearchService_TextSearch_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *searchServiceClient) HybridSearch(ctx context.Context, in *HybridSearchRequest, opts ...grpc.CallOption) (*HybridSearchResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(HybridSearchResponse)
+	err := c.cc.Invoke(ctx, SearchService_HybridSearch_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// SearchServiceServer is the server API for SearchService service.
+// All implementations must embed UnimplementedSearchServiceServer
+// for forward compatibility.
+type SearchServiceServer interface {
+	// Vector similarity search (KNN via HNSW index).
+	VectorSearch(context.Context, *VectorSearchRequest) (*VectorSearchResponse, error)
+	// Full-text search (BM25 scoring).
+	TextSearch(context.Context, *TextSearchRequest) (*TextSearchResponse, error)
+	// Hybrid search combining text and vector results with rank fusion.
+	HybridSearch(context.Context, *HybridSearchRequest) (*HybridSearchResponse, error)
+	mustEmbedUnimplementedSearchServiceServer()
+}
+
+// UnimplementedSearchServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedSearchServiceServer struct{}
+
+func (UnimplementedSearchServiceServer) VectorSearch(context.Context, *VectorSearchRequest) (*VectorSearchResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method VectorSearch not implemented")
+}
+func (UnimplementedSearchServiceServer) TextSearch(context.Context, *TextSearchRequest) (*TextSearchResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method TextSearch not implemented")
+}
+func (UnimplementedSearchServiceServer) HybridSearch(context.Context, *HybridSearchRequest) (*HybridSearchResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method HybridSearch not implemented")
+}
+func (UnimplementedSearchServiceServer) mustEmbedUnimplementedSearchServiceServer() {}
+func (UnimplementedSearchServiceServer) testEmbeddedByValue()                       {}
+
+// UnsafeSearchServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to SearchServiceServer will
+// result in compilation errors.
+type UnsafeSearchServiceServer interface {
+	mustEmbedUnimplementedSearchServiceServer()
+}
+
+func RegisterSearchServiceServer(s grpc.ServiceRegistrar, srv SearchServiceServer) {
+	// If the following call panics, it indicates UnimplementedSearchServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&SearchService_ServiceDesc, srv)
+}
+
+func _SearchService_VectorSearch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VectorSearchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SearchServiceServer).VectorSearch(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SearchService_VectorSearch_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SearchServiceServer).VectorSearch(ctx, req.(*VectorSearchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SearchService_TextSearch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TextSearchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SearchServiceServer).TextSearch(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SearchService_TextSearch_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SearchServiceServer).TextSearch(ctx, req.(*TextSearchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SearchService_HybridSearch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HybridSearchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SearchServiceServer).HybridSearch(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SearchService_HybridSearch_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SearchServiceServer).HybridSearch(ctx, req.(*HybridSearchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// SearchService_ServiceDesc is the grpc.ServiceDesc for SearchService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var SearchService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "gql.SearchService",
+	HandlerType: (*SearchServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "VectorSearch",
+			Handler:    _SearchService_VectorSearch_Handler,
+		},
+		{
+			MethodName: "TextSearch",
+			Handler:    _SearchService_TextSearch_Handler,
+		},
+		{
+			MethodName: "HybridSearch",
+			Handler:    _SearchService_HybridSearch_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.1.6 2026-02-28
+
+- **Breaking**: `DatabaseService` replaced by `CatalogService` (catalog > schema > graph hierarchy per GQL spec sec 12.2-12.7)
+- **Breaking**: `DatabaseClient` replaced by `CatalogClient` with schema, graph, and graph type operations
+- **Breaking**: Admin/Search request messages renamed `database` field to `graph`
+- **Breaking**: `GqlBackend` trait: removed `list_databases`, `create_database`, `delete_database`, `get_database_info`; added `list_schemas`, `create_schema`, `drop_schema`, `list_graphs`, `create_graph`, `drop_graph`, `get_graph_info`, `list_graph_types`, `create_graph_type`, `drop_graph_type`
+- **Feature**: `AdminClient` wrapper for stats, WAL, validation, and index operations
+- **Feature**: `SearchClient` wrapper for vector, text, and hybrid search
+- **Feature**: `Value` ergonomics: `TryFrom<Value>` for 11 types, `as_*()` accessors, `is_null()`, `type_name()`
+- **Feature**: `From<f32>` for `Value` (lossless promotion to f64)
+- **Feature**: `execute_simple()` convenience on `GqlSession` and `Transaction`
+- **Feature**: `TypeDescriptor` extended with precision, scale, min/max length, max cardinality, group/open flags, duration qualifier, component types
+- **Feature**: New `GqlType` variants: `TYPE_EMPTY`, `TYPE_YEAR_MONTH_DURATION`, `TYPE_DAY_TIME_DURATION`, `TYPE_NODE_REFERENCE`, `TYPE_EDGE_REFERENCE`, `TYPE_GRAPH_REFERENCE`, `TYPE_BINDING_TABLE_REFERENCE`
+- **Feature**: `DurationQualifier` enum for year-to-month vs day-to-second duration distinction
+- **Feature**: `ResultHeader.ordered` field for semantically meaningful row ordering
+- **Feature**: `DiagnosticRecord` extended with `invalid_reference` field, `current_schema` now optional
+- **Feature**: ~30 new GQLSTATUS code constants (warnings, informational, data exceptions, transaction state, syntax, dependent objects)
+- **Feature**: `warning()` and `informational()` GQLSTATUS constructors
+- **Feature**: 25+ operation code constants (Table 9 from GQL spec)
+
 ## 0.1.5 2026-02-19
 
 - **Feature**: `AdminService` gRPC service (database stats, WAL status/checkpoint, integrity validation, index create/drop)

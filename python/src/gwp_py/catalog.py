@@ -99,9 +99,7 @@ class CatalogClient:
 
     async def list_graphs(self, schema: str) -> list[GraphInfo]:
         """List all graphs in a schema."""
-        resp = await self._stub.ListGraphs(
-            gql_pb2.ListGraphsRequest(schema=schema)
-        )
+        resp = await self._stub.ListGraphs(gql_pb2.ListGraphsRequest(schema=schema))
         return [
             GraphInfo(
                 schema=g.schema,
@@ -181,10 +179,7 @@ class CatalogClient:
         resp = await self._stub.ListGraphTypes(
             gql_pb2.ListGraphTypesRequest(schema=schema)
         )
-        return [
-            GraphTypeInfo(schema=t.schema, name=t.name)
-            for t in resp.graph_types
-        ]
+        return [GraphTypeInfo(schema=t.schema, name=t.name) for t in resp.graph_types]
 
     async def create_graph_type(
         self,
@@ -209,8 +204,6 @@ class CatalogClient:
     ) -> bool:
         """Drop a graph type. Returns True if it existed."""
         resp = await self._stub.DropGraphType(
-            gql_pb2.DropGraphTypeRequest(
-                schema=schema, name=name, if_exists=if_exists
-            )
+            gql_pb2.DropGraphTypeRequest(schema=schema, name=name, if_exists=if_exists)
         )
         return resp.existed

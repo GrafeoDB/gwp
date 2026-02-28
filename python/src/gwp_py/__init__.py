@@ -1,7 +1,13 @@
 """GWP - Python client for the GQL Wire Protocol."""
 
 from gwp_py.connection import GqlConnection
-from gwp_py.catalog import CatalogClient, CreateGraphConfig, GraphInfo, GraphTypeInfo, SchemaInfo
+from gwp_py.catalog import (
+    CatalogClient,
+    CreateGraphConfig,
+    GraphInfo,
+    GraphTypeInfo,
+    SchemaInfo,
+)
 from gwp_py.errors import (
     ConnectionError as GqlConnectionError,
     GqlError,

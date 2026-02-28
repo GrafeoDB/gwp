@@ -374,7 +374,7 @@ pub trait GqlBackend: Send + Sync + 'static {
 // Admin types
 // ============================================================================
 
-/// Detailed database statistics.
+/// Detailed graph statistics.
 #[derive(Debug, Clone)]
 pub struct AdminStats {
     /// Number of nodes.
@@ -473,8 +473,8 @@ pub enum IndexDefinition {
 /// Vector search parameters.
 #[derive(Debug, Clone)]
 pub struct VectorSearchParams {
-    /// Database name.
-    pub database: String,
+    /// Graph name.
+    pub graph: String,
     /// Node label.
     pub label: String,
     /// Property name.
@@ -492,8 +492,8 @@ pub struct VectorSearchParams {
 /// Text search parameters.
 #[derive(Debug, Clone)]
 pub struct TextSearchParams {
-    /// Database name.
-    pub database: String,
+    /// Graph name.
+    pub graph: String,
     /// Node label.
     pub label: String,
     /// Property name.
@@ -507,8 +507,8 @@ pub struct TextSearchParams {
 /// Hybrid search parameters.
 #[derive(Debug, Clone)]
 pub struct HybridSearchParams {
-    /// Database name.
-    pub database: String,
+    /// Graph name.
+    pub graph: String,
     /// Node label.
     pub label: String,
     /// Text property name.

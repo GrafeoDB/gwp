@@ -212,51 +212,103 @@ enum TransactionMode {
 }
 
 // ============================================================================
-// DatabaseService
-// Manages database lifecycle. Requires appropriate privileges.
+// CatalogService
+// Manages the catalog hierarchy: schemas, graphs, and graph types.
+// Replaces DatabaseService with spec-aligned catalog model (sec 12).
 // Errors are returned as gRPC Status codes.
 // ============================================================================
 
-service DatabaseService {
-  // List all databases with summary info.
-  rpc ListDatabases(ListDatabasesRequest) returns (ListDatabasesResponse);
+service CatalogService {
+  // Schema management (sec 12.2, 12.3 - Feature GC01)
+  rpc ListSchemas(ListSchemasRequest) returns (ListSchemasResponse);
+  rpc CreateSchema(CreateSchemaRequest) returns (CreateSchemaResponse);
+  rpc DropSchema(DropSchemaRequest) returns (DropSchemaResponse);
 
-  // Create a new named database.
-  rpc CreateDatabase(CreateDatabaseRequest) returns (CreateDatabaseResponse);
+  // Graph management (sec 12.4, 12.5 - Feature GC04)
+  rpc ListGraphs(ListGraphsRequest) returns (ListGraphsResponse);
+  rpc CreateGraph(CreateGraphRequest) returns (CreateGraphResponse);
+  rpc DropGraph(DropGraphRequest) returns (DropGraphResponse);
+  rpc GetGraphInfo(GetGraphInfoRequest) returns (GetGraphInfoResponse);
 
-  // Delete a database by name. Cannot delete "default".
-  rpc DeleteDatabase(DeleteDatabaseRequest) returns (DeleteDatabaseResponse);
-
-  // Get database info (node/edge counts, metadata).
-  rpc GetDatabaseInfo(GetDatabaseInfoRequest) returns (GetDatabaseInfoResponse);
+  // Graph type management (sec 12.6, 12.7 - Feature GG02)
+  rpc ListGraphTypes(ListGraphTypesRequest) returns (ListGraphTypesResponse);
+  rpc CreateGraphType(CreateGraphTypeRequest) returns (CreateGraphTypeResponse);
+  rpc DropGraphType(DropGraphTypeRequest) returns (DropGraphTypeResponse);
 }
 
 // ============================================================================
-// Database Messages
+// Schema Messages
 // ============================================================================
 
-message ListDatabasesRequest {}
+message ListSchemasRequest {}
 
-message DatabaseSummary {
+message SchemaInfo {
   string name = 1;
-  uint64 node_count = 2;
-  uint64 edge_count = 3;
-  bool persistent = 4;
-  string database_type = 5;
+  uint32 graph_count = 2;
+  uint32 graph_type_count = 3;
 }
 
-message ListDatabasesResponse {
-  repeated DatabaseSummary databases = 1;
+message ListSchemasResponse {
+  repeated SchemaInfo schemas = 1;
 }
 
-message CreateDatabaseRequest {
+message CreateSchemaRequest {
   string name = 1;
-  string database_type = 2;           // "Lpg", "Rdf", etc.
-  string storage_mode = 3;            // "InMemory" or "Persistent"
-  DatabaseOptions options = 4;
+  bool if_not_exists = 2;
 }
 
-message DatabaseOptions {
+message CreateSchemaResponse {}
+
+message DropSchemaRequest {
+  string name = 1;
+  bool if_exists = 2;
+}
+
+message DropSchemaResponse {
+  bool existed = 1;
+}
+
+// ============================================================================
+// Graph Messages
+// ============================================================================
+
+message ListGraphsRequest {
+  string schema = 1;  // Schema to list graphs from
+}
+
+message GraphSummary {
+  string schema = 1;
+  string name = 2;
+  uint64 node_count = 3;
+  uint64 edge_count = 4;
+  string graph_type = 5;  // Graph type name (empty if open)
+}
+
+message ListGraphsResponse {
+  repeated GraphSummary graphs = 1;
+}
+
+message CreateGraphRequest {
+  string schema = 1;
+  string name = 2;
+  bool if_not_exists = 3;
+  bool or_replace = 4;
+
+  // Graph type (sec 12.4)
+  oneof type_spec {
+    bool open_type = 5;           // true = ANY GRAPH (open graph type)
+    string graph_type_ref = 6;    // Reference to a named graph type
+  }
+
+  // Optional: copy contents from source graph
+  optional string copy_of = 7;   // "schema.graph" qualified name
+
+  // Engine-specific options (GrafeoDB extensions)
+  string storage_mode = 10;      // "InMemory" or "Persistent"
+  GraphOptions options = 11;
+}
+
+message GraphOptions {
   optional uint64 memory_limit_bytes = 1;
   optional bool backward_edges = 2;
   optional uint32 threads = 3;
@@ -264,28 +316,31 @@ message DatabaseOptions {
   optional string wal_durability = 5;
 }
 
-message CreateDatabaseResponse {
-  DatabaseSummary database = 1;
+message CreateGraphResponse {
+  GraphSummary graph = 1;
 }
 
-message DeleteDatabaseRequest {
-  string name = 1;
+message DropGraphRequest {
+  string schema = 1;
+  string name = 2;
+  bool if_exists = 3;
 }
 
-message DeleteDatabaseResponse {
-  string deleted = 1;
+message DropGraphResponse {
+  bool existed = 1;
 }
 
-message GetDatabaseInfoRequest {
-  string name = 1;
+message GetGraphInfoRequest {
+  string schema = 1;
+  string name = 2;
 }
 
-message GetDatabaseInfoResponse {
-  string name = 1;
-  uint64 node_count = 2;
-  uint64 edge_count = 3;
-  bool persistent = 4;
-  string database_type = 5;
+message GetGraphInfoResponse {
+  string schema = 1;
+  string name = 2;
+  uint64 node_count = 3;
+  uint64 edge_count = 4;
+  string graph_type = 5;
   string storage_mode = 6;
   uint64 memory_limit_bytes = 7;
   bool backward_edges = 8;
@@ -293,14 +348,50 @@ message GetDatabaseInfoResponse {
 }
 
 // ============================================================================
+// Graph Type Messages
+// ============================================================================
+
+message ListGraphTypesRequest {
+  string schema = 1;
+}
+
+message GraphTypeInfo {
+  string schema = 1;
+  string name = 2;
+}
+
+message ListGraphTypesResponse {
+  repeated GraphTypeInfo graph_types = 1;
+}
+
+message CreateGraphTypeRequest {
+  string schema = 1;
+  string name = 2;
+  bool if_not_exists = 3;
+  bool or_replace = 4;
+}
+
+message CreateGraphTypeResponse {}
+
+message DropGraphTypeRequest {
+  string schema = 1;
+  string name = 2;
+  bool if_exists = 3;
+}
+
+message DropGraphTypeResponse {
+  bool existed = 1;
+}
+
+// ============================================================================
 // AdminService
-// Database introspection, maintenance, and index management.
+// Graph introspection, maintenance, and index management.
 // Errors are returned as gRPC Status codes.
 // ============================================================================
 
 service AdminService {
-  // Get detailed database statistics (counts, memory, disk, indexes).
-  rpc GetDatabaseStats(GetDatabaseStatsRequest) returns (GetDatabaseStatsResponse);
+  // Get detailed graph statistics (counts, memory, disk, indexes).
+  rpc GetGraphStats(GetGraphStatsRequest) returns (GetGraphStatsResponse);
 
   // Get WAL (Write-Ahead Log) status.
   rpc WalStatus(WalStatusRequest) returns (WalStatusResponse);
@@ -308,7 +399,7 @@ service AdminService {
   // Force a WAL checkpoint (flush pending records to storage).
   rpc WalCheckpoint(WalCheckpointRequest) returns (WalCheckpointResponse);
 
-  // Validate database integrity (dangling edges, index consistency).
+  // Validate graph integrity (dangling edges, index consistency).
   rpc Validate(ValidateRequest) returns (ValidateResponse);
 
   // Create an index (property, vector, or text).
@@ -339,11 +430,11 @@ service SearchService {
 // Admin Messages
 // ============================================================================
 
-message GetDatabaseStatsRequest {
-  string database = 1;
+message GetGraphStatsRequest {
+  string graph = 1;
 }
 
-message GetDatabaseStatsResponse {
+message GetGraphStatsResponse {
   uint64 node_count = 1;
   uint64 edge_count = 2;
   uint64 label_count = 3;
@@ -355,7 +446,7 @@ message GetDatabaseStatsResponse {
 }
 
 message WalStatusRequest {
-  string database = 1;
+  string graph = 1;
 }
 
 message WalStatusResponse {
@@ -368,13 +459,13 @@ message WalStatusResponse {
 }
 
 message WalCheckpointRequest {
-  string database = 1;
+  string graph = 1;
 }
 
 message WalCheckpointResponse {}
 
 message ValidateRequest {
-  string database = 1;
+  string graph = 1;
 }
 
 message ValidateResponse {
@@ -396,7 +487,7 @@ message ValidationWarning {
 }
 
 message CreateIndexRequest {
-  string database = 1;
+  string graph = 1;
   oneof index {
     PropertyIndexDef property_index = 2;
     VectorIndexDef vector_index = 3;
@@ -425,7 +516,7 @@ message TextIndexDef {
 message CreateIndexResponse {}
 
 message DropIndexRequest {
-  string database = 1;
+  string graph = 1;
   oneof index {
     PropertyIndexDef property_index = 2;
     VectorIndexDef vector_index = 3;
@@ -442,7 +533,7 @@ message DropIndexResponse {
 // ============================================================================
 
 message VectorSearchRequest {
-  string database = 1;
+  string graph = 1;
   string label = 2;
   string property = 3;
   repeated float query_vector = 4;
@@ -452,7 +543,7 @@ message VectorSearchRequest {
 }
 
 message TextSearchRequest {
-  string database = 1;
+  string graph = 1;
   string label = 2;
   string property = 3;
   string query = 4;
@@ -460,7 +551,7 @@ message TextSearchRequest {
 }
 
 message HybridSearchRequest {
-  string database = 1;
+  string graph = 1;
   string label = 2;
   string text_property = 3;
   string vector_property = 4;

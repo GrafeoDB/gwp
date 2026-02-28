@@ -153,6 +153,293 @@ impl From<Path> for Value {
     }
 }
 
+impl From<f32> for Value {
+    fn from(v: f32) -> Self {
+        Self::Float(f64::from(v))
+    }
+}
+
+impl From<Record> for Value {
+    fn from(v: Record) -> Self {
+        Self::Record(v)
+    }
+}
+
+// ============================================================================
+// TryFrom implementations for extracting typed values
+// ============================================================================
+
+impl TryFrom<Value> for bool {
+    type Error = crate::error::GqlError;
+    fn try_from(v: Value) -> Result<Self, Self::Error> {
+        match v {
+            Value::Boolean(b) => Ok(b),
+            other => Err(crate::error::GqlError::Protocol(format!(
+                "expected Boolean, got {}", other.type_name()
+            ))),
+        }
+    }
+}
+
+impl TryFrom<Value> for i64 {
+    type Error = crate::error::GqlError;
+    fn try_from(v: Value) -> Result<Self, Self::Error> {
+        match v {
+            Value::Integer(i) => Ok(i),
+            other => Err(crate::error::GqlError::Protocol(format!(
+                "expected Integer, got {}", other.type_name()
+            ))),
+        }
+    }
+}
+
+impl TryFrom<Value> for u64 {
+    type Error = crate::error::GqlError;
+    fn try_from(v: Value) -> Result<Self, Self::Error> {
+        match v {
+            Value::UnsignedInteger(u) => Ok(u),
+            other => Err(crate::error::GqlError::Protocol(format!(
+                "expected UnsignedInteger, got {}", other.type_name()
+            ))),
+        }
+    }
+}
+
+impl TryFrom<Value> for f64 {
+    type Error = crate::error::GqlError;
+    fn try_from(v: Value) -> Result<Self, Self::Error> {
+        match v {
+            Value::Float(f) => Ok(f),
+            other => Err(crate::error::GqlError::Protocol(format!(
+                "expected Float, got {}", other.type_name()
+            ))),
+        }
+    }
+}
+
+impl TryFrom<Value> for std::string::String {
+    type Error = crate::error::GqlError;
+    fn try_from(v: Value) -> Result<Self, Self::Error> {
+        match v {
+            Value::String(s) => Ok(s),
+            other => Err(crate::error::GqlError::Protocol(format!(
+                "expected String, got {}", other.type_name()
+            ))),
+        }
+    }
+}
+
+impl TryFrom<Value> for Vec<u8> {
+    type Error = crate::error::GqlError;
+    fn try_from(v: Value) -> Result<Self, Self::Error> {
+        match v {
+            Value::Bytes(b) => Ok(b),
+            other => Err(crate::error::GqlError::Protocol(format!(
+                "expected Bytes, got {}", other.type_name()
+            ))),
+        }
+    }
+}
+
+impl TryFrom<Value> for Vec<Value> {
+    type Error = crate::error::GqlError;
+    fn try_from(v: Value) -> Result<Self, Self::Error> {
+        match v {
+            Value::List(l) => Ok(l),
+            other => Err(crate::error::GqlError::Protocol(format!(
+                "expected List, got {}", other.type_name()
+            ))),
+        }
+    }
+}
+
+impl TryFrom<Value> for Node {
+    type Error = crate::error::GqlError;
+    fn try_from(v: Value) -> Result<Self, Self::Error> {
+        match v {
+            Value::Node(n) => Ok(n),
+            other => Err(crate::error::GqlError::Protocol(format!(
+                "expected Node, got {}", other.type_name()
+            ))),
+        }
+    }
+}
+
+impl TryFrom<Value> for Edge {
+    type Error = crate::error::GqlError;
+    fn try_from(v: Value) -> Result<Self, Self::Error> {
+        match v {
+            Value::Edge(e) => Ok(e),
+            other => Err(crate::error::GqlError::Protocol(format!(
+                "expected Edge, got {}", other.type_name()
+            ))),
+        }
+    }
+}
+
+impl TryFrom<Value> for Path {
+    type Error = crate::error::GqlError;
+    fn try_from(v: Value) -> Result<Self, Self::Error> {
+        match v {
+            Value::Path(p) => Ok(p),
+            other => Err(crate::error::GqlError::Protocol(format!(
+                "expected Path, got {}", other.type_name()
+            ))),
+        }
+    }
+}
+
+impl TryFrom<Value> for Record {
+    type Error = crate::error::GqlError;
+    fn try_from(v: Value) -> Result<Self, Self::Error> {
+        match v {
+            Value::Record(r) => Ok(r),
+            other => Err(crate::error::GqlError::Protocol(format!(
+                "expected Record, got {}", other.type_name()
+            ))),
+        }
+    }
+}
+
+// ============================================================================
+// Accessor methods (infallible, Option-returning)
+// ============================================================================
+
+impl Value {
+    /// Returns the type name for error messages.
+    #[must_use]
+    pub fn type_name(&self) -> &'static str {
+        match self {
+            Self::Null => "Null",
+            Self::Boolean(_) => "Boolean",
+            Self::Integer(_) => "Integer",
+            Self::UnsignedInteger(_) => "UnsignedInteger",
+            Self::Float(_) => "Float",
+            Self::String(_) => "String",
+            Self::Bytes(_) => "Bytes",
+            Self::Date(_) => "Date",
+            Self::LocalTime(_) => "LocalTime",
+            Self::ZonedTime(_) => "ZonedTime",
+            Self::LocalDateTime(_) => "LocalDateTime",
+            Self::ZonedDateTime(_) => "ZonedDateTime",
+            Self::Duration(_) => "Duration",
+            Self::List(_) => "List",
+            Self::Record(_) => "Record",
+            Self::Node(_) => "Node",
+            Self::Edge(_) => "Edge",
+            Self::Path(_) => "Path",
+            Self::Decimal { .. } => "Decimal",
+            Self::BigInteger { .. } => "BigInteger",
+            Self::BigFloat { .. } => "BigFloat",
+        }
+    }
+
+    /// Returns `true` if this value is `Null`.
+    #[must_use]
+    pub fn is_null(&self) -> bool {
+        matches!(self, Self::Null)
+    }
+
+    /// Returns the boolean value, if this is a `Boolean`.
+    #[must_use]
+    pub fn as_bool(&self) -> Option<bool> {
+        match self {
+            Self::Boolean(b) => Some(*b),
+            _ => None,
+        }
+    }
+
+    /// Returns the integer value, if this is an `Integer`.
+    #[must_use]
+    pub fn as_integer(&self) -> Option<i64> {
+        match self {
+            Self::Integer(i) => Some(*i),
+            _ => None,
+        }
+    }
+
+    /// Returns the unsigned integer value, if this is an `UnsignedInteger`.
+    #[must_use]
+    pub fn as_unsigned_integer(&self) -> Option<u64> {
+        match self {
+            Self::UnsignedInteger(u) => Some(*u),
+            _ => None,
+        }
+    }
+
+    /// Returns the float value, if this is a `Float`.
+    #[must_use]
+    pub fn as_float(&self) -> Option<f64> {
+        match self {
+            Self::Float(f) => Some(*f),
+            _ => None,
+        }
+    }
+
+    /// Returns a string slice, if this is a `String`.
+    #[must_use]
+    pub fn as_str(&self) -> Option<&str> {
+        match self {
+            Self::String(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    /// Returns a byte slice, if this is a `Bytes`.
+    #[must_use]
+    pub fn as_bytes(&self) -> Option<&[u8]> {
+        match self {
+            Self::Bytes(b) => Some(b),
+            _ => None,
+        }
+    }
+
+    /// Returns a slice of elements, if this is a `List`.
+    #[must_use]
+    pub fn as_list(&self) -> Option<&[Value]> {
+        match self {
+            Self::List(l) => Some(l),
+            _ => None,
+        }
+    }
+
+    /// Returns a reference to the record, if this is a `Record`.
+    #[must_use]
+    pub fn as_record(&self) -> Option<&Record> {
+        match self {
+            Self::Record(r) => Some(r),
+            _ => None,
+        }
+    }
+
+    /// Returns a reference to the node, if this is a `Node`.
+    #[must_use]
+    pub fn as_node(&self) -> Option<&Node> {
+        match self {
+            Self::Node(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    /// Returns a reference to the edge, if this is an `Edge`.
+    #[must_use]
+    pub fn as_edge(&self) -> Option<&Edge> {
+        match self {
+            Self::Edge(e) => Some(e),
+            _ => None,
+        }
+    }
+
+    /// Returns a reference to the path, if this is a `Path`.
+    #[must_use]
+    pub fn as_path(&self) -> Option<&Path> {
+        match self {
+            Self::Path(p) => Some(p),
+            _ => None,
+        }
+    }
+}
+
 // ============================================================================
 // Proto conversions
 // ============================================================================

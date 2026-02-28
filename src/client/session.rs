@@ -81,6 +81,17 @@ impl GqlSession {
         Ok(ResultCursor::new(stream))
     }
 
+    /// Execute a GQL statement with no parameters.
+    ///
+    /// Convenience wrapper around `execute()` with an empty parameter map.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the server rejects the request.
+    pub async fn execute_simple(&mut self, statement: &str) -> Result<ResultCursor, GqlError> {
+        self.execute(statement, HashMap::new()).await
+    }
+
     /// Begin an explicit transaction.
     ///
     /// # Errors

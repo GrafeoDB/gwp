@@ -143,6 +143,7 @@ message ExecuteResponse {
 message ResultHeader {
   ResultType result_type = 1;
   repeated ColumnDescriptor columns = 2;
+  bool ordered = 3;  // Whether row order is semantically meaningful (sec 4.3.6)
 }
 
 enum ResultType {

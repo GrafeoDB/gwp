@@ -173,12 +173,14 @@ class ExecuteResponse(_message.Message):
     def __init__(self, header: _Optional[_Union[ResultHeader, _Mapping]] = ..., row_batch: _Optional[_Union[RowBatch, _Mapping]] = ..., summary: _Optional[_Union[ResultSummary, _Mapping]] = ...) -> None: ...
 
 class ResultHeader(_message.Message):
-    __slots__ = ("result_type", "columns")
+    __slots__ = ("result_type", "columns", "ordered")
     RESULT_TYPE_FIELD_NUMBER: _ClassVar[int]
     COLUMNS_FIELD_NUMBER: _ClassVar[int]
+    ORDERED_FIELD_NUMBER: _ClassVar[int]
     result_type: ResultType
     columns: _containers.RepeatedCompositeFieldContainer[ColumnDescriptor]
-    def __init__(self, result_type: _Optional[_Union[ResultType, str]] = ..., columns: _Optional[_Iterable[_Union[ColumnDescriptor, _Mapping]]] = ...) -> None: ...
+    ordered: bool
+    def __init__(self, result_type: _Optional[_Union[ResultType, str]] = ..., columns: _Optional[_Iterable[_Union[ColumnDescriptor, _Mapping]]] = ..., ordered: bool = ...) -> None: ...
 
 class ColumnDescriptor(_message.Message):
     __slots__ = ("name", "type")
@@ -263,43 +265,101 @@ class RollbackResponse(_message.Message):
     status: _gql_types_pb2.GqlStatus
     def __init__(self, status: _Optional[_Union[_gql_types_pb2.GqlStatus, _Mapping]] = ...) -> None: ...
 
-class ListDatabasesRequest(_message.Message):
+class ListSchemasRequest(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...
 
-class DatabaseSummary(_message.Message):
-    __slots__ = ("name", "node_count", "edge_count", "persistent", "database_type")
+class SchemaInfo(_message.Message):
+    __slots__ = ("name", "graph_count", "graph_type_count")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    GRAPH_COUNT_FIELD_NUMBER: _ClassVar[int]
+    GRAPH_TYPE_COUNT_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    graph_count: int
+    graph_type_count: int
+    def __init__(self, name: _Optional[str] = ..., graph_count: _Optional[int] = ..., graph_type_count: _Optional[int] = ...) -> None: ...
+
+class ListSchemasResponse(_message.Message):
+    __slots__ = ("schemas",)
+    SCHEMAS_FIELD_NUMBER: _ClassVar[int]
+    schemas: _containers.RepeatedCompositeFieldContainer[SchemaInfo]
+    def __init__(self, schemas: _Optional[_Iterable[_Union[SchemaInfo, _Mapping]]] = ...) -> None: ...
+
+class CreateSchemaRequest(_message.Message):
+    __slots__ = ("name", "if_not_exists")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    IF_NOT_EXISTS_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    if_not_exists: bool
+    def __init__(self, name: _Optional[str] = ..., if_not_exists: bool = ...) -> None: ...
+
+class CreateSchemaResponse(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class DropSchemaRequest(_message.Message):
+    __slots__ = ("name", "if_exists")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    IF_EXISTS_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    if_exists: bool
+    def __init__(self, name: _Optional[str] = ..., if_exists: bool = ...) -> None: ...
+
+class DropSchemaResponse(_message.Message):
+    __slots__ = ("existed",)
+    EXISTED_FIELD_NUMBER: _ClassVar[int]
+    existed: bool
+    def __init__(self, existed: bool = ...) -> None: ...
+
+class ListGraphsRequest(_message.Message):
+    __slots__ = ("schema",)
+    SCHEMA_FIELD_NUMBER: _ClassVar[int]
+    schema: str
+    def __init__(self, schema: _Optional[str] = ...) -> None: ...
+
+class GraphSummary(_message.Message):
+    __slots__ = ("schema", "name", "node_count", "edge_count", "graph_type")
+    SCHEMA_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
     NODE_COUNT_FIELD_NUMBER: _ClassVar[int]
     EDGE_COUNT_FIELD_NUMBER: _ClassVar[int]
-    PERSISTENT_FIELD_NUMBER: _ClassVar[int]
-    DATABASE_TYPE_FIELD_NUMBER: _ClassVar[int]
+    GRAPH_TYPE_FIELD_NUMBER: _ClassVar[int]
+    schema: str
     name: str
     node_count: int
     edge_count: int
-    persistent: bool
-    database_type: str
-    def __init__(self, name: _Optional[str] = ..., node_count: _Optional[int] = ..., edge_count: _Optional[int] = ..., persistent: bool = ..., database_type: _Optional[str] = ...) -> None: ...
+    graph_type: str
+    def __init__(self, schema: _Optional[str] = ..., name: _Optional[str] = ..., node_count: _Optional[int] = ..., edge_count: _Optional[int] = ..., graph_type: _Optional[str] = ...) -> None: ...
 
-class ListDatabasesResponse(_message.Message):
-    __slots__ = ("databases",)
-    DATABASES_FIELD_NUMBER: _ClassVar[int]
-    databases: _containers.RepeatedCompositeFieldContainer[DatabaseSummary]
-    def __init__(self, databases: _Optional[_Iterable[_Union[DatabaseSummary, _Mapping]]] = ...) -> None: ...
+class ListGraphsResponse(_message.Message):
+    __slots__ = ("graphs",)
+    GRAPHS_FIELD_NUMBER: _ClassVar[int]
+    graphs: _containers.RepeatedCompositeFieldContainer[GraphSummary]
+    def __init__(self, graphs: _Optional[_Iterable[_Union[GraphSummary, _Mapping]]] = ...) -> None: ...
 
-class CreateDatabaseRequest(_message.Message):
-    __slots__ = ("name", "database_type", "storage_mode", "options")
+class CreateGraphRequest(_message.Message):
+    __slots__ = ("schema", "name", "if_not_exists", "or_replace", "open_type", "graph_type_ref", "copy_of", "storage_mode", "options")
+    SCHEMA_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
-    DATABASE_TYPE_FIELD_NUMBER: _ClassVar[int]
+    IF_NOT_EXISTS_FIELD_NUMBER: _ClassVar[int]
+    OR_REPLACE_FIELD_NUMBER: _ClassVar[int]
+    OPEN_TYPE_FIELD_NUMBER: _ClassVar[int]
+    GRAPH_TYPE_REF_FIELD_NUMBER: _ClassVar[int]
+    COPY_OF_FIELD_NUMBER: _ClassVar[int]
     STORAGE_MODE_FIELD_NUMBER: _ClassVar[int]
     OPTIONS_FIELD_NUMBER: _ClassVar[int]
+    schema: str
     name: str
-    database_type: str
+    if_not_exists: bool
+    or_replace: bool
+    open_type: bool
+    graph_type_ref: str
+    copy_of: str
     storage_mode: str
-    options: DatabaseOptions
-    def __init__(self, name: _Optional[str] = ..., database_type: _Optional[str] = ..., storage_mode: _Optional[str] = ..., options: _Optional[_Union[DatabaseOptions, _Mapping]] = ...) -> None: ...
+    options: GraphOptions
+    def __init__(self, schema: _Optional[str] = ..., name: _Optional[str] = ..., if_not_exists: bool = ..., or_replace: bool = ..., open_type: bool = ..., graph_type_ref: _Optional[str] = ..., copy_of: _Optional[str] = ..., storage_mode: _Optional[str] = ..., options: _Optional[_Union[GraphOptions, _Mapping]] = ...) -> None: ...
 
-class DatabaseOptions(_message.Message):
+class GraphOptions(_message.Message):
     __slots__ = ("memory_limit_bytes", "backward_edges", "threads", "wal_enabled", "wal_durability")
     MEMORY_LIMIT_BYTES_FIELD_NUMBER: _ClassVar[int]
     BACKWARD_EDGES_FIELD_NUMBER: _ClassVar[int]
@@ -313,48 +373,356 @@ class DatabaseOptions(_message.Message):
     wal_durability: str
     def __init__(self, memory_limit_bytes: _Optional[int] = ..., backward_edges: bool = ..., threads: _Optional[int] = ..., wal_enabled: bool = ..., wal_durability: _Optional[str] = ...) -> None: ...
 
-class CreateDatabaseResponse(_message.Message):
-    __slots__ = ("database",)
-    DATABASE_FIELD_NUMBER: _ClassVar[int]
-    database: DatabaseSummary
-    def __init__(self, database: _Optional[_Union[DatabaseSummary, _Mapping]] = ...) -> None: ...
+class CreateGraphResponse(_message.Message):
+    __slots__ = ("graph",)
+    GRAPH_FIELD_NUMBER: _ClassVar[int]
+    graph: GraphSummary
+    def __init__(self, graph: _Optional[_Union[GraphSummary, _Mapping]] = ...) -> None: ...
 
-class DeleteDatabaseRequest(_message.Message):
-    __slots__ = ("name",)
+class DropGraphRequest(_message.Message):
+    __slots__ = ("schema", "name", "if_exists")
+    SCHEMA_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
+    IF_EXISTS_FIELD_NUMBER: _ClassVar[int]
+    schema: str
     name: str
-    def __init__(self, name: _Optional[str] = ...) -> None: ...
+    if_exists: bool
+    def __init__(self, schema: _Optional[str] = ..., name: _Optional[str] = ..., if_exists: bool = ...) -> None: ...
 
-class DeleteDatabaseResponse(_message.Message):
-    __slots__ = ("deleted",)
-    DELETED_FIELD_NUMBER: _ClassVar[int]
-    deleted: str
-    def __init__(self, deleted: _Optional[str] = ...) -> None: ...
+class DropGraphResponse(_message.Message):
+    __slots__ = ("existed",)
+    EXISTED_FIELD_NUMBER: _ClassVar[int]
+    existed: bool
+    def __init__(self, existed: bool = ...) -> None: ...
 
-class GetDatabaseInfoRequest(_message.Message):
-    __slots__ = ("name",)
+class GetGraphInfoRequest(_message.Message):
+    __slots__ = ("schema", "name")
+    SCHEMA_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
+    schema: str
     name: str
-    def __init__(self, name: _Optional[str] = ...) -> None: ...
+    def __init__(self, schema: _Optional[str] = ..., name: _Optional[str] = ...) -> None: ...
 
-class GetDatabaseInfoResponse(_message.Message):
-    __slots__ = ("name", "node_count", "edge_count", "persistent", "database_type", "storage_mode", "memory_limit_bytes", "backward_edges", "threads")
+class GetGraphInfoResponse(_message.Message):
+    __slots__ = ("schema", "name", "node_count", "edge_count", "graph_type", "storage_mode", "memory_limit_bytes", "backward_edges", "threads")
+    SCHEMA_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
     NODE_COUNT_FIELD_NUMBER: _ClassVar[int]
     EDGE_COUNT_FIELD_NUMBER: _ClassVar[int]
-    PERSISTENT_FIELD_NUMBER: _ClassVar[int]
-    DATABASE_TYPE_FIELD_NUMBER: _ClassVar[int]
+    GRAPH_TYPE_FIELD_NUMBER: _ClassVar[int]
     STORAGE_MODE_FIELD_NUMBER: _ClassVar[int]
     MEMORY_LIMIT_BYTES_FIELD_NUMBER: _ClassVar[int]
     BACKWARD_EDGES_FIELD_NUMBER: _ClassVar[int]
     THREADS_FIELD_NUMBER: _ClassVar[int]
+    schema: str
     name: str
     node_count: int
     edge_count: int
-    persistent: bool
-    database_type: str
+    graph_type: str
     storage_mode: str
     memory_limit_bytes: int
     backward_edges: bool
     threads: int
-    def __init__(self, name: _Optional[str] = ..., node_count: _Optional[int] = ..., edge_count: _Optional[int] = ..., persistent: bool = ..., database_type: _Optional[str] = ..., storage_mode: _Optional[str] = ..., memory_limit_bytes: _Optional[int] = ..., backward_edges: bool = ..., threads: _Optional[int] = ...) -> None: ...
+    def __init__(self, schema: _Optional[str] = ..., name: _Optional[str] = ..., node_count: _Optional[int] = ..., edge_count: _Optional[int] = ..., graph_type: _Optional[str] = ..., storage_mode: _Optional[str] = ..., memory_limit_bytes: _Optional[int] = ..., backward_edges: bool = ..., threads: _Optional[int] = ...) -> None: ...
+
+class ListGraphTypesRequest(_message.Message):
+    __slots__ = ("schema",)
+    SCHEMA_FIELD_NUMBER: _ClassVar[int]
+    schema: str
+    def __init__(self, schema: _Optional[str] = ...) -> None: ...
+
+class GraphTypeInfo(_message.Message):
+    __slots__ = ("schema", "name")
+    SCHEMA_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    schema: str
+    name: str
+    def __init__(self, schema: _Optional[str] = ..., name: _Optional[str] = ...) -> None: ...
+
+class ListGraphTypesResponse(_message.Message):
+    __slots__ = ("graph_types",)
+    GRAPH_TYPES_FIELD_NUMBER: _ClassVar[int]
+    graph_types: _containers.RepeatedCompositeFieldContainer[GraphTypeInfo]
+    def __init__(self, graph_types: _Optional[_Iterable[_Union[GraphTypeInfo, _Mapping]]] = ...) -> None: ...
+
+class CreateGraphTypeRequest(_message.Message):
+    __slots__ = ("schema", "name", "if_not_exists", "or_replace")
+    SCHEMA_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    IF_NOT_EXISTS_FIELD_NUMBER: _ClassVar[int]
+    OR_REPLACE_FIELD_NUMBER: _ClassVar[int]
+    schema: str
+    name: str
+    if_not_exists: bool
+    or_replace: bool
+    def __init__(self, schema: _Optional[str] = ..., name: _Optional[str] = ..., if_not_exists: bool = ..., or_replace: bool = ...) -> None: ...
+
+class CreateGraphTypeResponse(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class DropGraphTypeRequest(_message.Message):
+    __slots__ = ("schema", "name", "if_exists")
+    SCHEMA_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    IF_EXISTS_FIELD_NUMBER: _ClassVar[int]
+    schema: str
+    name: str
+    if_exists: bool
+    def __init__(self, schema: _Optional[str] = ..., name: _Optional[str] = ..., if_exists: bool = ...) -> None: ...
+
+class DropGraphTypeResponse(_message.Message):
+    __slots__ = ("existed",)
+    EXISTED_FIELD_NUMBER: _ClassVar[int]
+    existed: bool
+    def __init__(self, existed: bool = ...) -> None: ...
+
+class GetGraphStatsRequest(_message.Message):
+    __slots__ = ("graph",)
+    GRAPH_FIELD_NUMBER: _ClassVar[int]
+    graph: str
+    def __init__(self, graph: _Optional[str] = ...) -> None: ...
+
+class GetGraphStatsResponse(_message.Message):
+    __slots__ = ("node_count", "edge_count", "label_count", "edge_type_count", "property_key_count", "index_count", "memory_bytes", "disk_bytes")
+    NODE_COUNT_FIELD_NUMBER: _ClassVar[int]
+    EDGE_COUNT_FIELD_NUMBER: _ClassVar[int]
+    LABEL_COUNT_FIELD_NUMBER: _ClassVar[int]
+    EDGE_TYPE_COUNT_FIELD_NUMBER: _ClassVar[int]
+    PROPERTY_KEY_COUNT_FIELD_NUMBER: _ClassVar[int]
+    INDEX_COUNT_FIELD_NUMBER: _ClassVar[int]
+    MEMORY_BYTES_FIELD_NUMBER: _ClassVar[int]
+    DISK_BYTES_FIELD_NUMBER: _ClassVar[int]
+    node_count: int
+    edge_count: int
+    label_count: int
+    edge_type_count: int
+    property_key_count: int
+    index_count: int
+    memory_bytes: int
+    disk_bytes: int
+    def __init__(self, node_count: _Optional[int] = ..., edge_count: _Optional[int] = ..., label_count: _Optional[int] = ..., edge_type_count: _Optional[int] = ..., property_key_count: _Optional[int] = ..., index_count: _Optional[int] = ..., memory_bytes: _Optional[int] = ..., disk_bytes: _Optional[int] = ...) -> None: ...
+
+class WalStatusRequest(_message.Message):
+    __slots__ = ("graph",)
+    GRAPH_FIELD_NUMBER: _ClassVar[int]
+    graph: str
+    def __init__(self, graph: _Optional[str] = ...) -> None: ...
+
+class WalStatusResponse(_message.Message):
+    __slots__ = ("enabled", "path", "size_bytes", "record_count", "last_checkpoint", "current_epoch")
+    ENABLED_FIELD_NUMBER: _ClassVar[int]
+    PATH_FIELD_NUMBER: _ClassVar[int]
+    SIZE_BYTES_FIELD_NUMBER: _ClassVar[int]
+    RECORD_COUNT_FIELD_NUMBER: _ClassVar[int]
+    LAST_CHECKPOINT_FIELD_NUMBER: _ClassVar[int]
+    CURRENT_EPOCH_FIELD_NUMBER: _ClassVar[int]
+    enabled: bool
+    path: str
+    size_bytes: int
+    record_count: int
+    last_checkpoint: int
+    current_epoch: int
+    def __init__(self, enabled: bool = ..., path: _Optional[str] = ..., size_bytes: _Optional[int] = ..., record_count: _Optional[int] = ..., last_checkpoint: _Optional[int] = ..., current_epoch: _Optional[int] = ...) -> None: ...
+
+class WalCheckpointRequest(_message.Message):
+    __slots__ = ("graph",)
+    GRAPH_FIELD_NUMBER: _ClassVar[int]
+    graph: str
+    def __init__(self, graph: _Optional[str] = ...) -> None: ...
+
+class WalCheckpointResponse(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class ValidateRequest(_message.Message):
+    __slots__ = ("graph",)
+    GRAPH_FIELD_NUMBER: _ClassVar[int]
+    graph: str
+    def __init__(self, graph: _Optional[str] = ...) -> None: ...
+
+class ValidateResponse(_message.Message):
+    __slots__ = ("valid", "errors", "warnings")
+    VALID_FIELD_NUMBER: _ClassVar[int]
+    ERRORS_FIELD_NUMBER: _ClassVar[int]
+    WARNINGS_FIELD_NUMBER: _ClassVar[int]
+    valid: bool
+    errors: _containers.RepeatedCompositeFieldContainer[ValidationError]
+    warnings: _containers.RepeatedCompositeFieldContainer[ValidationWarning]
+    def __init__(self, valid: bool = ..., errors: _Optional[_Iterable[_Union[ValidationError, _Mapping]]] = ..., warnings: _Optional[_Iterable[_Union[ValidationWarning, _Mapping]]] = ...) -> None: ...
+
+class ValidationError(_message.Message):
+    __slots__ = ("code", "message", "context")
+    CODE_FIELD_NUMBER: _ClassVar[int]
+    MESSAGE_FIELD_NUMBER: _ClassVar[int]
+    CONTEXT_FIELD_NUMBER: _ClassVar[int]
+    code: str
+    message: str
+    context: str
+    def __init__(self, code: _Optional[str] = ..., message: _Optional[str] = ..., context: _Optional[str] = ...) -> None: ...
+
+class ValidationWarning(_message.Message):
+    __slots__ = ("code", "message", "context")
+    CODE_FIELD_NUMBER: _ClassVar[int]
+    MESSAGE_FIELD_NUMBER: _ClassVar[int]
+    CONTEXT_FIELD_NUMBER: _ClassVar[int]
+    code: str
+    message: str
+    context: str
+    def __init__(self, code: _Optional[str] = ..., message: _Optional[str] = ..., context: _Optional[str] = ...) -> None: ...
+
+class CreateIndexRequest(_message.Message):
+    __slots__ = ("graph", "property_index", "vector_index", "text_index")
+    GRAPH_FIELD_NUMBER: _ClassVar[int]
+    PROPERTY_INDEX_FIELD_NUMBER: _ClassVar[int]
+    VECTOR_INDEX_FIELD_NUMBER: _ClassVar[int]
+    TEXT_INDEX_FIELD_NUMBER: _ClassVar[int]
+    graph: str
+    property_index: PropertyIndexDef
+    vector_index: VectorIndexDef
+    text_index: TextIndexDef
+    def __init__(self, graph: _Optional[str] = ..., property_index: _Optional[_Union[PropertyIndexDef, _Mapping]] = ..., vector_index: _Optional[_Union[VectorIndexDef, _Mapping]] = ..., text_index: _Optional[_Union[TextIndexDef, _Mapping]] = ...) -> None: ...
+
+class PropertyIndexDef(_message.Message):
+    __slots__ = ("property",)
+    PROPERTY_FIELD_NUMBER: _ClassVar[int]
+    property: str
+    def __init__(self, property: _Optional[str] = ...) -> None: ...
+
+class VectorIndexDef(_message.Message):
+    __slots__ = ("label", "property", "dimensions", "metric", "m", "ef_construction")
+    LABEL_FIELD_NUMBER: _ClassVar[int]
+    PROPERTY_FIELD_NUMBER: _ClassVar[int]
+    DIMENSIONS_FIELD_NUMBER: _ClassVar[int]
+    METRIC_FIELD_NUMBER: _ClassVar[int]
+    M_FIELD_NUMBER: _ClassVar[int]
+    EF_CONSTRUCTION_FIELD_NUMBER: _ClassVar[int]
+    label: str
+    property: str
+    dimensions: int
+    metric: str
+    m: int
+    ef_construction: int
+    def __init__(self, label: _Optional[str] = ..., property: _Optional[str] = ..., dimensions: _Optional[int] = ..., metric: _Optional[str] = ..., m: _Optional[int] = ..., ef_construction: _Optional[int] = ...) -> None: ...
+
+class TextIndexDef(_message.Message):
+    __slots__ = ("label", "property")
+    LABEL_FIELD_NUMBER: _ClassVar[int]
+    PROPERTY_FIELD_NUMBER: _ClassVar[int]
+    label: str
+    property: str
+    def __init__(self, label: _Optional[str] = ..., property: _Optional[str] = ...) -> None: ...
+
+class CreateIndexResponse(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class DropIndexRequest(_message.Message):
+    __slots__ = ("graph", "property_index", "vector_index", "text_index")
+    GRAPH_FIELD_NUMBER: _ClassVar[int]
+    PROPERTY_INDEX_FIELD_NUMBER: _ClassVar[int]
+    VECTOR_INDEX_FIELD_NUMBER: _ClassVar[int]
+    TEXT_INDEX_FIELD_NUMBER: _ClassVar[int]
+    graph: str
+    property_index: PropertyIndexDef
+    vector_index: VectorIndexDef
+    text_index: TextIndexDef
+    def __init__(self, graph: _Optional[str] = ..., property_index: _Optional[_Union[PropertyIndexDef, _Mapping]] = ..., vector_index: _Optional[_Union[VectorIndexDef, _Mapping]] = ..., text_index: _Optional[_Union[TextIndexDef, _Mapping]] = ...) -> None: ...
+
+class DropIndexResponse(_message.Message):
+    __slots__ = ("existed",)
+    EXISTED_FIELD_NUMBER: _ClassVar[int]
+    existed: bool
+    def __init__(self, existed: bool = ...) -> None: ...
+
+class VectorSearchRequest(_message.Message):
+    __slots__ = ("graph", "label", "property", "query_vector", "k", "ef", "filters")
+    class FiltersEntry(_message.Message):
+        __slots__ = ("key", "value")
+        KEY_FIELD_NUMBER: _ClassVar[int]
+        VALUE_FIELD_NUMBER: _ClassVar[int]
+        key: str
+        value: _gql_types_pb2.Value
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[_Union[_gql_types_pb2.Value, _Mapping]] = ...) -> None: ...
+    GRAPH_FIELD_NUMBER: _ClassVar[int]
+    LABEL_FIELD_NUMBER: _ClassVar[int]
+    PROPERTY_FIELD_NUMBER: _ClassVar[int]
+    QUERY_VECTOR_FIELD_NUMBER: _ClassVar[int]
+    K_FIELD_NUMBER: _ClassVar[int]
+    EF_FIELD_NUMBER: _ClassVar[int]
+    FILTERS_FIELD_NUMBER: _ClassVar[int]
+    graph: str
+    label: str
+    property: str
+    query_vector: _containers.RepeatedScalarFieldContainer[float]
+    k: int
+    ef: int
+    filters: _containers.MessageMap[str, _gql_types_pb2.Value]
+    def __init__(self, graph: _Optional[str] = ..., label: _Optional[str] = ..., property: _Optional[str] = ..., query_vector: _Optional[_Iterable[float]] = ..., k: _Optional[int] = ..., ef: _Optional[int] = ..., filters: _Optional[_Mapping[str, _gql_types_pb2.Value]] = ...) -> None: ...
+
+class TextSearchRequest(_message.Message):
+    __slots__ = ("graph", "label", "property", "query", "k")
+    GRAPH_FIELD_NUMBER: _ClassVar[int]
+    LABEL_FIELD_NUMBER: _ClassVar[int]
+    PROPERTY_FIELD_NUMBER: _ClassVar[int]
+    QUERY_FIELD_NUMBER: _ClassVar[int]
+    K_FIELD_NUMBER: _ClassVar[int]
+    graph: str
+    label: str
+    property: str
+    query: str
+    k: int
+    def __init__(self, graph: _Optional[str] = ..., label: _Optional[str] = ..., property: _Optional[str] = ..., query: _Optional[str] = ..., k: _Optional[int] = ...) -> None: ...
+
+class HybridSearchRequest(_message.Message):
+    __slots__ = ("graph", "label", "text_property", "vector_property", "query_text", "query_vector", "k")
+    GRAPH_FIELD_NUMBER: _ClassVar[int]
+    LABEL_FIELD_NUMBER: _ClassVar[int]
+    TEXT_PROPERTY_FIELD_NUMBER: _ClassVar[int]
+    VECTOR_PROPERTY_FIELD_NUMBER: _ClassVar[int]
+    QUERY_TEXT_FIELD_NUMBER: _ClassVar[int]
+    QUERY_VECTOR_FIELD_NUMBER: _ClassVar[int]
+    K_FIELD_NUMBER: _ClassVar[int]
+    graph: str
+    label: str
+    text_property: str
+    vector_property: str
+    query_text: str
+    query_vector: _containers.RepeatedScalarFieldContainer[float]
+    k: int
+    def __init__(self, graph: _Optional[str] = ..., label: _Optional[str] = ..., text_property: _Optional[str] = ..., vector_property: _Optional[str] = ..., query_text: _Optional[str] = ..., query_vector: _Optional[_Iterable[float]] = ..., k: _Optional[int] = ...) -> None: ...
+
+class SearchHit(_message.Message):
+    __slots__ = ("node_id", "score", "properties")
+    class PropertiesEntry(_message.Message):
+        __slots__ = ("key", "value")
+        KEY_FIELD_NUMBER: _ClassVar[int]
+        VALUE_FIELD_NUMBER: _ClassVar[int]
+        key: str
+        value: _gql_types_pb2.Value
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[_Union[_gql_types_pb2.Value, _Mapping]] = ...) -> None: ...
+    NODE_ID_FIELD_NUMBER: _ClassVar[int]
+    SCORE_FIELD_NUMBER: _ClassVar[int]
+    PROPERTIES_FIELD_NUMBER: _ClassVar[int]
+    node_id: int
+    score: float
+    properties: _containers.MessageMap[str, _gql_types_pb2.Value]
+    def __init__(self, node_id: _Optional[int] = ..., score: _Optional[float] = ..., properties: _Optional[_Mapping[str, _gql_types_pb2.Value]] = ...) -> None: ...
+
+class VectorSearchResponse(_message.Message):
+    __slots__ = ("hits",)
+    HITS_FIELD_NUMBER: _ClassVar[int]
+    hits: _containers.RepeatedCompositeFieldContainer[SearchHit]
+    def __init__(self, hits: _Optional[_Iterable[_Union[SearchHit, _Mapping]]] = ...) -> None: ...
+
+class TextSearchResponse(_message.Message):
+    __slots__ = ("hits",)
+    HITS_FIELD_NUMBER: _ClassVar[int]
+    hits: _containers.RepeatedCompositeFieldContainer[SearchHit]
+    def __init__(self, hits: _Optional[_Iterable[_Union[SearchHit, _Mapping]]] = ...) -> None: ...
+
+class HybridSearchResponse(_message.Message):
+    __slots__ = ("hits",)
+    HITS_FIELD_NUMBER: _ClassVar[int]
+    hits: _containers.RepeatedCompositeFieldContainer[SearchHit]
+    def __init__(self, hits: _Optional[_Iterable[_Union[SearchHit, _Mapping]]] = ...) -> None: ...

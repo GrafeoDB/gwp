@@ -7,11 +7,18 @@ from typing import ClassVar as _ClassVar, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
+class DurationQualifier(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    DURATION_UNSPECIFIED: _ClassVar[DurationQualifier]
+    DURATION_YEAR_TO_MONTH: _ClassVar[DurationQualifier]
+    DURATION_DAY_TO_SECOND: _ClassVar[DurationQualifier]
+
 class GqlType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
     TYPE_UNKNOWN: _ClassVar[GqlType]
     TYPE_NULL: _ClassVar[GqlType]
     TYPE_BOOLEAN: _ClassVar[GqlType]
+    TYPE_EMPTY: _ClassVar[GqlType]
     TYPE_INT8: _ClassVar[GqlType]
     TYPE_INT16: _ClassVar[GqlType]
     TYPE_INT32: _ClassVar[GqlType]
@@ -38,16 +45,26 @@ class GqlType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     TYPE_LOCAL_DATETIME: _ClassVar[GqlType]
     TYPE_ZONED_DATETIME: _ClassVar[GqlType]
     TYPE_DURATION: _ClassVar[GqlType]
+    TYPE_YEAR_MONTH_DURATION: _ClassVar[GqlType]
+    TYPE_DAY_TIME_DURATION: _ClassVar[GqlType]
     TYPE_LIST: _ClassVar[GqlType]
     TYPE_RECORD: _ClassVar[GqlType]
     TYPE_PATH: _ClassVar[GqlType]
     TYPE_NODE: _ClassVar[GqlType]
     TYPE_EDGE: _ClassVar[GqlType]
+    TYPE_NODE_REFERENCE: _ClassVar[GqlType]
+    TYPE_EDGE_REFERENCE: _ClassVar[GqlType]
+    TYPE_GRAPH_REFERENCE: _ClassVar[GqlType]
+    TYPE_BINDING_TABLE_REFERENCE: _ClassVar[GqlType]
     TYPE_ANY: _ClassVar[GqlType]
     TYPE_PROPERTY_VALUE: _ClassVar[GqlType]
+DURATION_UNSPECIFIED: DurationQualifier
+DURATION_YEAR_TO_MONTH: DurationQualifier
+DURATION_DAY_TO_SECOND: DurationQualifier
 TYPE_UNKNOWN: GqlType
 TYPE_NULL: GqlType
 TYPE_BOOLEAN: GqlType
+TYPE_EMPTY: GqlType
 TYPE_INT8: GqlType
 TYPE_INT16: GqlType
 TYPE_INT32: GqlType
@@ -74,11 +91,17 @@ TYPE_ZONED_TIME: GqlType
 TYPE_LOCAL_DATETIME: GqlType
 TYPE_ZONED_DATETIME: GqlType
 TYPE_DURATION: GqlType
+TYPE_YEAR_MONTH_DURATION: GqlType
+TYPE_DAY_TIME_DURATION: GqlType
 TYPE_LIST: GqlType
 TYPE_RECORD: GqlType
 TYPE_PATH: GqlType
 TYPE_NODE: GqlType
 TYPE_EDGE: GqlType
+TYPE_NODE_REFERENCE: GqlType
+TYPE_EDGE_REFERENCE: GqlType
+TYPE_GRAPH_REFERENCE: GqlType
+TYPE_BINDING_TABLE_REFERENCE: GqlType
 TYPE_ANY: GqlType
 TYPE_PROPERTY_VALUE: GqlType
 
@@ -281,16 +304,34 @@ class Field(_message.Message):
     def __init__(self, name: _Optional[str] = ..., value: _Optional[_Union[Value, _Mapping]] = ...) -> None: ...
 
 class TypeDescriptor(_message.Message):
-    __slots__ = ("type", "nullable", "element_type", "fields")
+    __slots__ = ("type", "nullable", "element_type", "fields", "precision", "scale", "min_length", "max_length", "max_cardinality", "is_group", "is_open", "duration_qualifier", "component_types")
     TYPE_FIELD_NUMBER: _ClassVar[int]
     NULLABLE_FIELD_NUMBER: _ClassVar[int]
     ELEMENT_TYPE_FIELD_NUMBER: _ClassVar[int]
     FIELDS_FIELD_NUMBER: _ClassVar[int]
+    PRECISION_FIELD_NUMBER: _ClassVar[int]
+    SCALE_FIELD_NUMBER: _ClassVar[int]
+    MIN_LENGTH_FIELD_NUMBER: _ClassVar[int]
+    MAX_LENGTH_FIELD_NUMBER: _ClassVar[int]
+    MAX_CARDINALITY_FIELD_NUMBER: _ClassVar[int]
+    IS_GROUP_FIELD_NUMBER: _ClassVar[int]
+    IS_OPEN_FIELD_NUMBER: _ClassVar[int]
+    DURATION_QUALIFIER_FIELD_NUMBER: _ClassVar[int]
+    COMPONENT_TYPES_FIELD_NUMBER: _ClassVar[int]
     type: GqlType
     nullable: bool
     element_type: TypeDescriptor
     fields: _containers.RepeatedCompositeFieldContainer[FieldDescriptor]
-    def __init__(self, type: _Optional[_Union[GqlType, str]] = ..., nullable: bool = ..., element_type: _Optional[_Union[TypeDescriptor, _Mapping]] = ..., fields: _Optional[_Iterable[_Union[FieldDescriptor, _Mapping]]] = ...) -> None: ...
+    precision: int
+    scale: int
+    min_length: int
+    max_length: int
+    max_cardinality: int
+    is_group: bool
+    is_open: bool
+    duration_qualifier: DurationQualifier
+    component_types: _containers.RepeatedCompositeFieldContainer[TypeDescriptor]
+    def __init__(self, type: _Optional[_Union[GqlType, str]] = ..., nullable: bool = ..., element_type: _Optional[_Union[TypeDescriptor, _Mapping]] = ..., fields: _Optional[_Iterable[_Union[FieldDescriptor, _Mapping]]] = ..., precision: _Optional[int] = ..., scale: _Optional[int] = ..., min_length: _Optional[int] = ..., max_length: _Optional[int] = ..., max_cardinality: _Optional[int] = ..., is_group: bool = ..., is_open: bool = ..., duration_qualifier: _Optional[_Union[DurationQualifier, str]] = ..., component_types: _Optional[_Iterable[_Union[TypeDescriptor, _Mapping]]] = ...) -> None: ...
 
 class FieldDescriptor(_message.Message):
     __slots__ = ("name", "type")
@@ -313,14 +354,16 @@ class GqlStatus(_message.Message):
     def __init__(self, code: _Optional[str] = ..., message: _Optional[str] = ..., diagnostic: _Optional[_Union[DiagnosticRecord, _Mapping]] = ..., cause: _Optional[_Union[GqlStatus, _Mapping]] = ...) -> None: ...
 
 class DiagnosticRecord(_message.Message):
-    __slots__ = ("operation", "operation_code", "current_schema")
+    __slots__ = ("operation", "operation_code", "current_schema", "invalid_reference")
     OPERATION_FIELD_NUMBER: _ClassVar[int]
     OPERATION_CODE_FIELD_NUMBER: _ClassVar[int]
     CURRENT_SCHEMA_FIELD_NUMBER: _ClassVar[int]
+    INVALID_REFERENCE_FIELD_NUMBER: _ClassVar[int]
     operation: str
     operation_code: int
     current_schema: str
-    def __init__(self, operation: _Optional[str] = ..., operation_code: _Optional[int] = ..., current_schema: _Optional[str] = ...) -> None: ...
+    invalid_reference: str
+    def __init__(self, operation: _Optional[str] = ..., operation_code: _Optional[int] = ..., current_schema: _Optional[str] = ..., invalid_reference: _Optional[str] = ...) -> None: ...
 
 class AuthCredentials(_message.Message):
     __slots__ = ("bearer_token", "basic")

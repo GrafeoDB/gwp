@@ -244,6 +244,8 @@ export interface ExecuteResponse {
 export interface ResultHeader {
   resultType: ResultType;
   columns: ColumnDescriptor[];
+  /** Whether row order is semantically meaningful (sec 4.3.6) */
+  ordered: boolean;
 }
 
 export interface ColumnDescriptor {
@@ -303,31 +305,77 @@ export interface RollbackResponse {
   status: GqlStatus | undefined;
 }
 
-export interface ListDatabasesRequest {
+export interface ListSchemasRequest {
 }
 
-export interface DatabaseSummary {
+export interface SchemaInfo {
+  name: string;
+  graphCount: number;
+  graphTypeCount: number;
+}
+
+export interface ListSchemasResponse {
+  schemas: SchemaInfo[];
+}
+
+export interface CreateSchemaRequest {
+  name: string;
+  ifNotExists: boolean;
+}
+
+export interface CreateSchemaResponse {
+}
+
+export interface DropSchemaRequest {
+  name: string;
+  ifExists: boolean;
+}
+
+export interface DropSchemaResponse {
+  existed: boolean;
+}
+
+export interface ListGraphsRequest {
+  /** Schema to list graphs from */
+  schema: string;
+}
+
+export interface GraphSummary {
+  schema: string;
   name: string;
   nodeCount: bigint;
   edgeCount: bigint;
-  persistent: boolean;
-  databaseType: string;
+  /** Graph type name (empty if open) */
+  graphType: string;
 }
 
-export interface ListDatabasesResponse {
-  databases: DatabaseSummary[];
+export interface ListGraphsResponse {
+  graphs: GraphSummary[];
 }
 
-export interface CreateDatabaseRequest {
+export interface CreateGraphRequest {
+  schema: string;
   name: string;
-  /** "Lpg", "Rdf", etc. */
-  databaseType: string;
-  /** "InMemory" or "Persistent" */
+  ifNotExists: boolean;
+  orReplace: boolean;
+  /** true = ANY GRAPH (open graph type) */
+  openType?:
+    | boolean
+    | undefined;
+  /** Reference to a named graph type */
+  graphTypeRef?:
+    | string
+    | undefined;
+  /** Optional: copy contents from source graph */
+  copyOf?:
+    | string
+    | undefined;
+  /** Engine-specific options (GrafeoDB extensions) */
   storageMode: string;
-  options: DatabaseOptions | undefined;
+  options: GraphOptions | undefined;
 }
 
-export interface DatabaseOptions {
+export interface GraphOptions {
   memoryLimitBytes?: bigint | undefined;
   backwardEdges?: boolean | undefined;
   threads?: number | undefined;
@@ -335,32 +383,230 @@ export interface DatabaseOptions {
   walDurability?: string | undefined;
 }
 
-export interface CreateDatabaseResponse {
-  database: DatabaseSummary | undefined;
+export interface CreateGraphResponse {
+  graph: GraphSummary | undefined;
 }
 
-export interface DeleteDatabaseRequest {
+export interface DropGraphRequest {
+  schema: string;
+  name: string;
+  ifExists: boolean;
+}
+
+export interface DropGraphResponse {
+  existed: boolean;
+}
+
+export interface GetGraphInfoRequest {
+  schema: string;
   name: string;
 }
 
-export interface DeleteDatabaseResponse {
-  deleted: string;
-}
-
-export interface GetDatabaseInfoRequest {
-  name: string;
-}
-
-export interface GetDatabaseInfoResponse {
+export interface GetGraphInfoResponse {
+  schema: string;
   name: string;
   nodeCount: bigint;
   edgeCount: bigint;
-  persistent: boolean;
-  databaseType: string;
+  graphType: string;
   storageMode: string;
   memoryLimitBytes: bigint;
   backwardEdges: boolean;
   threads: number;
+}
+
+export interface ListGraphTypesRequest {
+  schema: string;
+}
+
+export interface GraphTypeInfo {
+  schema: string;
+  name: string;
+}
+
+export interface ListGraphTypesResponse {
+  graphTypes: GraphTypeInfo[];
+}
+
+export interface CreateGraphTypeRequest {
+  schema: string;
+  name: string;
+  ifNotExists: boolean;
+  orReplace: boolean;
+}
+
+export interface CreateGraphTypeResponse {
+}
+
+export interface DropGraphTypeRequest {
+  schema: string;
+  name: string;
+  ifExists: boolean;
+}
+
+export interface DropGraphTypeResponse {
+  existed: boolean;
+}
+
+export interface GetGraphStatsRequest {
+  graph: string;
+}
+
+export interface GetGraphStatsResponse {
+  nodeCount: bigint;
+  edgeCount: bigint;
+  labelCount: bigint;
+  edgeTypeCount: bigint;
+  propertyKeyCount: bigint;
+  indexCount: bigint;
+  memoryBytes: bigint;
+  diskBytes?: bigint | undefined;
+}
+
+export interface WalStatusRequest {
+  graph: string;
+}
+
+export interface WalStatusResponse {
+  enabled: boolean;
+  path?: string | undefined;
+  sizeBytes: bigint;
+  recordCount: bigint;
+  lastCheckpoint?: bigint | undefined;
+  currentEpoch: bigint;
+}
+
+export interface WalCheckpointRequest {
+  graph: string;
+}
+
+export interface WalCheckpointResponse {
+}
+
+export interface ValidateRequest {
+  graph: string;
+}
+
+export interface ValidateResponse {
+  valid: boolean;
+  errors: ValidationError[];
+  warnings: ValidationWarning[];
+}
+
+export interface ValidationError {
+  code: string;
+  message: string;
+  context?: string | undefined;
+}
+
+export interface ValidationWarning {
+  code: string;
+  message: string;
+  context?: string | undefined;
+}
+
+export interface CreateIndexRequest {
+  graph: string;
+  propertyIndex?: PropertyIndexDef | undefined;
+  vectorIndex?: VectorIndexDef | undefined;
+  textIndex?: TextIndexDef | undefined;
+}
+
+export interface PropertyIndexDef {
+  property: string;
+}
+
+export interface VectorIndexDef {
+  label: string;
+  property: string;
+  dimensions?:
+    | number
+    | undefined;
+  /** cosine, euclidean, dot_product, manhattan */
+  metric?:
+    | string
+    | undefined;
+  /** HNSW links per node */
+  m?: number | undefined;
+  efConstruction?: number | undefined;
+}
+
+export interface TextIndexDef {
+  label: string;
+  property: string;
+}
+
+export interface CreateIndexResponse {
+}
+
+export interface DropIndexRequest {
+  graph: string;
+  propertyIndex?: PropertyIndexDef | undefined;
+  vectorIndex?: VectorIndexDef | undefined;
+  textIndex?: TextIndexDef | undefined;
+}
+
+export interface DropIndexResponse {
+  existed: boolean;
+}
+
+export interface VectorSearchRequest {
+  graph: string;
+  label: string;
+  property: string;
+  queryVector: number[];
+  k: number;
+  ef?: number | undefined;
+  filters: { [key: string]: Value };
+}
+
+export interface VectorSearchRequest_FiltersEntry {
+  key: string;
+  value: Value | undefined;
+}
+
+export interface TextSearchRequest {
+  graph: string;
+  label: string;
+  property: string;
+  query: string;
+  k: number;
+}
+
+export interface HybridSearchRequest {
+  graph: string;
+  label: string;
+  textProperty: string;
+  vectorProperty: string;
+  queryText: string;
+  queryVector: number[];
+  k: number;
+}
+
+/**
+ * A single search result. node_id is an internal numeric identifier
+ * (not the opaque bytes element ID from the GQL type system).
+ */
+export interface SearchHit {
+  nodeId: bigint;
+  score: number;
+  properties: { [key: string]: Value };
+}
+
+export interface SearchHit_PropertiesEntry {
+  key: string;
+  value: Value | undefined;
+}
+
+export interface VectorSearchResponse {
+  hits: SearchHit[];
+}
+
+export interface TextSearchResponse {
+  hits: SearchHit[];
+}
+
+export interface HybridSearchResponse {
+  hits: SearchHit[];
 }
 
 function createBaseHandshakeRequest(): HandshakeRequest {
@@ -1824,7 +2070,7 @@ export const ExecuteResponse: MessageFns<ExecuteResponse> = {
 };
 
 function createBaseResultHeader(): ResultHeader {
-  return { resultType: 0, columns: [] };
+  return { resultType: 0, columns: [], ordered: false };
 }
 
 export const ResultHeader: MessageFns<ResultHeader> = {
@@ -1834,6 +2080,9 @@ export const ResultHeader: MessageFns<ResultHeader> = {
     }
     for (const v of message.columns) {
       ColumnDescriptor.encode(v!, writer.uint32(18).fork()).join();
+    }
+    if (message.ordered !== false) {
+      writer.uint32(24).bool(message.ordered);
     }
     return writer;
   },
@@ -1861,6 +2110,14 @@ export const ResultHeader: MessageFns<ResultHeader> = {
           message.columns.push(ColumnDescriptor.decode(reader, reader.uint32()));
           continue;
         }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.ordered = reader.bool();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1880,6 +2137,7 @@ export const ResultHeader: MessageFns<ResultHeader> = {
       columns: globalThis.Array.isArray(object?.columns)
         ? object.columns.map((e: any) => ColumnDescriptor.fromJSON(e))
         : [],
+      ordered: isSet(object.ordered) ? globalThis.Boolean(object.ordered) : false,
     };
   },
 
@@ -1891,6 +2149,9 @@ export const ResultHeader: MessageFns<ResultHeader> = {
     if (message.columns?.length) {
       obj.columns = message.columns.map((e) => ColumnDescriptor.toJSON(e));
     }
+    if (message.ordered !== false) {
+      obj.ordered = message.ordered;
+    }
     return obj;
   },
 
@@ -1901,6 +2162,7 @@ export const ResultHeader: MessageFns<ResultHeader> = {
     const message = createBaseResultHeader();
     message.resultType = object.resultType ?? 0;
     message.columns = object.columns?.map((e) => ColumnDescriptor.fromPartial(e)) || [];
+    message.ordered = object.ordered ?? false;
     return message;
   },
 };
@@ -2772,19 +3034,19 @@ export const RollbackResponse: MessageFns<RollbackResponse> = {
   },
 };
 
-function createBaseListDatabasesRequest(): ListDatabasesRequest {
+function createBaseListSchemasRequest(): ListSchemasRequest {
   return {};
 }
 
-export const ListDatabasesRequest: MessageFns<ListDatabasesRequest> = {
-  encode(_: ListDatabasesRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const ListSchemasRequest: MessageFns<ListSchemasRequest> = {
+  encode(_: ListSchemasRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): ListDatabasesRequest {
+  decode(input: BinaryReader | Uint8Array, length?: number): ListSchemasRequest {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseListDatabasesRequest();
+    const message = createBaseListSchemasRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -2797,58 +3059,46 @@ export const ListDatabasesRequest: MessageFns<ListDatabasesRequest> = {
     return message;
   },
 
-  fromJSON(_: any): ListDatabasesRequest {
+  fromJSON(_: any): ListSchemasRequest {
     return {};
   },
 
-  toJSON(_: ListDatabasesRequest): unknown {
+  toJSON(_: ListSchemasRequest): unknown {
     const obj: any = {};
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<ListDatabasesRequest>, I>>(base?: I): ListDatabasesRequest {
-    return ListDatabasesRequest.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<ListSchemasRequest>, I>>(base?: I): ListSchemasRequest {
+    return ListSchemasRequest.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<ListDatabasesRequest>, I>>(_: I): ListDatabasesRequest {
-    const message = createBaseListDatabasesRequest();
+  fromPartial<I extends Exact<DeepPartial<ListSchemasRequest>, I>>(_: I): ListSchemasRequest {
+    const message = createBaseListSchemasRequest();
     return message;
   },
 };
 
-function createBaseDatabaseSummary(): DatabaseSummary {
-  return { name: "", nodeCount: 0n, edgeCount: 0n, persistent: false, databaseType: "" };
+function createBaseSchemaInfo(): SchemaInfo {
+  return { name: "", graphCount: 0, graphTypeCount: 0 };
 }
 
-export const DatabaseSummary: MessageFns<DatabaseSummary> = {
-  encode(message: DatabaseSummary, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const SchemaInfo: MessageFns<SchemaInfo> = {
+  encode(message: SchemaInfo, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.name !== "") {
       writer.uint32(10).string(message.name);
     }
-    if (message.nodeCount !== 0n) {
-      if (BigInt.asUintN(64, message.nodeCount) !== message.nodeCount) {
-        throw new globalThis.Error("value provided for field message.nodeCount of type uint64 too large");
-      }
-      writer.uint32(16).uint64(message.nodeCount);
+    if (message.graphCount !== 0) {
+      writer.uint32(16).uint32(message.graphCount);
     }
-    if (message.edgeCount !== 0n) {
-      if (BigInt.asUintN(64, message.edgeCount) !== message.edgeCount) {
-        throw new globalThis.Error("value provided for field message.edgeCount of type uint64 too large");
-      }
-      writer.uint32(24).uint64(message.edgeCount);
-    }
-    if (message.persistent !== false) {
-      writer.uint32(32).bool(message.persistent);
-    }
-    if (message.databaseType !== "") {
-      writer.uint32(42).string(message.databaseType);
+    if (message.graphTypeCount !== 0) {
+      writer.uint32(24).uint32(message.graphTypeCount);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): DatabaseSummary {
+  decode(input: BinaryReader | Uint8Array, length?: number): SchemaInfo {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseDatabaseSummary();
+    const message = createBaseSchemaInfo();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -2865,7 +3115,7 @@ export const DatabaseSummary: MessageFns<DatabaseSummary> = {
             break;
           }
 
-          message.nodeCount = reader.uint64() as bigint;
+          message.graphCount = reader.uint32();
           continue;
         }
         case 3: {
@@ -2873,23 +3123,7 @@ export const DatabaseSummary: MessageFns<DatabaseSummary> = {
             break;
           }
 
-          message.edgeCount = reader.uint64() as bigint;
-          continue;
-        }
-        case 4: {
-          if (tag !== 32) {
-            break;
-          }
-
-          message.persistent = reader.bool();
-          continue;
-        }
-        case 5: {
-          if (tag !== 42) {
-            break;
-          }
-
-          message.databaseType = reader.string();
+          message.graphTypeCount = reader.uint32();
           continue;
         }
       }
@@ -2901,78 +3135,64 @@ export const DatabaseSummary: MessageFns<DatabaseSummary> = {
     return message;
   },
 
-  fromJSON(object: any): DatabaseSummary {
+  fromJSON(object: any): SchemaInfo {
     return {
       name: isSet(object.name) ? globalThis.String(object.name) : "",
-      nodeCount: isSet(object.nodeCount)
-        ? BigInt(object.nodeCount)
-        : isSet(object.node_count)
-        ? BigInt(object.node_count)
-        : 0n,
-      edgeCount: isSet(object.edgeCount)
-        ? BigInt(object.edgeCount)
-        : isSet(object.edge_count)
-        ? BigInt(object.edge_count)
-        : 0n,
-      persistent: isSet(object.persistent) ? globalThis.Boolean(object.persistent) : false,
-      databaseType: isSet(object.databaseType)
-        ? globalThis.String(object.databaseType)
-        : isSet(object.database_type)
-        ? globalThis.String(object.database_type)
-        : "",
+      graphCount: isSet(object.graphCount)
+        ? globalThis.Number(object.graphCount)
+        : isSet(object.graph_count)
+        ? globalThis.Number(object.graph_count)
+        : 0,
+      graphTypeCount: isSet(object.graphTypeCount)
+        ? globalThis.Number(object.graphTypeCount)
+        : isSet(object.graph_type_count)
+        ? globalThis.Number(object.graph_type_count)
+        : 0,
     };
   },
 
-  toJSON(message: DatabaseSummary): unknown {
+  toJSON(message: SchemaInfo): unknown {
     const obj: any = {};
     if (message.name !== "") {
       obj.name = message.name;
     }
-    if (message.nodeCount !== 0n) {
-      obj.nodeCount = message.nodeCount.toString();
+    if (message.graphCount !== 0) {
+      obj.graphCount = Math.round(message.graphCount);
     }
-    if (message.edgeCount !== 0n) {
-      obj.edgeCount = message.edgeCount.toString();
-    }
-    if (message.persistent !== false) {
-      obj.persistent = message.persistent;
-    }
-    if (message.databaseType !== "") {
-      obj.databaseType = message.databaseType;
+    if (message.graphTypeCount !== 0) {
+      obj.graphTypeCount = Math.round(message.graphTypeCount);
     }
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<DatabaseSummary>, I>>(base?: I): DatabaseSummary {
-    return DatabaseSummary.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<SchemaInfo>, I>>(base?: I): SchemaInfo {
+    return SchemaInfo.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<DatabaseSummary>, I>>(object: I): DatabaseSummary {
-    const message = createBaseDatabaseSummary();
+  fromPartial<I extends Exact<DeepPartial<SchemaInfo>, I>>(object: I): SchemaInfo {
+    const message = createBaseSchemaInfo();
     message.name = object.name ?? "";
-    message.nodeCount = object.nodeCount ?? 0n;
-    message.edgeCount = object.edgeCount ?? 0n;
-    message.persistent = object.persistent ?? false;
-    message.databaseType = object.databaseType ?? "";
+    message.graphCount = object.graphCount ?? 0;
+    message.graphTypeCount = object.graphTypeCount ?? 0;
     return message;
   },
 };
 
-function createBaseListDatabasesResponse(): ListDatabasesResponse {
-  return { databases: [] };
+function createBaseListSchemasResponse(): ListSchemasResponse {
+  return { schemas: [] };
 }
 
-export const ListDatabasesResponse: MessageFns<ListDatabasesResponse> = {
-  encode(message: ListDatabasesResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    for (const v of message.databases) {
-      DatabaseSummary.encode(v!, writer.uint32(10).fork()).join();
+export const ListSchemasResponse: MessageFns<ListSchemasResponse> = {
+  encode(message: ListSchemasResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.schemas) {
+      SchemaInfo.encode(v!, writer.uint32(10).fork()).join();
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): ListDatabasesResponse {
+  decode(input: BinaryReader | Uint8Array, length?: number): ListSchemasResponse {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseListDatabasesResponse();
+    const message = createBaseListSchemasResponse();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -2981,7 +3201,7 @@ export const ListDatabasesResponse: MessageFns<ListDatabasesResponse> = {
             break;
           }
 
-          message.databases.push(DatabaseSummary.decode(reader, reader.uint32()));
+          message.schemas.push(SchemaInfo.decode(reader, reader.uint32()));
           continue;
         }
       }
@@ -2993,57 +3213,49 @@ export const ListDatabasesResponse: MessageFns<ListDatabasesResponse> = {
     return message;
   },
 
-  fromJSON(object: any): ListDatabasesResponse {
+  fromJSON(object: any): ListSchemasResponse {
     return {
-      databases: globalThis.Array.isArray(object?.databases)
-        ? object.databases.map((e: any) => DatabaseSummary.fromJSON(e))
-        : [],
+      schemas: globalThis.Array.isArray(object?.schemas) ? object.schemas.map((e: any) => SchemaInfo.fromJSON(e)) : [],
     };
   },
 
-  toJSON(message: ListDatabasesResponse): unknown {
+  toJSON(message: ListSchemasResponse): unknown {
     const obj: any = {};
-    if (message.databases?.length) {
-      obj.databases = message.databases.map((e) => DatabaseSummary.toJSON(e));
+    if (message.schemas?.length) {
+      obj.schemas = message.schemas.map((e) => SchemaInfo.toJSON(e));
     }
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<ListDatabasesResponse>, I>>(base?: I): ListDatabasesResponse {
-    return ListDatabasesResponse.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<ListSchemasResponse>, I>>(base?: I): ListSchemasResponse {
+    return ListSchemasResponse.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<ListDatabasesResponse>, I>>(object: I): ListDatabasesResponse {
-    const message = createBaseListDatabasesResponse();
-    message.databases = object.databases?.map((e) => DatabaseSummary.fromPartial(e)) || [];
+  fromPartial<I extends Exact<DeepPartial<ListSchemasResponse>, I>>(object: I): ListSchemasResponse {
+    const message = createBaseListSchemasResponse();
+    message.schemas = object.schemas?.map((e) => SchemaInfo.fromPartial(e)) || [];
     return message;
   },
 };
 
-function createBaseCreateDatabaseRequest(): CreateDatabaseRequest {
-  return { name: "", databaseType: "", storageMode: "", options: undefined };
+function createBaseCreateSchemaRequest(): CreateSchemaRequest {
+  return { name: "", ifNotExists: false };
 }
 
-export const CreateDatabaseRequest: MessageFns<CreateDatabaseRequest> = {
-  encode(message: CreateDatabaseRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const CreateSchemaRequest: MessageFns<CreateSchemaRequest> = {
+  encode(message: CreateSchemaRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.name !== "") {
       writer.uint32(10).string(message.name);
     }
-    if (message.databaseType !== "") {
-      writer.uint32(18).string(message.databaseType);
-    }
-    if (message.storageMode !== "") {
-      writer.uint32(26).string(message.storageMode);
-    }
-    if (message.options !== undefined) {
-      DatabaseOptions.encode(message.options, writer.uint32(34).fork()).join();
+    if (message.ifNotExists !== false) {
+      writer.uint32(16).bool(message.ifNotExists);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): CreateDatabaseRequest {
+  decode(input: BinaryReader | Uint8Array, length?: number): CreateSchemaRequest {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseCreateDatabaseRequest();
+    const message = createBaseCreateSchemaRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -3056,27 +3268,11 @@ export const CreateDatabaseRequest: MessageFns<CreateDatabaseRequest> = {
           continue;
         }
         case 2: {
-          if (tag !== 18) {
+          if (tag !== 16) {
             break;
           }
 
-          message.databaseType = reader.string();
-          continue;
-        }
-        case 3: {
-          if (tag !== 26) {
-            break;
-          }
-
-          message.storageMode = reader.string();
-          continue;
-        }
-        case 4: {
-          if (tag !== 34) {
-            break;
-          }
-
-          message.options = DatabaseOptions.decode(reader, reader.uint32());
+          message.ifNotExists = reader.bool();
           continue;
         }
       }
@@ -3088,56 +3284,705 @@ export const CreateDatabaseRequest: MessageFns<CreateDatabaseRequest> = {
     return message;
   },
 
-  fromJSON(object: any): CreateDatabaseRequest {
+  fromJSON(object: any): CreateSchemaRequest {
     return {
       name: isSet(object.name) ? globalThis.String(object.name) : "",
-      databaseType: isSet(object.databaseType)
-        ? globalThis.String(object.databaseType)
-        : isSet(object.database_type)
-        ? globalThis.String(object.database_type)
+      ifNotExists: isSet(object.ifNotExists)
+        ? globalThis.Boolean(object.ifNotExists)
+        : isSet(object.if_not_exists)
+        ? globalThis.Boolean(object.if_not_exists)
+        : false,
+    };
+  },
+
+  toJSON(message: CreateSchemaRequest): unknown {
+    const obj: any = {};
+    if (message.name !== "") {
+      obj.name = message.name;
+    }
+    if (message.ifNotExists !== false) {
+      obj.ifNotExists = message.ifNotExists;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<CreateSchemaRequest>, I>>(base?: I): CreateSchemaRequest {
+    return CreateSchemaRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<CreateSchemaRequest>, I>>(object: I): CreateSchemaRequest {
+    const message = createBaseCreateSchemaRequest();
+    message.name = object.name ?? "";
+    message.ifNotExists = object.ifNotExists ?? false;
+    return message;
+  },
+};
+
+function createBaseCreateSchemaResponse(): CreateSchemaResponse {
+  return {};
+}
+
+export const CreateSchemaResponse: MessageFns<CreateSchemaResponse> = {
+  encode(_: CreateSchemaResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CreateSchemaResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCreateSchemaResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(_: any): CreateSchemaResponse {
+    return {};
+  },
+
+  toJSON(_: CreateSchemaResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<CreateSchemaResponse>, I>>(base?: I): CreateSchemaResponse {
+    return CreateSchemaResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<CreateSchemaResponse>, I>>(_: I): CreateSchemaResponse {
+    const message = createBaseCreateSchemaResponse();
+    return message;
+  },
+};
+
+function createBaseDropSchemaRequest(): DropSchemaRequest {
+  return { name: "", ifExists: false };
+}
+
+export const DropSchemaRequest: MessageFns<DropSchemaRequest> = {
+  encode(message: DropSchemaRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.name !== "") {
+      writer.uint32(10).string(message.name);
+    }
+    if (message.ifExists !== false) {
+      writer.uint32(16).bool(message.ifExists);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): DropSchemaRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseDropSchemaRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.ifExists = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): DropSchemaRequest {
+    return {
+      name: isSet(object.name) ? globalThis.String(object.name) : "",
+      ifExists: isSet(object.ifExists)
+        ? globalThis.Boolean(object.ifExists)
+        : isSet(object.if_exists)
+        ? globalThis.Boolean(object.if_exists)
+        : false,
+    };
+  },
+
+  toJSON(message: DropSchemaRequest): unknown {
+    const obj: any = {};
+    if (message.name !== "") {
+      obj.name = message.name;
+    }
+    if (message.ifExists !== false) {
+      obj.ifExists = message.ifExists;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<DropSchemaRequest>, I>>(base?: I): DropSchemaRequest {
+    return DropSchemaRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<DropSchemaRequest>, I>>(object: I): DropSchemaRequest {
+    const message = createBaseDropSchemaRequest();
+    message.name = object.name ?? "";
+    message.ifExists = object.ifExists ?? false;
+    return message;
+  },
+};
+
+function createBaseDropSchemaResponse(): DropSchemaResponse {
+  return { existed: false };
+}
+
+export const DropSchemaResponse: MessageFns<DropSchemaResponse> = {
+  encode(message: DropSchemaResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.existed !== false) {
+      writer.uint32(8).bool(message.existed);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): DropSchemaResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseDropSchemaResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.existed = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): DropSchemaResponse {
+    return { existed: isSet(object.existed) ? globalThis.Boolean(object.existed) : false };
+  },
+
+  toJSON(message: DropSchemaResponse): unknown {
+    const obj: any = {};
+    if (message.existed !== false) {
+      obj.existed = message.existed;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<DropSchemaResponse>, I>>(base?: I): DropSchemaResponse {
+    return DropSchemaResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<DropSchemaResponse>, I>>(object: I): DropSchemaResponse {
+    const message = createBaseDropSchemaResponse();
+    message.existed = object.existed ?? false;
+    return message;
+  },
+};
+
+function createBaseListGraphsRequest(): ListGraphsRequest {
+  return { schema: "" };
+}
+
+export const ListGraphsRequest: MessageFns<ListGraphsRequest> = {
+  encode(message: ListGraphsRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.schema !== "") {
+      writer.uint32(10).string(message.schema);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ListGraphsRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseListGraphsRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.schema = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ListGraphsRequest {
+    return { schema: isSet(object.schema) ? globalThis.String(object.schema) : "" };
+  },
+
+  toJSON(message: ListGraphsRequest): unknown {
+    const obj: any = {};
+    if (message.schema !== "") {
+      obj.schema = message.schema;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ListGraphsRequest>, I>>(base?: I): ListGraphsRequest {
+    return ListGraphsRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ListGraphsRequest>, I>>(object: I): ListGraphsRequest {
+    const message = createBaseListGraphsRequest();
+    message.schema = object.schema ?? "";
+    return message;
+  },
+};
+
+function createBaseGraphSummary(): GraphSummary {
+  return { schema: "", name: "", nodeCount: 0n, edgeCount: 0n, graphType: "" };
+}
+
+export const GraphSummary: MessageFns<GraphSummary> = {
+  encode(message: GraphSummary, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.schema !== "") {
+      writer.uint32(10).string(message.schema);
+    }
+    if (message.name !== "") {
+      writer.uint32(18).string(message.name);
+    }
+    if (message.nodeCount !== 0n) {
+      if (BigInt.asUintN(64, message.nodeCount) !== message.nodeCount) {
+        throw new globalThis.Error("value provided for field message.nodeCount of type uint64 too large");
+      }
+      writer.uint32(24).uint64(message.nodeCount);
+    }
+    if (message.edgeCount !== 0n) {
+      if (BigInt.asUintN(64, message.edgeCount) !== message.edgeCount) {
+        throw new globalThis.Error("value provided for field message.edgeCount of type uint64 too large");
+      }
+      writer.uint32(32).uint64(message.edgeCount);
+    }
+    if (message.graphType !== "") {
+      writer.uint32(42).string(message.graphType);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GraphSummary {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGraphSummary();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.schema = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.nodeCount = reader.uint64() as bigint;
+          continue;
+        }
+        case 4: {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.edgeCount = reader.uint64() as bigint;
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.graphType = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GraphSummary {
+    return {
+      schema: isSet(object.schema) ? globalThis.String(object.schema) : "",
+      name: isSet(object.name) ? globalThis.String(object.name) : "",
+      nodeCount: isSet(object.nodeCount)
+        ? BigInt(object.nodeCount)
+        : isSet(object.node_count)
+        ? BigInt(object.node_count)
+        : 0n,
+      edgeCount: isSet(object.edgeCount)
+        ? BigInt(object.edgeCount)
+        : isSet(object.edge_count)
+        ? BigInt(object.edge_count)
+        : 0n,
+      graphType: isSet(object.graphType)
+        ? globalThis.String(object.graphType)
+        : isSet(object.graph_type)
+        ? globalThis.String(object.graph_type)
         : "",
+    };
+  },
+
+  toJSON(message: GraphSummary): unknown {
+    const obj: any = {};
+    if (message.schema !== "") {
+      obj.schema = message.schema;
+    }
+    if (message.name !== "") {
+      obj.name = message.name;
+    }
+    if (message.nodeCount !== 0n) {
+      obj.nodeCount = message.nodeCount.toString();
+    }
+    if (message.edgeCount !== 0n) {
+      obj.edgeCount = message.edgeCount.toString();
+    }
+    if (message.graphType !== "") {
+      obj.graphType = message.graphType;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<GraphSummary>, I>>(base?: I): GraphSummary {
+    return GraphSummary.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<GraphSummary>, I>>(object: I): GraphSummary {
+    const message = createBaseGraphSummary();
+    message.schema = object.schema ?? "";
+    message.name = object.name ?? "";
+    message.nodeCount = object.nodeCount ?? 0n;
+    message.edgeCount = object.edgeCount ?? 0n;
+    message.graphType = object.graphType ?? "";
+    return message;
+  },
+};
+
+function createBaseListGraphsResponse(): ListGraphsResponse {
+  return { graphs: [] };
+}
+
+export const ListGraphsResponse: MessageFns<ListGraphsResponse> = {
+  encode(message: ListGraphsResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.graphs) {
+      GraphSummary.encode(v!, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ListGraphsResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseListGraphsResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.graphs.push(GraphSummary.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ListGraphsResponse {
+    return {
+      graphs: globalThis.Array.isArray(object?.graphs) ? object.graphs.map((e: any) => GraphSummary.fromJSON(e)) : [],
+    };
+  },
+
+  toJSON(message: ListGraphsResponse): unknown {
+    const obj: any = {};
+    if (message.graphs?.length) {
+      obj.graphs = message.graphs.map((e) => GraphSummary.toJSON(e));
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ListGraphsResponse>, I>>(base?: I): ListGraphsResponse {
+    return ListGraphsResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ListGraphsResponse>, I>>(object: I): ListGraphsResponse {
+    const message = createBaseListGraphsResponse();
+    message.graphs = object.graphs?.map((e) => GraphSummary.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBaseCreateGraphRequest(): CreateGraphRequest {
+  return {
+    schema: "",
+    name: "",
+    ifNotExists: false,
+    orReplace: false,
+    openType: undefined,
+    graphTypeRef: undefined,
+    copyOf: undefined,
+    storageMode: "",
+    options: undefined,
+  };
+}
+
+export const CreateGraphRequest: MessageFns<CreateGraphRequest> = {
+  encode(message: CreateGraphRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.schema !== "") {
+      writer.uint32(10).string(message.schema);
+    }
+    if (message.name !== "") {
+      writer.uint32(18).string(message.name);
+    }
+    if (message.ifNotExists !== false) {
+      writer.uint32(24).bool(message.ifNotExists);
+    }
+    if (message.orReplace !== false) {
+      writer.uint32(32).bool(message.orReplace);
+    }
+    if (message.openType !== undefined) {
+      writer.uint32(40).bool(message.openType);
+    }
+    if (message.graphTypeRef !== undefined) {
+      writer.uint32(50).string(message.graphTypeRef);
+    }
+    if (message.copyOf !== undefined) {
+      writer.uint32(58).string(message.copyOf);
+    }
+    if (message.storageMode !== "") {
+      writer.uint32(82).string(message.storageMode);
+    }
+    if (message.options !== undefined) {
+      GraphOptions.encode(message.options, writer.uint32(90).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CreateGraphRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCreateGraphRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.schema = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.ifNotExists = reader.bool();
+          continue;
+        }
+        case 4: {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.orReplace = reader.bool();
+          continue;
+        }
+        case 5: {
+          if (tag !== 40) {
+            break;
+          }
+
+          message.openType = reader.bool();
+          continue;
+        }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.graphTypeRef = reader.string();
+          continue;
+        }
+        case 7: {
+          if (tag !== 58) {
+            break;
+          }
+
+          message.copyOf = reader.string();
+          continue;
+        }
+        case 10: {
+          if (tag !== 82) {
+            break;
+          }
+
+          message.storageMode = reader.string();
+          continue;
+        }
+        case 11: {
+          if (tag !== 90) {
+            break;
+          }
+
+          message.options = GraphOptions.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): CreateGraphRequest {
+    return {
+      schema: isSet(object.schema) ? globalThis.String(object.schema) : "",
+      name: isSet(object.name) ? globalThis.String(object.name) : "",
+      ifNotExists: isSet(object.ifNotExists)
+        ? globalThis.Boolean(object.ifNotExists)
+        : isSet(object.if_not_exists)
+        ? globalThis.Boolean(object.if_not_exists)
+        : false,
+      orReplace: isSet(object.orReplace)
+        ? globalThis.Boolean(object.orReplace)
+        : isSet(object.or_replace)
+        ? globalThis.Boolean(object.or_replace)
+        : false,
+      openType: isSet(object.openType)
+        ? globalThis.Boolean(object.openType)
+        : isSet(object.open_type)
+        ? globalThis.Boolean(object.open_type)
+        : undefined,
+      graphTypeRef: isSet(object.graphTypeRef)
+        ? globalThis.String(object.graphTypeRef)
+        : isSet(object.graph_type_ref)
+        ? globalThis.String(object.graph_type_ref)
+        : undefined,
+      copyOf: isSet(object.copyOf)
+        ? globalThis.String(object.copyOf)
+        : isSet(object.copy_of)
+        ? globalThis.String(object.copy_of)
+        : undefined,
       storageMode: isSet(object.storageMode)
         ? globalThis.String(object.storageMode)
         : isSet(object.storage_mode)
         ? globalThis.String(object.storage_mode)
         : "",
-      options: isSet(object.options) ? DatabaseOptions.fromJSON(object.options) : undefined,
+      options: isSet(object.options) ? GraphOptions.fromJSON(object.options) : undefined,
     };
   },
 
-  toJSON(message: CreateDatabaseRequest): unknown {
+  toJSON(message: CreateGraphRequest): unknown {
     const obj: any = {};
+    if (message.schema !== "") {
+      obj.schema = message.schema;
+    }
     if (message.name !== "") {
       obj.name = message.name;
     }
-    if (message.databaseType !== "") {
-      obj.databaseType = message.databaseType;
+    if (message.ifNotExists !== false) {
+      obj.ifNotExists = message.ifNotExists;
+    }
+    if (message.orReplace !== false) {
+      obj.orReplace = message.orReplace;
+    }
+    if (message.openType !== undefined) {
+      obj.openType = message.openType;
+    }
+    if (message.graphTypeRef !== undefined) {
+      obj.graphTypeRef = message.graphTypeRef;
+    }
+    if (message.copyOf !== undefined) {
+      obj.copyOf = message.copyOf;
     }
     if (message.storageMode !== "") {
       obj.storageMode = message.storageMode;
     }
     if (message.options !== undefined) {
-      obj.options = DatabaseOptions.toJSON(message.options);
+      obj.options = GraphOptions.toJSON(message.options);
     }
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<CreateDatabaseRequest>, I>>(base?: I): CreateDatabaseRequest {
-    return CreateDatabaseRequest.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<CreateGraphRequest>, I>>(base?: I): CreateGraphRequest {
+    return CreateGraphRequest.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<CreateDatabaseRequest>, I>>(object: I): CreateDatabaseRequest {
-    const message = createBaseCreateDatabaseRequest();
+  fromPartial<I extends Exact<DeepPartial<CreateGraphRequest>, I>>(object: I): CreateGraphRequest {
+    const message = createBaseCreateGraphRequest();
+    message.schema = object.schema ?? "";
     message.name = object.name ?? "";
-    message.databaseType = object.databaseType ?? "";
+    message.ifNotExists = object.ifNotExists ?? false;
+    message.orReplace = object.orReplace ?? false;
+    message.openType = object.openType ?? undefined;
+    message.graphTypeRef = object.graphTypeRef ?? undefined;
+    message.copyOf = object.copyOf ?? undefined;
     message.storageMode = object.storageMode ?? "";
     message.options = (object.options !== undefined && object.options !== null)
-      ? DatabaseOptions.fromPartial(object.options)
+      ? GraphOptions.fromPartial(object.options)
       : undefined;
     return message;
   },
 };
 
-function createBaseDatabaseOptions(): DatabaseOptions {
+function createBaseGraphOptions(): GraphOptions {
   return {
     memoryLimitBytes: undefined,
     backwardEdges: undefined,
@@ -3147,8 +3992,8 @@ function createBaseDatabaseOptions(): DatabaseOptions {
   };
 }
 
-export const DatabaseOptions: MessageFns<DatabaseOptions> = {
-  encode(message: DatabaseOptions, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const GraphOptions: MessageFns<GraphOptions> = {
+  encode(message: GraphOptions, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.memoryLimitBytes !== undefined) {
       if (BigInt.asUintN(64, message.memoryLimitBytes) !== message.memoryLimitBytes) {
         throw new globalThis.Error("value provided for field message.memoryLimitBytes of type uint64 too large");
@@ -3170,10 +4015,10 @@ export const DatabaseOptions: MessageFns<DatabaseOptions> = {
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): DatabaseOptions {
+  decode(input: BinaryReader | Uint8Array, length?: number): GraphOptions {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseDatabaseOptions();
+    const message = createBaseGraphOptions();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -3226,7 +4071,7 @@ export const DatabaseOptions: MessageFns<DatabaseOptions> = {
     return message;
   },
 
-  fromJSON(object: any): DatabaseOptions {
+  fromJSON(object: any): GraphOptions {
     return {
       memoryLimitBytes: isSet(object.memoryLimitBytes)
         ? BigInt(object.memoryLimitBytes)
@@ -3252,7 +4097,7 @@ export const DatabaseOptions: MessageFns<DatabaseOptions> = {
     };
   },
 
-  toJSON(message: DatabaseOptions): unknown {
+  toJSON(message: GraphOptions): unknown {
     const obj: any = {};
     if (message.memoryLimitBytes !== undefined) {
       obj.memoryLimitBytes = message.memoryLimitBytes.toString();
@@ -3272,11 +4117,11 @@ export const DatabaseOptions: MessageFns<DatabaseOptions> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<DatabaseOptions>, I>>(base?: I): DatabaseOptions {
-    return DatabaseOptions.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<GraphOptions>, I>>(base?: I): GraphOptions {
+    return GraphOptions.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<DatabaseOptions>, I>>(object: I): DatabaseOptions {
-    const message = createBaseDatabaseOptions();
+  fromPartial<I extends Exact<DeepPartial<GraphOptions>, I>>(object: I): GraphOptions {
+    const message = createBaseGraphOptions();
     message.memoryLimitBytes = object.memoryLimitBytes ?? undefined;
     message.backwardEdges = object.backwardEdges ?? undefined;
     message.threads = object.threads ?? undefined;
@@ -3286,22 +4131,22 @@ export const DatabaseOptions: MessageFns<DatabaseOptions> = {
   },
 };
 
-function createBaseCreateDatabaseResponse(): CreateDatabaseResponse {
-  return { database: undefined };
+function createBaseCreateGraphResponse(): CreateGraphResponse {
+  return { graph: undefined };
 }
 
-export const CreateDatabaseResponse: MessageFns<CreateDatabaseResponse> = {
-  encode(message: CreateDatabaseResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.database !== undefined) {
-      DatabaseSummary.encode(message.database, writer.uint32(10).fork()).join();
+export const CreateGraphResponse: MessageFns<CreateGraphResponse> = {
+  encode(message: CreateGraphResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.graph !== undefined) {
+      GraphSummary.encode(message.graph, writer.uint32(10).fork()).join();
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): CreateDatabaseResponse {
+  decode(input: BinaryReader | Uint8Array, length?: number): CreateGraphResponse {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseCreateDatabaseResponse();
+    const message = createBaseCreateGraphResponse();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -3310,7 +4155,7 @@ export const CreateDatabaseResponse: MessageFns<CreateDatabaseResponse> = {
             break;
           }
 
-          message.database = DatabaseSummary.decode(reader, reader.uint32());
+          message.graph = GraphSummary.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -3322,51 +4167,216 @@ export const CreateDatabaseResponse: MessageFns<CreateDatabaseResponse> = {
     return message;
   },
 
-  fromJSON(object: any): CreateDatabaseResponse {
-    return { database: isSet(object.database) ? DatabaseSummary.fromJSON(object.database) : undefined };
+  fromJSON(object: any): CreateGraphResponse {
+    return { graph: isSet(object.graph) ? GraphSummary.fromJSON(object.graph) : undefined };
   },
 
-  toJSON(message: CreateDatabaseResponse): unknown {
+  toJSON(message: CreateGraphResponse): unknown {
     const obj: any = {};
-    if (message.database !== undefined) {
-      obj.database = DatabaseSummary.toJSON(message.database);
+    if (message.graph !== undefined) {
+      obj.graph = GraphSummary.toJSON(message.graph);
     }
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<CreateDatabaseResponse>, I>>(base?: I): CreateDatabaseResponse {
-    return CreateDatabaseResponse.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<CreateGraphResponse>, I>>(base?: I): CreateGraphResponse {
+    return CreateGraphResponse.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<CreateDatabaseResponse>, I>>(object: I): CreateDatabaseResponse {
-    const message = createBaseCreateDatabaseResponse();
-    message.database = (object.database !== undefined && object.database !== null)
-      ? DatabaseSummary.fromPartial(object.database)
+  fromPartial<I extends Exact<DeepPartial<CreateGraphResponse>, I>>(object: I): CreateGraphResponse {
+    const message = createBaseCreateGraphResponse();
+    message.graph = (object.graph !== undefined && object.graph !== null)
+      ? GraphSummary.fromPartial(object.graph)
       : undefined;
     return message;
   },
 };
 
-function createBaseDeleteDatabaseRequest(): DeleteDatabaseRequest {
-  return { name: "" };
+function createBaseDropGraphRequest(): DropGraphRequest {
+  return { schema: "", name: "", ifExists: false };
 }
 
-export const DeleteDatabaseRequest: MessageFns<DeleteDatabaseRequest> = {
-  encode(message: DeleteDatabaseRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const DropGraphRequest: MessageFns<DropGraphRequest> = {
+  encode(message: DropGraphRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.schema !== "") {
+      writer.uint32(10).string(message.schema);
+    }
     if (message.name !== "") {
-      writer.uint32(10).string(message.name);
+      writer.uint32(18).string(message.name);
+    }
+    if (message.ifExists !== false) {
+      writer.uint32(24).bool(message.ifExists);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): DeleteDatabaseRequest {
+  decode(input: BinaryReader | Uint8Array, length?: number): DropGraphRequest {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseDeleteDatabaseRequest();
+    const message = createBaseDropGraphRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1: {
           if (tag !== 10) {
+            break;
+          }
+
+          message.schema = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.ifExists = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): DropGraphRequest {
+    return {
+      schema: isSet(object.schema) ? globalThis.String(object.schema) : "",
+      name: isSet(object.name) ? globalThis.String(object.name) : "",
+      ifExists: isSet(object.ifExists)
+        ? globalThis.Boolean(object.ifExists)
+        : isSet(object.if_exists)
+        ? globalThis.Boolean(object.if_exists)
+        : false,
+    };
+  },
+
+  toJSON(message: DropGraphRequest): unknown {
+    const obj: any = {};
+    if (message.schema !== "") {
+      obj.schema = message.schema;
+    }
+    if (message.name !== "") {
+      obj.name = message.name;
+    }
+    if (message.ifExists !== false) {
+      obj.ifExists = message.ifExists;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<DropGraphRequest>, I>>(base?: I): DropGraphRequest {
+    return DropGraphRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<DropGraphRequest>, I>>(object: I): DropGraphRequest {
+    const message = createBaseDropGraphRequest();
+    message.schema = object.schema ?? "";
+    message.name = object.name ?? "";
+    message.ifExists = object.ifExists ?? false;
+    return message;
+  },
+};
+
+function createBaseDropGraphResponse(): DropGraphResponse {
+  return { existed: false };
+}
+
+export const DropGraphResponse: MessageFns<DropGraphResponse> = {
+  encode(message: DropGraphResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.existed !== false) {
+      writer.uint32(8).bool(message.existed);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): DropGraphResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseDropGraphResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.existed = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): DropGraphResponse {
+    return { existed: isSet(object.existed) ? globalThis.Boolean(object.existed) : false };
+  },
+
+  toJSON(message: DropGraphResponse): unknown {
+    const obj: any = {};
+    if (message.existed !== false) {
+      obj.existed = message.existed;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<DropGraphResponse>, I>>(base?: I): DropGraphResponse {
+    return DropGraphResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<DropGraphResponse>, I>>(object: I): DropGraphResponse {
+    const message = createBaseDropGraphResponse();
+    message.existed = object.existed ?? false;
+    return message;
+  },
+};
+
+function createBaseGetGraphInfoRequest(): GetGraphInfoRequest {
+  return { schema: "", name: "" };
+}
+
+export const GetGraphInfoRequest: MessageFns<GetGraphInfoRequest> = {
+  encode(message: GetGraphInfoRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.schema !== "") {
+      writer.uint32(10).string(message.schema);
+    }
+    if (message.name !== "") {
+      writer.uint32(18).string(message.name);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetGraphInfoRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetGraphInfoRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.schema = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
             break;
           }
 
@@ -3382,151 +4392,42 @@ export const DeleteDatabaseRequest: MessageFns<DeleteDatabaseRequest> = {
     return message;
   },
 
-  fromJSON(object: any): DeleteDatabaseRequest {
-    return { name: isSet(object.name) ? globalThis.String(object.name) : "" };
+  fromJSON(object: any): GetGraphInfoRequest {
+    return {
+      schema: isSet(object.schema) ? globalThis.String(object.schema) : "",
+      name: isSet(object.name) ? globalThis.String(object.name) : "",
+    };
   },
 
-  toJSON(message: DeleteDatabaseRequest): unknown {
+  toJSON(message: GetGraphInfoRequest): unknown {
     const obj: any = {};
+    if (message.schema !== "") {
+      obj.schema = message.schema;
+    }
     if (message.name !== "") {
       obj.name = message.name;
     }
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<DeleteDatabaseRequest>, I>>(base?: I): DeleteDatabaseRequest {
-    return DeleteDatabaseRequest.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<GetGraphInfoRequest>, I>>(base?: I): GetGraphInfoRequest {
+    return GetGraphInfoRequest.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<DeleteDatabaseRequest>, I>>(object: I): DeleteDatabaseRequest {
-    const message = createBaseDeleteDatabaseRequest();
+  fromPartial<I extends Exact<DeepPartial<GetGraphInfoRequest>, I>>(object: I): GetGraphInfoRequest {
+    const message = createBaseGetGraphInfoRequest();
+    message.schema = object.schema ?? "";
     message.name = object.name ?? "";
     return message;
   },
 };
 
-function createBaseDeleteDatabaseResponse(): DeleteDatabaseResponse {
-  return { deleted: "" };
-}
-
-export const DeleteDatabaseResponse: MessageFns<DeleteDatabaseResponse> = {
-  encode(message: DeleteDatabaseResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.deleted !== "") {
-      writer.uint32(10).string(message.deleted);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): DeleteDatabaseResponse {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseDeleteDatabaseResponse();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.deleted = reader.string();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): DeleteDatabaseResponse {
-    return { deleted: isSet(object.deleted) ? globalThis.String(object.deleted) : "" };
-  },
-
-  toJSON(message: DeleteDatabaseResponse): unknown {
-    const obj: any = {};
-    if (message.deleted !== "") {
-      obj.deleted = message.deleted;
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<DeleteDatabaseResponse>, I>>(base?: I): DeleteDatabaseResponse {
-    return DeleteDatabaseResponse.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<DeleteDatabaseResponse>, I>>(object: I): DeleteDatabaseResponse {
-    const message = createBaseDeleteDatabaseResponse();
-    message.deleted = object.deleted ?? "";
-    return message;
-  },
-};
-
-function createBaseGetDatabaseInfoRequest(): GetDatabaseInfoRequest {
-  return { name: "" };
-}
-
-export const GetDatabaseInfoRequest: MessageFns<GetDatabaseInfoRequest> = {
-  encode(message: GetDatabaseInfoRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.name !== "") {
-      writer.uint32(10).string(message.name);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): GetDatabaseInfoRequest {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseGetDatabaseInfoRequest();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.name = reader.string();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): GetDatabaseInfoRequest {
-    return { name: isSet(object.name) ? globalThis.String(object.name) : "" };
-  },
-
-  toJSON(message: GetDatabaseInfoRequest): unknown {
-    const obj: any = {};
-    if (message.name !== "") {
-      obj.name = message.name;
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<GetDatabaseInfoRequest>, I>>(base?: I): GetDatabaseInfoRequest {
-    return GetDatabaseInfoRequest.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<GetDatabaseInfoRequest>, I>>(object: I): GetDatabaseInfoRequest {
-    const message = createBaseGetDatabaseInfoRequest();
-    message.name = object.name ?? "";
-    return message;
-  },
-};
-
-function createBaseGetDatabaseInfoResponse(): GetDatabaseInfoResponse {
+function createBaseGetGraphInfoResponse(): GetGraphInfoResponse {
   return {
+    schema: "",
     name: "",
     nodeCount: 0n,
     edgeCount: 0n,
-    persistent: false,
-    databaseType: "",
+    graphType: "",
     storageMode: "",
     memoryLimitBytes: 0n,
     backwardEdges: false,
@@ -3534,28 +4435,28 @@ function createBaseGetDatabaseInfoResponse(): GetDatabaseInfoResponse {
   };
 }
 
-export const GetDatabaseInfoResponse: MessageFns<GetDatabaseInfoResponse> = {
-  encode(message: GetDatabaseInfoResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const GetGraphInfoResponse: MessageFns<GetGraphInfoResponse> = {
+  encode(message: GetGraphInfoResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.schema !== "") {
+      writer.uint32(10).string(message.schema);
+    }
     if (message.name !== "") {
-      writer.uint32(10).string(message.name);
+      writer.uint32(18).string(message.name);
     }
     if (message.nodeCount !== 0n) {
       if (BigInt.asUintN(64, message.nodeCount) !== message.nodeCount) {
         throw new globalThis.Error("value provided for field message.nodeCount of type uint64 too large");
       }
-      writer.uint32(16).uint64(message.nodeCount);
+      writer.uint32(24).uint64(message.nodeCount);
     }
     if (message.edgeCount !== 0n) {
       if (BigInt.asUintN(64, message.edgeCount) !== message.edgeCount) {
         throw new globalThis.Error("value provided for field message.edgeCount of type uint64 too large");
       }
-      writer.uint32(24).uint64(message.edgeCount);
+      writer.uint32(32).uint64(message.edgeCount);
     }
-    if (message.persistent !== false) {
-      writer.uint32(32).bool(message.persistent);
-    }
-    if (message.databaseType !== "") {
-      writer.uint32(42).string(message.databaseType);
+    if (message.graphType !== "") {
+      writer.uint32(42).string(message.graphType);
     }
     if (message.storageMode !== "") {
       writer.uint32(50).string(message.storageMode);
@@ -3575,10 +4476,10 @@ export const GetDatabaseInfoResponse: MessageFns<GetDatabaseInfoResponse> = {
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): GetDatabaseInfoResponse {
+  decode(input: BinaryReader | Uint8Array, length?: number): GetGraphInfoResponse {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseGetDatabaseInfoResponse();
+    const message = createBaseGetGraphInfoResponse();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -3587,15 +4488,15 @@ export const GetDatabaseInfoResponse: MessageFns<GetDatabaseInfoResponse> = {
             break;
           }
 
-          message.name = reader.string();
+          message.schema = reader.string();
           continue;
         }
         case 2: {
-          if (tag !== 16) {
+          if (tag !== 18) {
             break;
           }
 
-          message.nodeCount = reader.uint64() as bigint;
+          message.name = reader.string();
           continue;
         }
         case 3: {
@@ -3603,7 +4504,7 @@ export const GetDatabaseInfoResponse: MessageFns<GetDatabaseInfoResponse> = {
             break;
           }
 
-          message.edgeCount = reader.uint64() as bigint;
+          message.nodeCount = reader.uint64() as bigint;
           continue;
         }
         case 4: {
@@ -3611,7 +4512,7 @@ export const GetDatabaseInfoResponse: MessageFns<GetDatabaseInfoResponse> = {
             break;
           }
 
-          message.persistent = reader.bool();
+          message.edgeCount = reader.uint64() as bigint;
           continue;
         }
         case 5: {
@@ -3619,7 +4520,7 @@ export const GetDatabaseInfoResponse: MessageFns<GetDatabaseInfoResponse> = {
             break;
           }
 
-          message.databaseType = reader.string();
+          message.graphType = reader.string();
           continue;
         }
         case 6: {
@@ -3663,8 +4564,9 @@ export const GetDatabaseInfoResponse: MessageFns<GetDatabaseInfoResponse> = {
     return message;
   },
 
-  fromJSON(object: any): GetDatabaseInfoResponse {
+  fromJSON(object: any): GetGraphInfoResponse {
     return {
+      schema: isSet(object.schema) ? globalThis.String(object.schema) : "",
       name: isSet(object.name) ? globalThis.String(object.name) : "",
       nodeCount: isSet(object.nodeCount)
         ? BigInt(object.nodeCount)
@@ -3676,11 +4578,10 @@ export const GetDatabaseInfoResponse: MessageFns<GetDatabaseInfoResponse> = {
         : isSet(object.edge_count)
         ? BigInt(object.edge_count)
         : 0n,
-      persistent: isSet(object.persistent) ? globalThis.Boolean(object.persistent) : false,
-      databaseType: isSet(object.databaseType)
-        ? globalThis.String(object.databaseType)
-        : isSet(object.database_type)
-        ? globalThis.String(object.database_type)
+      graphType: isSet(object.graphType)
+        ? globalThis.String(object.graphType)
+        : isSet(object.graph_type)
+        ? globalThis.String(object.graph_type)
         : "",
       storageMode: isSet(object.storageMode)
         ? globalThis.String(object.storageMode)
@@ -3701,8 +4602,11 @@ export const GetDatabaseInfoResponse: MessageFns<GetDatabaseInfoResponse> = {
     };
   },
 
-  toJSON(message: GetDatabaseInfoResponse): unknown {
+  toJSON(message: GetGraphInfoResponse): unknown {
     const obj: any = {};
+    if (message.schema !== "") {
+      obj.schema = message.schema;
+    }
     if (message.name !== "") {
       obj.name = message.name;
     }
@@ -3712,11 +4616,8 @@ export const GetDatabaseInfoResponse: MessageFns<GetDatabaseInfoResponse> = {
     if (message.edgeCount !== 0n) {
       obj.edgeCount = message.edgeCount.toString();
     }
-    if (message.persistent !== false) {
-      obj.persistent = message.persistent;
-    }
-    if (message.databaseType !== "") {
-      obj.databaseType = message.databaseType;
+    if (message.graphType !== "") {
+      obj.graphType = message.graphType;
     }
     if (message.storageMode !== "") {
       obj.storageMode = message.storageMode;
@@ -3733,20 +4634,3084 @@ export const GetDatabaseInfoResponse: MessageFns<GetDatabaseInfoResponse> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<GetDatabaseInfoResponse>, I>>(base?: I): GetDatabaseInfoResponse {
-    return GetDatabaseInfoResponse.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<GetGraphInfoResponse>, I>>(base?: I): GetGraphInfoResponse {
+    return GetGraphInfoResponse.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<GetDatabaseInfoResponse>, I>>(object: I): GetDatabaseInfoResponse {
-    const message = createBaseGetDatabaseInfoResponse();
+  fromPartial<I extends Exact<DeepPartial<GetGraphInfoResponse>, I>>(object: I): GetGraphInfoResponse {
+    const message = createBaseGetGraphInfoResponse();
+    message.schema = object.schema ?? "";
     message.name = object.name ?? "";
     message.nodeCount = object.nodeCount ?? 0n;
     message.edgeCount = object.edgeCount ?? 0n;
-    message.persistent = object.persistent ?? false;
-    message.databaseType = object.databaseType ?? "";
+    message.graphType = object.graphType ?? "";
     message.storageMode = object.storageMode ?? "";
     message.memoryLimitBytes = object.memoryLimitBytes ?? 0n;
     message.backwardEdges = object.backwardEdges ?? false;
     message.threads = object.threads ?? 0;
+    return message;
+  },
+};
+
+function createBaseListGraphTypesRequest(): ListGraphTypesRequest {
+  return { schema: "" };
+}
+
+export const ListGraphTypesRequest: MessageFns<ListGraphTypesRequest> = {
+  encode(message: ListGraphTypesRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.schema !== "") {
+      writer.uint32(10).string(message.schema);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ListGraphTypesRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseListGraphTypesRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.schema = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ListGraphTypesRequest {
+    return { schema: isSet(object.schema) ? globalThis.String(object.schema) : "" };
+  },
+
+  toJSON(message: ListGraphTypesRequest): unknown {
+    const obj: any = {};
+    if (message.schema !== "") {
+      obj.schema = message.schema;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ListGraphTypesRequest>, I>>(base?: I): ListGraphTypesRequest {
+    return ListGraphTypesRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ListGraphTypesRequest>, I>>(object: I): ListGraphTypesRequest {
+    const message = createBaseListGraphTypesRequest();
+    message.schema = object.schema ?? "";
+    return message;
+  },
+};
+
+function createBaseGraphTypeInfo(): GraphTypeInfo {
+  return { schema: "", name: "" };
+}
+
+export const GraphTypeInfo: MessageFns<GraphTypeInfo> = {
+  encode(message: GraphTypeInfo, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.schema !== "") {
+      writer.uint32(10).string(message.schema);
+    }
+    if (message.name !== "") {
+      writer.uint32(18).string(message.name);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GraphTypeInfo {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGraphTypeInfo();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.schema = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GraphTypeInfo {
+    return {
+      schema: isSet(object.schema) ? globalThis.String(object.schema) : "",
+      name: isSet(object.name) ? globalThis.String(object.name) : "",
+    };
+  },
+
+  toJSON(message: GraphTypeInfo): unknown {
+    const obj: any = {};
+    if (message.schema !== "") {
+      obj.schema = message.schema;
+    }
+    if (message.name !== "") {
+      obj.name = message.name;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<GraphTypeInfo>, I>>(base?: I): GraphTypeInfo {
+    return GraphTypeInfo.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<GraphTypeInfo>, I>>(object: I): GraphTypeInfo {
+    const message = createBaseGraphTypeInfo();
+    message.schema = object.schema ?? "";
+    message.name = object.name ?? "";
+    return message;
+  },
+};
+
+function createBaseListGraphTypesResponse(): ListGraphTypesResponse {
+  return { graphTypes: [] };
+}
+
+export const ListGraphTypesResponse: MessageFns<ListGraphTypesResponse> = {
+  encode(message: ListGraphTypesResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.graphTypes) {
+      GraphTypeInfo.encode(v!, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ListGraphTypesResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseListGraphTypesResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.graphTypes.push(GraphTypeInfo.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ListGraphTypesResponse {
+    return {
+      graphTypes: globalThis.Array.isArray(object?.graphTypes)
+        ? object.graphTypes.map((e: any) => GraphTypeInfo.fromJSON(e))
+        : globalThis.Array.isArray(object?.graph_types)
+        ? object.graph_types.map((e: any) => GraphTypeInfo.fromJSON(e))
+        : [],
+    };
+  },
+
+  toJSON(message: ListGraphTypesResponse): unknown {
+    const obj: any = {};
+    if (message.graphTypes?.length) {
+      obj.graphTypes = message.graphTypes.map((e) => GraphTypeInfo.toJSON(e));
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ListGraphTypesResponse>, I>>(base?: I): ListGraphTypesResponse {
+    return ListGraphTypesResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ListGraphTypesResponse>, I>>(object: I): ListGraphTypesResponse {
+    const message = createBaseListGraphTypesResponse();
+    message.graphTypes = object.graphTypes?.map((e) => GraphTypeInfo.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBaseCreateGraphTypeRequest(): CreateGraphTypeRequest {
+  return { schema: "", name: "", ifNotExists: false, orReplace: false };
+}
+
+export const CreateGraphTypeRequest: MessageFns<CreateGraphTypeRequest> = {
+  encode(message: CreateGraphTypeRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.schema !== "") {
+      writer.uint32(10).string(message.schema);
+    }
+    if (message.name !== "") {
+      writer.uint32(18).string(message.name);
+    }
+    if (message.ifNotExists !== false) {
+      writer.uint32(24).bool(message.ifNotExists);
+    }
+    if (message.orReplace !== false) {
+      writer.uint32(32).bool(message.orReplace);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CreateGraphTypeRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCreateGraphTypeRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.schema = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.ifNotExists = reader.bool();
+          continue;
+        }
+        case 4: {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.orReplace = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): CreateGraphTypeRequest {
+    return {
+      schema: isSet(object.schema) ? globalThis.String(object.schema) : "",
+      name: isSet(object.name) ? globalThis.String(object.name) : "",
+      ifNotExists: isSet(object.ifNotExists)
+        ? globalThis.Boolean(object.ifNotExists)
+        : isSet(object.if_not_exists)
+        ? globalThis.Boolean(object.if_not_exists)
+        : false,
+      orReplace: isSet(object.orReplace)
+        ? globalThis.Boolean(object.orReplace)
+        : isSet(object.or_replace)
+        ? globalThis.Boolean(object.or_replace)
+        : false,
+    };
+  },
+
+  toJSON(message: CreateGraphTypeRequest): unknown {
+    const obj: any = {};
+    if (message.schema !== "") {
+      obj.schema = message.schema;
+    }
+    if (message.name !== "") {
+      obj.name = message.name;
+    }
+    if (message.ifNotExists !== false) {
+      obj.ifNotExists = message.ifNotExists;
+    }
+    if (message.orReplace !== false) {
+      obj.orReplace = message.orReplace;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<CreateGraphTypeRequest>, I>>(base?: I): CreateGraphTypeRequest {
+    return CreateGraphTypeRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<CreateGraphTypeRequest>, I>>(object: I): CreateGraphTypeRequest {
+    const message = createBaseCreateGraphTypeRequest();
+    message.schema = object.schema ?? "";
+    message.name = object.name ?? "";
+    message.ifNotExists = object.ifNotExists ?? false;
+    message.orReplace = object.orReplace ?? false;
+    return message;
+  },
+};
+
+function createBaseCreateGraphTypeResponse(): CreateGraphTypeResponse {
+  return {};
+}
+
+export const CreateGraphTypeResponse: MessageFns<CreateGraphTypeResponse> = {
+  encode(_: CreateGraphTypeResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CreateGraphTypeResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCreateGraphTypeResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(_: any): CreateGraphTypeResponse {
+    return {};
+  },
+
+  toJSON(_: CreateGraphTypeResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<CreateGraphTypeResponse>, I>>(base?: I): CreateGraphTypeResponse {
+    return CreateGraphTypeResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<CreateGraphTypeResponse>, I>>(_: I): CreateGraphTypeResponse {
+    const message = createBaseCreateGraphTypeResponse();
+    return message;
+  },
+};
+
+function createBaseDropGraphTypeRequest(): DropGraphTypeRequest {
+  return { schema: "", name: "", ifExists: false };
+}
+
+export const DropGraphTypeRequest: MessageFns<DropGraphTypeRequest> = {
+  encode(message: DropGraphTypeRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.schema !== "") {
+      writer.uint32(10).string(message.schema);
+    }
+    if (message.name !== "") {
+      writer.uint32(18).string(message.name);
+    }
+    if (message.ifExists !== false) {
+      writer.uint32(24).bool(message.ifExists);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): DropGraphTypeRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseDropGraphTypeRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.schema = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.ifExists = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): DropGraphTypeRequest {
+    return {
+      schema: isSet(object.schema) ? globalThis.String(object.schema) : "",
+      name: isSet(object.name) ? globalThis.String(object.name) : "",
+      ifExists: isSet(object.ifExists)
+        ? globalThis.Boolean(object.ifExists)
+        : isSet(object.if_exists)
+        ? globalThis.Boolean(object.if_exists)
+        : false,
+    };
+  },
+
+  toJSON(message: DropGraphTypeRequest): unknown {
+    const obj: any = {};
+    if (message.schema !== "") {
+      obj.schema = message.schema;
+    }
+    if (message.name !== "") {
+      obj.name = message.name;
+    }
+    if (message.ifExists !== false) {
+      obj.ifExists = message.ifExists;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<DropGraphTypeRequest>, I>>(base?: I): DropGraphTypeRequest {
+    return DropGraphTypeRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<DropGraphTypeRequest>, I>>(object: I): DropGraphTypeRequest {
+    const message = createBaseDropGraphTypeRequest();
+    message.schema = object.schema ?? "";
+    message.name = object.name ?? "";
+    message.ifExists = object.ifExists ?? false;
+    return message;
+  },
+};
+
+function createBaseDropGraphTypeResponse(): DropGraphTypeResponse {
+  return { existed: false };
+}
+
+export const DropGraphTypeResponse: MessageFns<DropGraphTypeResponse> = {
+  encode(message: DropGraphTypeResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.existed !== false) {
+      writer.uint32(8).bool(message.existed);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): DropGraphTypeResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseDropGraphTypeResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.existed = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): DropGraphTypeResponse {
+    return { existed: isSet(object.existed) ? globalThis.Boolean(object.existed) : false };
+  },
+
+  toJSON(message: DropGraphTypeResponse): unknown {
+    const obj: any = {};
+    if (message.existed !== false) {
+      obj.existed = message.existed;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<DropGraphTypeResponse>, I>>(base?: I): DropGraphTypeResponse {
+    return DropGraphTypeResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<DropGraphTypeResponse>, I>>(object: I): DropGraphTypeResponse {
+    const message = createBaseDropGraphTypeResponse();
+    message.existed = object.existed ?? false;
+    return message;
+  },
+};
+
+function createBaseGetGraphStatsRequest(): GetGraphStatsRequest {
+  return { graph: "" };
+}
+
+export const GetGraphStatsRequest: MessageFns<GetGraphStatsRequest> = {
+  encode(message: GetGraphStatsRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.graph !== "") {
+      writer.uint32(10).string(message.graph);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetGraphStatsRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetGraphStatsRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.graph = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetGraphStatsRequest {
+    return { graph: isSet(object.graph) ? globalThis.String(object.graph) : "" };
+  },
+
+  toJSON(message: GetGraphStatsRequest): unknown {
+    const obj: any = {};
+    if (message.graph !== "") {
+      obj.graph = message.graph;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<GetGraphStatsRequest>, I>>(base?: I): GetGraphStatsRequest {
+    return GetGraphStatsRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<GetGraphStatsRequest>, I>>(object: I): GetGraphStatsRequest {
+    const message = createBaseGetGraphStatsRequest();
+    message.graph = object.graph ?? "";
+    return message;
+  },
+};
+
+function createBaseGetGraphStatsResponse(): GetGraphStatsResponse {
+  return {
+    nodeCount: 0n,
+    edgeCount: 0n,
+    labelCount: 0n,
+    edgeTypeCount: 0n,
+    propertyKeyCount: 0n,
+    indexCount: 0n,
+    memoryBytes: 0n,
+    diskBytes: undefined,
+  };
+}
+
+export const GetGraphStatsResponse: MessageFns<GetGraphStatsResponse> = {
+  encode(message: GetGraphStatsResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.nodeCount !== 0n) {
+      if (BigInt.asUintN(64, message.nodeCount) !== message.nodeCount) {
+        throw new globalThis.Error("value provided for field message.nodeCount of type uint64 too large");
+      }
+      writer.uint32(8).uint64(message.nodeCount);
+    }
+    if (message.edgeCount !== 0n) {
+      if (BigInt.asUintN(64, message.edgeCount) !== message.edgeCount) {
+        throw new globalThis.Error("value provided for field message.edgeCount of type uint64 too large");
+      }
+      writer.uint32(16).uint64(message.edgeCount);
+    }
+    if (message.labelCount !== 0n) {
+      if (BigInt.asUintN(64, message.labelCount) !== message.labelCount) {
+        throw new globalThis.Error("value provided for field message.labelCount of type uint64 too large");
+      }
+      writer.uint32(24).uint64(message.labelCount);
+    }
+    if (message.edgeTypeCount !== 0n) {
+      if (BigInt.asUintN(64, message.edgeTypeCount) !== message.edgeTypeCount) {
+        throw new globalThis.Error("value provided for field message.edgeTypeCount of type uint64 too large");
+      }
+      writer.uint32(32).uint64(message.edgeTypeCount);
+    }
+    if (message.propertyKeyCount !== 0n) {
+      if (BigInt.asUintN(64, message.propertyKeyCount) !== message.propertyKeyCount) {
+        throw new globalThis.Error("value provided for field message.propertyKeyCount of type uint64 too large");
+      }
+      writer.uint32(40).uint64(message.propertyKeyCount);
+    }
+    if (message.indexCount !== 0n) {
+      if (BigInt.asUintN(64, message.indexCount) !== message.indexCount) {
+        throw new globalThis.Error("value provided for field message.indexCount of type uint64 too large");
+      }
+      writer.uint32(48).uint64(message.indexCount);
+    }
+    if (message.memoryBytes !== 0n) {
+      if (BigInt.asUintN(64, message.memoryBytes) !== message.memoryBytes) {
+        throw new globalThis.Error("value provided for field message.memoryBytes of type uint64 too large");
+      }
+      writer.uint32(56).uint64(message.memoryBytes);
+    }
+    if (message.diskBytes !== undefined) {
+      if (BigInt.asUintN(64, message.diskBytes) !== message.diskBytes) {
+        throw new globalThis.Error("value provided for field message.diskBytes of type uint64 too large");
+      }
+      writer.uint32(64).uint64(message.diskBytes);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetGraphStatsResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetGraphStatsResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.nodeCount = reader.uint64() as bigint;
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.edgeCount = reader.uint64() as bigint;
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.labelCount = reader.uint64() as bigint;
+          continue;
+        }
+        case 4: {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.edgeTypeCount = reader.uint64() as bigint;
+          continue;
+        }
+        case 5: {
+          if (tag !== 40) {
+            break;
+          }
+
+          message.propertyKeyCount = reader.uint64() as bigint;
+          continue;
+        }
+        case 6: {
+          if (tag !== 48) {
+            break;
+          }
+
+          message.indexCount = reader.uint64() as bigint;
+          continue;
+        }
+        case 7: {
+          if (tag !== 56) {
+            break;
+          }
+
+          message.memoryBytes = reader.uint64() as bigint;
+          continue;
+        }
+        case 8: {
+          if (tag !== 64) {
+            break;
+          }
+
+          message.diskBytes = reader.uint64() as bigint;
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetGraphStatsResponse {
+    return {
+      nodeCount: isSet(object.nodeCount)
+        ? BigInt(object.nodeCount)
+        : isSet(object.node_count)
+        ? BigInt(object.node_count)
+        : 0n,
+      edgeCount: isSet(object.edgeCount)
+        ? BigInt(object.edgeCount)
+        : isSet(object.edge_count)
+        ? BigInt(object.edge_count)
+        : 0n,
+      labelCount: isSet(object.labelCount)
+        ? BigInt(object.labelCount)
+        : isSet(object.label_count)
+        ? BigInt(object.label_count)
+        : 0n,
+      edgeTypeCount: isSet(object.edgeTypeCount)
+        ? BigInt(object.edgeTypeCount)
+        : isSet(object.edge_type_count)
+        ? BigInt(object.edge_type_count)
+        : 0n,
+      propertyKeyCount: isSet(object.propertyKeyCount)
+        ? BigInt(object.propertyKeyCount)
+        : isSet(object.property_key_count)
+        ? BigInt(object.property_key_count)
+        : 0n,
+      indexCount: isSet(object.indexCount)
+        ? BigInt(object.indexCount)
+        : isSet(object.index_count)
+        ? BigInt(object.index_count)
+        : 0n,
+      memoryBytes: isSet(object.memoryBytes)
+        ? BigInt(object.memoryBytes)
+        : isSet(object.memory_bytes)
+        ? BigInt(object.memory_bytes)
+        : 0n,
+      diskBytes: isSet(object.diskBytes)
+        ? BigInt(object.diskBytes)
+        : isSet(object.disk_bytes)
+        ? BigInt(object.disk_bytes)
+        : undefined,
+    };
+  },
+
+  toJSON(message: GetGraphStatsResponse): unknown {
+    const obj: any = {};
+    if (message.nodeCount !== 0n) {
+      obj.nodeCount = message.nodeCount.toString();
+    }
+    if (message.edgeCount !== 0n) {
+      obj.edgeCount = message.edgeCount.toString();
+    }
+    if (message.labelCount !== 0n) {
+      obj.labelCount = message.labelCount.toString();
+    }
+    if (message.edgeTypeCount !== 0n) {
+      obj.edgeTypeCount = message.edgeTypeCount.toString();
+    }
+    if (message.propertyKeyCount !== 0n) {
+      obj.propertyKeyCount = message.propertyKeyCount.toString();
+    }
+    if (message.indexCount !== 0n) {
+      obj.indexCount = message.indexCount.toString();
+    }
+    if (message.memoryBytes !== 0n) {
+      obj.memoryBytes = message.memoryBytes.toString();
+    }
+    if (message.diskBytes !== undefined) {
+      obj.diskBytes = message.diskBytes.toString();
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<GetGraphStatsResponse>, I>>(base?: I): GetGraphStatsResponse {
+    return GetGraphStatsResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<GetGraphStatsResponse>, I>>(object: I): GetGraphStatsResponse {
+    const message = createBaseGetGraphStatsResponse();
+    message.nodeCount = object.nodeCount ?? 0n;
+    message.edgeCount = object.edgeCount ?? 0n;
+    message.labelCount = object.labelCount ?? 0n;
+    message.edgeTypeCount = object.edgeTypeCount ?? 0n;
+    message.propertyKeyCount = object.propertyKeyCount ?? 0n;
+    message.indexCount = object.indexCount ?? 0n;
+    message.memoryBytes = object.memoryBytes ?? 0n;
+    message.diskBytes = object.diskBytes ?? undefined;
+    return message;
+  },
+};
+
+function createBaseWalStatusRequest(): WalStatusRequest {
+  return { graph: "" };
+}
+
+export const WalStatusRequest: MessageFns<WalStatusRequest> = {
+  encode(message: WalStatusRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.graph !== "") {
+      writer.uint32(10).string(message.graph);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): WalStatusRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseWalStatusRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.graph = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): WalStatusRequest {
+    return { graph: isSet(object.graph) ? globalThis.String(object.graph) : "" };
+  },
+
+  toJSON(message: WalStatusRequest): unknown {
+    const obj: any = {};
+    if (message.graph !== "") {
+      obj.graph = message.graph;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<WalStatusRequest>, I>>(base?: I): WalStatusRequest {
+    return WalStatusRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<WalStatusRequest>, I>>(object: I): WalStatusRequest {
+    const message = createBaseWalStatusRequest();
+    message.graph = object.graph ?? "";
+    return message;
+  },
+};
+
+function createBaseWalStatusResponse(): WalStatusResponse {
+  return {
+    enabled: false,
+    path: undefined,
+    sizeBytes: 0n,
+    recordCount: 0n,
+    lastCheckpoint: undefined,
+    currentEpoch: 0n,
+  };
+}
+
+export const WalStatusResponse: MessageFns<WalStatusResponse> = {
+  encode(message: WalStatusResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.enabled !== false) {
+      writer.uint32(8).bool(message.enabled);
+    }
+    if (message.path !== undefined) {
+      writer.uint32(18).string(message.path);
+    }
+    if (message.sizeBytes !== 0n) {
+      if (BigInt.asUintN(64, message.sizeBytes) !== message.sizeBytes) {
+        throw new globalThis.Error("value provided for field message.sizeBytes of type uint64 too large");
+      }
+      writer.uint32(24).uint64(message.sizeBytes);
+    }
+    if (message.recordCount !== 0n) {
+      if (BigInt.asUintN(64, message.recordCount) !== message.recordCount) {
+        throw new globalThis.Error("value provided for field message.recordCount of type uint64 too large");
+      }
+      writer.uint32(32).uint64(message.recordCount);
+    }
+    if (message.lastCheckpoint !== undefined) {
+      if (BigInt.asUintN(64, message.lastCheckpoint) !== message.lastCheckpoint) {
+        throw new globalThis.Error("value provided for field message.lastCheckpoint of type uint64 too large");
+      }
+      writer.uint32(40).uint64(message.lastCheckpoint);
+    }
+    if (message.currentEpoch !== 0n) {
+      if (BigInt.asUintN(64, message.currentEpoch) !== message.currentEpoch) {
+        throw new globalThis.Error("value provided for field message.currentEpoch of type uint64 too large");
+      }
+      writer.uint32(48).uint64(message.currentEpoch);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): WalStatusResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseWalStatusResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.enabled = reader.bool();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.path = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.sizeBytes = reader.uint64() as bigint;
+          continue;
+        }
+        case 4: {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.recordCount = reader.uint64() as bigint;
+          continue;
+        }
+        case 5: {
+          if (tag !== 40) {
+            break;
+          }
+
+          message.lastCheckpoint = reader.uint64() as bigint;
+          continue;
+        }
+        case 6: {
+          if (tag !== 48) {
+            break;
+          }
+
+          message.currentEpoch = reader.uint64() as bigint;
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): WalStatusResponse {
+    return {
+      enabled: isSet(object.enabled) ? globalThis.Boolean(object.enabled) : false,
+      path: isSet(object.path) ? globalThis.String(object.path) : undefined,
+      sizeBytes: isSet(object.sizeBytes)
+        ? BigInt(object.sizeBytes)
+        : isSet(object.size_bytes)
+        ? BigInt(object.size_bytes)
+        : 0n,
+      recordCount: isSet(object.recordCount)
+        ? BigInt(object.recordCount)
+        : isSet(object.record_count)
+        ? BigInt(object.record_count)
+        : 0n,
+      lastCheckpoint: isSet(object.lastCheckpoint)
+        ? BigInt(object.lastCheckpoint)
+        : isSet(object.last_checkpoint)
+        ? BigInt(object.last_checkpoint)
+        : undefined,
+      currentEpoch: isSet(object.currentEpoch)
+        ? BigInt(object.currentEpoch)
+        : isSet(object.current_epoch)
+        ? BigInt(object.current_epoch)
+        : 0n,
+    };
+  },
+
+  toJSON(message: WalStatusResponse): unknown {
+    const obj: any = {};
+    if (message.enabled !== false) {
+      obj.enabled = message.enabled;
+    }
+    if (message.path !== undefined) {
+      obj.path = message.path;
+    }
+    if (message.sizeBytes !== 0n) {
+      obj.sizeBytes = message.sizeBytes.toString();
+    }
+    if (message.recordCount !== 0n) {
+      obj.recordCount = message.recordCount.toString();
+    }
+    if (message.lastCheckpoint !== undefined) {
+      obj.lastCheckpoint = message.lastCheckpoint.toString();
+    }
+    if (message.currentEpoch !== 0n) {
+      obj.currentEpoch = message.currentEpoch.toString();
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<WalStatusResponse>, I>>(base?: I): WalStatusResponse {
+    return WalStatusResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<WalStatusResponse>, I>>(object: I): WalStatusResponse {
+    const message = createBaseWalStatusResponse();
+    message.enabled = object.enabled ?? false;
+    message.path = object.path ?? undefined;
+    message.sizeBytes = object.sizeBytes ?? 0n;
+    message.recordCount = object.recordCount ?? 0n;
+    message.lastCheckpoint = object.lastCheckpoint ?? undefined;
+    message.currentEpoch = object.currentEpoch ?? 0n;
+    return message;
+  },
+};
+
+function createBaseWalCheckpointRequest(): WalCheckpointRequest {
+  return { graph: "" };
+}
+
+export const WalCheckpointRequest: MessageFns<WalCheckpointRequest> = {
+  encode(message: WalCheckpointRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.graph !== "") {
+      writer.uint32(10).string(message.graph);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): WalCheckpointRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseWalCheckpointRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.graph = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): WalCheckpointRequest {
+    return { graph: isSet(object.graph) ? globalThis.String(object.graph) : "" };
+  },
+
+  toJSON(message: WalCheckpointRequest): unknown {
+    const obj: any = {};
+    if (message.graph !== "") {
+      obj.graph = message.graph;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<WalCheckpointRequest>, I>>(base?: I): WalCheckpointRequest {
+    return WalCheckpointRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<WalCheckpointRequest>, I>>(object: I): WalCheckpointRequest {
+    const message = createBaseWalCheckpointRequest();
+    message.graph = object.graph ?? "";
+    return message;
+  },
+};
+
+function createBaseWalCheckpointResponse(): WalCheckpointResponse {
+  return {};
+}
+
+export const WalCheckpointResponse: MessageFns<WalCheckpointResponse> = {
+  encode(_: WalCheckpointResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): WalCheckpointResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseWalCheckpointResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(_: any): WalCheckpointResponse {
+    return {};
+  },
+
+  toJSON(_: WalCheckpointResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<WalCheckpointResponse>, I>>(base?: I): WalCheckpointResponse {
+    return WalCheckpointResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<WalCheckpointResponse>, I>>(_: I): WalCheckpointResponse {
+    const message = createBaseWalCheckpointResponse();
+    return message;
+  },
+};
+
+function createBaseValidateRequest(): ValidateRequest {
+  return { graph: "" };
+}
+
+export const ValidateRequest: MessageFns<ValidateRequest> = {
+  encode(message: ValidateRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.graph !== "") {
+      writer.uint32(10).string(message.graph);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ValidateRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseValidateRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.graph = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ValidateRequest {
+    return { graph: isSet(object.graph) ? globalThis.String(object.graph) : "" };
+  },
+
+  toJSON(message: ValidateRequest): unknown {
+    const obj: any = {};
+    if (message.graph !== "") {
+      obj.graph = message.graph;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ValidateRequest>, I>>(base?: I): ValidateRequest {
+    return ValidateRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ValidateRequest>, I>>(object: I): ValidateRequest {
+    const message = createBaseValidateRequest();
+    message.graph = object.graph ?? "";
+    return message;
+  },
+};
+
+function createBaseValidateResponse(): ValidateResponse {
+  return { valid: false, errors: [], warnings: [] };
+}
+
+export const ValidateResponse: MessageFns<ValidateResponse> = {
+  encode(message: ValidateResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.valid !== false) {
+      writer.uint32(8).bool(message.valid);
+    }
+    for (const v of message.errors) {
+      ValidationError.encode(v!, writer.uint32(18).fork()).join();
+    }
+    for (const v of message.warnings) {
+      ValidationWarning.encode(v!, writer.uint32(26).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ValidateResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseValidateResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.valid = reader.bool();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.errors.push(ValidationError.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.warnings.push(ValidationWarning.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ValidateResponse {
+    return {
+      valid: isSet(object.valid) ? globalThis.Boolean(object.valid) : false,
+      errors: globalThis.Array.isArray(object?.errors)
+        ? object.errors.map((e: any) => ValidationError.fromJSON(e))
+        : [],
+      warnings: globalThis.Array.isArray(object?.warnings)
+        ? object.warnings.map((e: any) => ValidationWarning.fromJSON(e))
+        : [],
+    };
+  },
+
+  toJSON(message: ValidateResponse): unknown {
+    const obj: any = {};
+    if (message.valid !== false) {
+      obj.valid = message.valid;
+    }
+    if (message.errors?.length) {
+      obj.errors = message.errors.map((e) => ValidationError.toJSON(e));
+    }
+    if (message.warnings?.length) {
+      obj.warnings = message.warnings.map((e) => ValidationWarning.toJSON(e));
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ValidateResponse>, I>>(base?: I): ValidateResponse {
+    return ValidateResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ValidateResponse>, I>>(object: I): ValidateResponse {
+    const message = createBaseValidateResponse();
+    message.valid = object.valid ?? false;
+    message.errors = object.errors?.map((e) => ValidationError.fromPartial(e)) || [];
+    message.warnings = object.warnings?.map((e) => ValidationWarning.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBaseValidationError(): ValidationError {
+  return { code: "", message: "", context: undefined };
+}
+
+export const ValidationError: MessageFns<ValidationError> = {
+  encode(message: ValidationError, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.code !== "") {
+      writer.uint32(10).string(message.code);
+    }
+    if (message.message !== "") {
+      writer.uint32(18).string(message.message);
+    }
+    if (message.context !== undefined) {
+      writer.uint32(26).string(message.context);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ValidationError {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseValidationError();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.code = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.message = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.context = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ValidationError {
+    return {
+      code: isSet(object.code) ? globalThis.String(object.code) : "",
+      message: isSet(object.message) ? globalThis.String(object.message) : "",
+      context: isSet(object.context) ? globalThis.String(object.context) : undefined,
+    };
+  },
+
+  toJSON(message: ValidationError): unknown {
+    const obj: any = {};
+    if (message.code !== "") {
+      obj.code = message.code;
+    }
+    if (message.message !== "") {
+      obj.message = message.message;
+    }
+    if (message.context !== undefined) {
+      obj.context = message.context;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ValidationError>, I>>(base?: I): ValidationError {
+    return ValidationError.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ValidationError>, I>>(object: I): ValidationError {
+    const message = createBaseValidationError();
+    message.code = object.code ?? "";
+    message.message = object.message ?? "";
+    message.context = object.context ?? undefined;
+    return message;
+  },
+};
+
+function createBaseValidationWarning(): ValidationWarning {
+  return { code: "", message: "", context: undefined };
+}
+
+export const ValidationWarning: MessageFns<ValidationWarning> = {
+  encode(message: ValidationWarning, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.code !== "") {
+      writer.uint32(10).string(message.code);
+    }
+    if (message.message !== "") {
+      writer.uint32(18).string(message.message);
+    }
+    if (message.context !== undefined) {
+      writer.uint32(26).string(message.context);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ValidationWarning {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseValidationWarning();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.code = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.message = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.context = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ValidationWarning {
+    return {
+      code: isSet(object.code) ? globalThis.String(object.code) : "",
+      message: isSet(object.message) ? globalThis.String(object.message) : "",
+      context: isSet(object.context) ? globalThis.String(object.context) : undefined,
+    };
+  },
+
+  toJSON(message: ValidationWarning): unknown {
+    const obj: any = {};
+    if (message.code !== "") {
+      obj.code = message.code;
+    }
+    if (message.message !== "") {
+      obj.message = message.message;
+    }
+    if (message.context !== undefined) {
+      obj.context = message.context;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ValidationWarning>, I>>(base?: I): ValidationWarning {
+    return ValidationWarning.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ValidationWarning>, I>>(object: I): ValidationWarning {
+    const message = createBaseValidationWarning();
+    message.code = object.code ?? "";
+    message.message = object.message ?? "";
+    message.context = object.context ?? undefined;
+    return message;
+  },
+};
+
+function createBaseCreateIndexRequest(): CreateIndexRequest {
+  return { graph: "", propertyIndex: undefined, vectorIndex: undefined, textIndex: undefined };
+}
+
+export const CreateIndexRequest: MessageFns<CreateIndexRequest> = {
+  encode(message: CreateIndexRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.graph !== "") {
+      writer.uint32(10).string(message.graph);
+    }
+    if (message.propertyIndex !== undefined) {
+      PropertyIndexDef.encode(message.propertyIndex, writer.uint32(18).fork()).join();
+    }
+    if (message.vectorIndex !== undefined) {
+      VectorIndexDef.encode(message.vectorIndex, writer.uint32(26).fork()).join();
+    }
+    if (message.textIndex !== undefined) {
+      TextIndexDef.encode(message.textIndex, writer.uint32(34).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CreateIndexRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCreateIndexRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.graph = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.propertyIndex = PropertyIndexDef.decode(reader, reader.uint32());
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.vectorIndex = VectorIndexDef.decode(reader, reader.uint32());
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.textIndex = TextIndexDef.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): CreateIndexRequest {
+    return {
+      graph: isSet(object.graph) ? globalThis.String(object.graph) : "",
+      propertyIndex: isSet(object.propertyIndex)
+        ? PropertyIndexDef.fromJSON(object.propertyIndex)
+        : isSet(object.property_index)
+        ? PropertyIndexDef.fromJSON(object.property_index)
+        : undefined,
+      vectorIndex: isSet(object.vectorIndex)
+        ? VectorIndexDef.fromJSON(object.vectorIndex)
+        : isSet(object.vector_index)
+        ? VectorIndexDef.fromJSON(object.vector_index)
+        : undefined,
+      textIndex: isSet(object.textIndex)
+        ? TextIndexDef.fromJSON(object.textIndex)
+        : isSet(object.text_index)
+        ? TextIndexDef.fromJSON(object.text_index)
+        : undefined,
+    };
+  },
+
+  toJSON(message: CreateIndexRequest): unknown {
+    const obj: any = {};
+    if (message.graph !== "") {
+      obj.graph = message.graph;
+    }
+    if (message.propertyIndex !== undefined) {
+      obj.propertyIndex = PropertyIndexDef.toJSON(message.propertyIndex);
+    }
+    if (message.vectorIndex !== undefined) {
+      obj.vectorIndex = VectorIndexDef.toJSON(message.vectorIndex);
+    }
+    if (message.textIndex !== undefined) {
+      obj.textIndex = TextIndexDef.toJSON(message.textIndex);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<CreateIndexRequest>, I>>(base?: I): CreateIndexRequest {
+    return CreateIndexRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<CreateIndexRequest>, I>>(object: I): CreateIndexRequest {
+    const message = createBaseCreateIndexRequest();
+    message.graph = object.graph ?? "";
+    message.propertyIndex = (object.propertyIndex !== undefined && object.propertyIndex !== null)
+      ? PropertyIndexDef.fromPartial(object.propertyIndex)
+      : undefined;
+    message.vectorIndex = (object.vectorIndex !== undefined && object.vectorIndex !== null)
+      ? VectorIndexDef.fromPartial(object.vectorIndex)
+      : undefined;
+    message.textIndex = (object.textIndex !== undefined && object.textIndex !== null)
+      ? TextIndexDef.fromPartial(object.textIndex)
+      : undefined;
+    return message;
+  },
+};
+
+function createBasePropertyIndexDef(): PropertyIndexDef {
+  return { property: "" };
+}
+
+export const PropertyIndexDef: MessageFns<PropertyIndexDef> = {
+  encode(message: PropertyIndexDef, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.property !== "") {
+      writer.uint32(10).string(message.property);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): PropertyIndexDef {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePropertyIndexDef();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.property = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PropertyIndexDef {
+    return { property: isSet(object.property) ? globalThis.String(object.property) : "" };
+  },
+
+  toJSON(message: PropertyIndexDef): unknown {
+    const obj: any = {};
+    if (message.property !== "") {
+      obj.property = message.property;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<PropertyIndexDef>, I>>(base?: I): PropertyIndexDef {
+    return PropertyIndexDef.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<PropertyIndexDef>, I>>(object: I): PropertyIndexDef {
+    const message = createBasePropertyIndexDef();
+    message.property = object.property ?? "";
+    return message;
+  },
+};
+
+function createBaseVectorIndexDef(): VectorIndexDef {
+  return { label: "", property: "", dimensions: undefined, metric: undefined, m: undefined, efConstruction: undefined };
+}
+
+export const VectorIndexDef: MessageFns<VectorIndexDef> = {
+  encode(message: VectorIndexDef, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.label !== "") {
+      writer.uint32(10).string(message.label);
+    }
+    if (message.property !== "") {
+      writer.uint32(18).string(message.property);
+    }
+    if (message.dimensions !== undefined) {
+      writer.uint32(24).uint32(message.dimensions);
+    }
+    if (message.metric !== undefined) {
+      writer.uint32(34).string(message.metric);
+    }
+    if (message.m !== undefined) {
+      writer.uint32(40).uint32(message.m);
+    }
+    if (message.efConstruction !== undefined) {
+      writer.uint32(48).uint32(message.efConstruction);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): VectorIndexDef {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseVectorIndexDef();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.label = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.property = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.dimensions = reader.uint32();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.metric = reader.string();
+          continue;
+        }
+        case 5: {
+          if (tag !== 40) {
+            break;
+          }
+
+          message.m = reader.uint32();
+          continue;
+        }
+        case 6: {
+          if (tag !== 48) {
+            break;
+          }
+
+          message.efConstruction = reader.uint32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): VectorIndexDef {
+    return {
+      label: isSet(object.label) ? globalThis.String(object.label) : "",
+      property: isSet(object.property) ? globalThis.String(object.property) : "",
+      dimensions: isSet(object.dimensions) ? globalThis.Number(object.dimensions) : undefined,
+      metric: isSet(object.metric) ? globalThis.String(object.metric) : undefined,
+      m: isSet(object.m) ? globalThis.Number(object.m) : undefined,
+      efConstruction: isSet(object.efConstruction)
+        ? globalThis.Number(object.efConstruction)
+        : isSet(object.ef_construction)
+        ? globalThis.Number(object.ef_construction)
+        : undefined,
+    };
+  },
+
+  toJSON(message: VectorIndexDef): unknown {
+    const obj: any = {};
+    if (message.label !== "") {
+      obj.label = message.label;
+    }
+    if (message.property !== "") {
+      obj.property = message.property;
+    }
+    if (message.dimensions !== undefined) {
+      obj.dimensions = Math.round(message.dimensions);
+    }
+    if (message.metric !== undefined) {
+      obj.metric = message.metric;
+    }
+    if (message.m !== undefined) {
+      obj.m = Math.round(message.m);
+    }
+    if (message.efConstruction !== undefined) {
+      obj.efConstruction = Math.round(message.efConstruction);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<VectorIndexDef>, I>>(base?: I): VectorIndexDef {
+    return VectorIndexDef.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<VectorIndexDef>, I>>(object: I): VectorIndexDef {
+    const message = createBaseVectorIndexDef();
+    message.label = object.label ?? "";
+    message.property = object.property ?? "";
+    message.dimensions = object.dimensions ?? undefined;
+    message.metric = object.metric ?? undefined;
+    message.m = object.m ?? undefined;
+    message.efConstruction = object.efConstruction ?? undefined;
+    return message;
+  },
+};
+
+function createBaseTextIndexDef(): TextIndexDef {
+  return { label: "", property: "" };
+}
+
+export const TextIndexDef: MessageFns<TextIndexDef> = {
+  encode(message: TextIndexDef, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.label !== "") {
+      writer.uint32(10).string(message.label);
+    }
+    if (message.property !== "") {
+      writer.uint32(18).string(message.property);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): TextIndexDef {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseTextIndexDef();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.label = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.property = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): TextIndexDef {
+    return {
+      label: isSet(object.label) ? globalThis.String(object.label) : "",
+      property: isSet(object.property) ? globalThis.String(object.property) : "",
+    };
+  },
+
+  toJSON(message: TextIndexDef): unknown {
+    const obj: any = {};
+    if (message.label !== "") {
+      obj.label = message.label;
+    }
+    if (message.property !== "") {
+      obj.property = message.property;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<TextIndexDef>, I>>(base?: I): TextIndexDef {
+    return TextIndexDef.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<TextIndexDef>, I>>(object: I): TextIndexDef {
+    const message = createBaseTextIndexDef();
+    message.label = object.label ?? "";
+    message.property = object.property ?? "";
+    return message;
+  },
+};
+
+function createBaseCreateIndexResponse(): CreateIndexResponse {
+  return {};
+}
+
+export const CreateIndexResponse: MessageFns<CreateIndexResponse> = {
+  encode(_: CreateIndexResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CreateIndexResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCreateIndexResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(_: any): CreateIndexResponse {
+    return {};
+  },
+
+  toJSON(_: CreateIndexResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<CreateIndexResponse>, I>>(base?: I): CreateIndexResponse {
+    return CreateIndexResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<CreateIndexResponse>, I>>(_: I): CreateIndexResponse {
+    const message = createBaseCreateIndexResponse();
+    return message;
+  },
+};
+
+function createBaseDropIndexRequest(): DropIndexRequest {
+  return { graph: "", propertyIndex: undefined, vectorIndex: undefined, textIndex: undefined };
+}
+
+export const DropIndexRequest: MessageFns<DropIndexRequest> = {
+  encode(message: DropIndexRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.graph !== "") {
+      writer.uint32(10).string(message.graph);
+    }
+    if (message.propertyIndex !== undefined) {
+      PropertyIndexDef.encode(message.propertyIndex, writer.uint32(18).fork()).join();
+    }
+    if (message.vectorIndex !== undefined) {
+      VectorIndexDef.encode(message.vectorIndex, writer.uint32(26).fork()).join();
+    }
+    if (message.textIndex !== undefined) {
+      TextIndexDef.encode(message.textIndex, writer.uint32(34).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): DropIndexRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseDropIndexRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.graph = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.propertyIndex = PropertyIndexDef.decode(reader, reader.uint32());
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.vectorIndex = VectorIndexDef.decode(reader, reader.uint32());
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.textIndex = TextIndexDef.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): DropIndexRequest {
+    return {
+      graph: isSet(object.graph) ? globalThis.String(object.graph) : "",
+      propertyIndex: isSet(object.propertyIndex)
+        ? PropertyIndexDef.fromJSON(object.propertyIndex)
+        : isSet(object.property_index)
+        ? PropertyIndexDef.fromJSON(object.property_index)
+        : undefined,
+      vectorIndex: isSet(object.vectorIndex)
+        ? VectorIndexDef.fromJSON(object.vectorIndex)
+        : isSet(object.vector_index)
+        ? VectorIndexDef.fromJSON(object.vector_index)
+        : undefined,
+      textIndex: isSet(object.textIndex)
+        ? TextIndexDef.fromJSON(object.textIndex)
+        : isSet(object.text_index)
+        ? TextIndexDef.fromJSON(object.text_index)
+        : undefined,
+    };
+  },
+
+  toJSON(message: DropIndexRequest): unknown {
+    const obj: any = {};
+    if (message.graph !== "") {
+      obj.graph = message.graph;
+    }
+    if (message.propertyIndex !== undefined) {
+      obj.propertyIndex = PropertyIndexDef.toJSON(message.propertyIndex);
+    }
+    if (message.vectorIndex !== undefined) {
+      obj.vectorIndex = VectorIndexDef.toJSON(message.vectorIndex);
+    }
+    if (message.textIndex !== undefined) {
+      obj.textIndex = TextIndexDef.toJSON(message.textIndex);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<DropIndexRequest>, I>>(base?: I): DropIndexRequest {
+    return DropIndexRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<DropIndexRequest>, I>>(object: I): DropIndexRequest {
+    const message = createBaseDropIndexRequest();
+    message.graph = object.graph ?? "";
+    message.propertyIndex = (object.propertyIndex !== undefined && object.propertyIndex !== null)
+      ? PropertyIndexDef.fromPartial(object.propertyIndex)
+      : undefined;
+    message.vectorIndex = (object.vectorIndex !== undefined && object.vectorIndex !== null)
+      ? VectorIndexDef.fromPartial(object.vectorIndex)
+      : undefined;
+    message.textIndex = (object.textIndex !== undefined && object.textIndex !== null)
+      ? TextIndexDef.fromPartial(object.textIndex)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseDropIndexResponse(): DropIndexResponse {
+  return { existed: false };
+}
+
+export const DropIndexResponse: MessageFns<DropIndexResponse> = {
+  encode(message: DropIndexResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.existed !== false) {
+      writer.uint32(8).bool(message.existed);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): DropIndexResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseDropIndexResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.existed = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): DropIndexResponse {
+    return { existed: isSet(object.existed) ? globalThis.Boolean(object.existed) : false };
+  },
+
+  toJSON(message: DropIndexResponse): unknown {
+    const obj: any = {};
+    if (message.existed !== false) {
+      obj.existed = message.existed;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<DropIndexResponse>, I>>(base?: I): DropIndexResponse {
+    return DropIndexResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<DropIndexResponse>, I>>(object: I): DropIndexResponse {
+    const message = createBaseDropIndexResponse();
+    message.existed = object.existed ?? false;
+    return message;
+  },
+};
+
+function createBaseVectorSearchRequest(): VectorSearchRequest {
+  return { graph: "", label: "", property: "", queryVector: [], k: 0, ef: undefined, filters: {} };
+}
+
+export const VectorSearchRequest: MessageFns<VectorSearchRequest> = {
+  encode(message: VectorSearchRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.graph !== "") {
+      writer.uint32(10).string(message.graph);
+    }
+    if (message.label !== "") {
+      writer.uint32(18).string(message.label);
+    }
+    if (message.property !== "") {
+      writer.uint32(26).string(message.property);
+    }
+    writer.uint32(34).fork();
+    for (const v of message.queryVector) {
+      writer.float(v);
+    }
+    writer.join();
+    if (message.k !== 0) {
+      writer.uint32(40).uint32(message.k);
+    }
+    if (message.ef !== undefined) {
+      writer.uint32(48).uint32(message.ef);
+    }
+    globalThis.Object.entries(message.filters).forEach(([key, value]: [string, Value]) => {
+      VectorSearchRequest_FiltersEntry.encode({ key: key as any, value }, writer.uint32(58).fork()).join();
+    });
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): VectorSearchRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseVectorSearchRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.graph = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.label = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.property = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag === 37) {
+            message.queryVector.push(reader.float());
+
+            continue;
+          }
+
+          if (tag === 34) {
+            const end2 = reader.uint32() + reader.pos;
+            while (reader.pos < end2) {
+              message.queryVector.push(reader.float());
+            }
+
+            continue;
+          }
+
+          break;
+        }
+        case 5: {
+          if (tag !== 40) {
+            break;
+          }
+
+          message.k = reader.uint32();
+          continue;
+        }
+        case 6: {
+          if (tag !== 48) {
+            break;
+          }
+
+          message.ef = reader.uint32();
+          continue;
+        }
+        case 7: {
+          if (tag !== 58) {
+            break;
+          }
+
+          const entry7 = VectorSearchRequest_FiltersEntry.decode(reader, reader.uint32());
+          if (entry7.value !== undefined) {
+            message.filters[entry7.key] = entry7.value;
+          }
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): VectorSearchRequest {
+    return {
+      graph: isSet(object.graph) ? globalThis.String(object.graph) : "",
+      label: isSet(object.label) ? globalThis.String(object.label) : "",
+      property: isSet(object.property) ? globalThis.String(object.property) : "",
+      queryVector: globalThis.Array.isArray(object?.queryVector)
+        ? object.queryVector.map((e: any) => globalThis.Number(e))
+        : globalThis.Array.isArray(object?.query_vector)
+        ? object.query_vector.map((e: any) => globalThis.Number(e))
+        : [],
+      k: isSet(object.k) ? globalThis.Number(object.k) : 0,
+      ef: isSet(object.ef) ? globalThis.Number(object.ef) : undefined,
+      filters: isObject(object.filters)
+        ? (globalThis.Object.entries(object.filters) as [string, any][]).reduce(
+          (acc: { [key: string]: Value }, [key, value]: [string, any]) => {
+            acc[key] = Value.fromJSON(value);
+            return acc;
+          },
+          {},
+        )
+        : {},
+    };
+  },
+
+  toJSON(message: VectorSearchRequest): unknown {
+    const obj: any = {};
+    if (message.graph !== "") {
+      obj.graph = message.graph;
+    }
+    if (message.label !== "") {
+      obj.label = message.label;
+    }
+    if (message.property !== "") {
+      obj.property = message.property;
+    }
+    if (message.queryVector?.length) {
+      obj.queryVector = message.queryVector;
+    }
+    if (message.k !== 0) {
+      obj.k = Math.round(message.k);
+    }
+    if (message.ef !== undefined) {
+      obj.ef = Math.round(message.ef);
+    }
+    if (message.filters) {
+      const entries = globalThis.Object.entries(message.filters) as [string, Value][];
+      if (entries.length > 0) {
+        obj.filters = {};
+        entries.forEach(([k, v]) => {
+          obj.filters[k] = Value.toJSON(v);
+        });
+      }
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<VectorSearchRequest>, I>>(base?: I): VectorSearchRequest {
+    return VectorSearchRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<VectorSearchRequest>, I>>(object: I): VectorSearchRequest {
+    const message = createBaseVectorSearchRequest();
+    message.graph = object.graph ?? "";
+    message.label = object.label ?? "";
+    message.property = object.property ?? "";
+    message.queryVector = object.queryVector?.map((e) => e) || [];
+    message.k = object.k ?? 0;
+    message.ef = object.ef ?? undefined;
+    message.filters = (globalThis.Object.entries(object.filters ?? {}) as [string, Value][]).reduce(
+      (acc: { [key: string]: Value }, [key, value]: [string, Value]) => {
+        if (value !== undefined) {
+          acc[key] = Value.fromPartial(value);
+        }
+        return acc;
+      },
+      {},
+    );
+    return message;
+  },
+};
+
+function createBaseVectorSearchRequest_FiltersEntry(): VectorSearchRequest_FiltersEntry {
+  return { key: "", value: undefined };
+}
+
+export const VectorSearchRequest_FiltersEntry: MessageFns<VectorSearchRequest_FiltersEntry> = {
+  encode(message: VectorSearchRequest_FiltersEntry, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.key !== "") {
+      writer.uint32(10).string(message.key);
+    }
+    if (message.value !== undefined) {
+      Value.encode(message.value, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): VectorSearchRequest_FiltersEntry {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseVectorSearchRequest_FiltersEntry();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.key = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.value = Value.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): VectorSearchRequest_FiltersEntry {
+    return {
+      key: isSet(object.key) ? globalThis.String(object.key) : "",
+      value: isSet(object.value) ? Value.fromJSON(object.value) : undefined,
+    };
+  },
+
+  toJSON(message: VectorSearchRequest_FiltersEntry): unknown {
+    const obj: any = {};
+    if (message.key !== "") {
+      obj.key = message.key;
+    }
+    if (message.value !== undefined) {
+      obj.value = Value.toJSON(message.value);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<VectorSearchRequest_FiltersEntry>, I>>(
+    base?: I,
+  ): VectorSearchRequest_FiltersEntry {
+    return VectorSearchRequest_FiltersEntry.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<VectorSearchRequest_FiltersEntry>, I>>(
+    object: I,
+  ): VectorSearchRequest_FiltersEntry {
+    const message = createBaseVectorSearchRequest_FiltersEntry();
+    message.key = object.key ?? "";
+    message.value = (object.value !== undefined && object.value !== null) ? Value.fromPartial(object.value) : undefined;
+    return message;
+  },
+};
+
+function createBaseTextSearchRequest(): TextSearchRequest {
+  return { graph: "", label: "", property: "", query: "", k: 0 };
+}
+
+export const TextSearchRequest: MessageFns<TextSearchRequest> = {
+  encode(message: TextSearchRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.graph !== "") {
+      writer.uint32(10).string(message.graph);
+    }
+    if (message.label !== "") {
+      writer.uint32(18).string(message.label);
+    }
+    if (message.property !== "") {
+      writer.uint32(26).string(message.property);
+    }
+    if (message.query !== "") {
+      writer.uint32(34).string(message.query);
+    }
+    if (message.k !== 0) {
+      writer.uint32(40).uint32(message.k);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): TextSearchRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseTextSearchRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.graph = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.label = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.property = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.query = reader.string();
+          continue;
+        }
+        case 5: {
+          if (tag !== 40) {
+            break;
+          }
+
+          message.k = reader.uint32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): TextSearchRequest {
+    return {
+      graph: isSet(object.graph) ? globalThis.String(object.graph) : "",
+      label: isSet(object.label) ? globalThis.String(object.label) : "",
+      property: isSet(object.property) ? globalThis.String(object.property) : "",
+      query: isSet(object.query) ? globalThis.String(object.query) : "",
+      k: isSet(object.k) ? globalThis.Number(object.k) : 0,
+    };
+  },
+
+  toJSON(message: TextSearchRequest): unknown {
+    const obj: any = {};
+    if (message.graph !== "") {
+      obj.graph = message.graph;
+    }
+    if (message.label !== "") {
+      obj.label = message.label;
+    }
+    if (message.property !== "") {
+      obj.property = message.property;
+    }
+    if (message.query !== "") {
+      obj.query = message.query;
+    }
+    if (message.k !== 0) {
+      obj.k = Math.round(message.k);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<TextSearchRequest>, I>>(base?: I): TextSearchRequest {
+    return TextSearchRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<TextSearchRequest>, I>>(object: I): TextSearchRequest {
+    const message = createBaseTextSearchRequest();
+    message.graph = object.graph ?? "";
+    message.label = object.label ?? "";
+    message.property = object.property ?? "";
+    message.query = object.query ?? "";
+    message.k = object.k ?? 0;
+    return message;
+  },
+};
+
+function createBaseHybridSearchRequest(): HybridSearchRequest {
+  return { graph: "", label: "", textProperty: "", vectorProperty: "", queryText: "", queryVector: [], k: 0 };
+}
+
+export const HybridSearchRequest: MessageFns<HybridSearchRequest> = {
+  encode(message: HybridSearchRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.graph !== "") {
+      writer.uint32(10).string(message.graph);
+    }
+    if (message.label !== "") {
+      writer.uint32(18).string(message.label);
+    }
+    if (message.textProperty !== "") {
+      writer.uint32(26).string(message.textProperty);
+    }
+    if (message.vectorProperty !== "") {
+      writer.uint32(34).string(message.vectorProperty);
+    }
+    if (message.queryText !== "") {
+      writer.uint32(42).string(message.queryText);
+    }
+    writer.uint32(50).fork();
+    for (const v of message.queryVector) {
+      writer.float(v);
+    }
+    writer.join();
+    if (message.k !== 0) {
+      writer.uint32(56).uint32(message.k);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): HybridSearchRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseHybridSearchRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.graph = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.label = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.textProperty = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.vectorProperty = reader.string();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.queryText = reader.string();
+          continue;
+        }
+        case 6: {
+          if (tag === 53) {
+            message.queryVector.push(reader.float());
+
+            continue;
+          }
+
+          if (tag === 50) {
+            const end2 = reader.uint32() + reader.pos;
+            while (reader.pos < end2) {
+              message.queryVector.push(reader.float());
+            }
+
+            continue;
+          }
+
+          break;
+        }
+        case 7: {
+          if (tag !== 56) {
+            break;
+          }
+
+          message.k = reader.uint32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): HybridSearchRequest {
+    return {
+      graph: isSet(object.graph) ? globalThis.String(object.graph) : "",
+      label: isSet(object.label) ? globalThis.String(object.label) : "",
+      textProperty: isSet(object.textProperty)
+        ? globalThis.String(object.textProperty)
+        : isSet(object.text_property)
+        ? globalThis.String(object.text_property)
+        : "",
+      vectorProperty: isSet(object.vectorProperty)
+        ? globalThis.String(object.vectorProperty)
+        : isSet(object.vector_property)
+        ? globalThis.String(object.vector_property)
+        : "",
+      queryText: isSet(object.queryText)
+        ? globalThis.String(object.queryText)
+        : isSet(object.query_text)
+        ? globalThis.String(object.query_text)
+        : "",
+      queryVector: globalThis.Array.isArray(object?.queryVector)
+        ? object.queryVector.map((e: any) => globalThis.Number(e))
+        : globalThis.Array.isArray(object?.query_vector)
+        ? object.query_vector.map((e: any) => globalThis.Number(e))
+        : [],
+      k: isSet(object.k) ? globalThis.Number(object.k) : 0,
+    };
+  },
+
+  toJSON(message: HybridSearchRequest): unknown {
+    const obj: any = {};
+    if (message.graph !== "") {
+      obj.graph = message.graph;
+    }
+    if (message.label !== "") {
+      obj.label = message.label;
+    }
+    if (message.textProperty !== "") {
+      obj.textProperty = message.textProperty;
+    }
+    if (message.vectorProperty !== "") {
+      obj.vectorProperty = message.vectorProperty;
+    }
+    if (message.queryText !== "") {
+      obj.queryText = message.queryText;
+    }
+    if (message.queryVector?.length) {
+      obj.queryVector = message.queryVector;
+    }
+    if (message.k !== 0) {
+      obj.k = Math.round(message.k);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<HybridSearchRequest>, I>>(base?: I): HybridSearchRequest {
+    return HybridSearchRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<HybridSearchRequest>, I>>(object: I): HybridSearchRequest {
+    const message = createBaseHybridSearchRequest();
+    message.graph = object.graph ?? "";
+    message.label = object.label ?? "";
+    message.textProperty = object.textProperty ?? "";
+    message.vectorProperty = object.vectorProperty ?? "";
+    message.queryText = object.queryText ?? "";
+    message.queryVector = object.queryVector?.map((e) => e) || [];
+    message.k = object.k ?? 0;
+    return message;
+  },
+};
+
+function createBaseSearchHit(): SearchHit {
+  return { nodeId: 0n, score: 0, properties: {} };
+}
+
+export const SearchHit: MessageFns<SearchHit> = {
+  encode(message: SearchHit, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.nodeId !== 0n) {
+      if (BigInt.asUintN(64, message.nodeId) !== message.nodeId) {
+        throw new globalThis.Error("value provided for field message.nodeId of type uint64 too large");
+      }
+      writer.uint32(8).uint64(message.nodeId);
+    }
+    if (message.score !== 0) {
+      writer.uint32(17).double(message.score);
+    }
+    globalThis.Object.entries(message.properties).forEach(([key, value]: [string, Value]) => {
+      SearchHit_PropertiesEntry.encode({ key: key as any, value }, writer.uint32(26).fork()).join();
+    });
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): SearchHit {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseSearchHit();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.nodeId = reader.uint64() as bigint;
+          continue;
+        }
+        case 2: {
+          if (tag !== 17) {
+            break;
+          }
+
+          message.score = reader.double();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          const entry3 = SearchHit_PropertiesEntry.decode(reader, reader.uint32());
+          if (entry3.value !== undefined) {
+            message.properties[entry3.key] = entry3.value;
+          }
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): SearchHit {
+    return {
+      nodeId: isSet(object.nodeId) ? BigInt(object.nodeId) : isSet(object.node_id) ? BigInt(object.node_id) : 0n,
+      score: isSet(object.score) ? globalThis.Number(object.score) : 0,
+      properties: isObject(object.properties)
+        ? (globalThis.Object.entries(object.properties) as [string, any][]).reduce(
+          (acc: { [key: string]: Value }, [key, value]: [string, any]) => {
+            acc[key] = Value.fromJSON(value);
+            return acc;
+          },
+          {},
+        )
+        : {},
+    };
+  },
+
+  toJSON(message: SearchHit): unknown {
+    const obj: any = {};
+    if (message.nodeId !== 0n) {
+      obj.nodeId = message.nodeId.toString();
+    }
+    if (message.score !== 0) {
+      obj.score = message.score;
+    }
+    if (message.properties) {
+      const entries = globalThis.Object.entries(message.properties) as [string, Value][];
+      if (entries.length > 0) {
+        obj.properties = {};
+        entries.forEach(([k, v]) => {
+          obj.properties[k] = Value.toJSON(v);
+        });
+      }
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<SearchHit>, I>>(base?: I): SearchHit {
+    return SearchHit.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<SearchHit>, I>>(object: I): SearchHit {
+    const message = createBaseSearchHit();
+    message.nodeId = object.nodeId ?? 0n;
+    message.score = object.score ?? 0;
+    message.properties = (globalThis.Object.entries(object.properties ?? {}) as [string, Value][]).reduce(
+      (acc: { [key: string]: Value }, [key, value]: [string, Value]) => {
+        if (value !== undefined) {
+          acc[key] = Value.fromPartial(value);
+        }
+        return acc;
+      },
+      {},
+    );
+    return message;
+  },
+};
+
+function createBaseSearchHit_PropertiesEntry(): SearchHit_PropertiesEntry {
+  return { key: "", value: undefined };
+}
+
+export const SearchHit_PropertiesEntry: MessageFns<SearchHit_PropertiesEntry> = {
+  encode(message: SearchHit_PropertiesEntry, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.key !== "") {
+      writer.uint32(10).string(message.key);
+    }
+    if (message.value !== undefined) {
+      Value.encode(message.value, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): SearchHit_PropertiesEntry {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseSearchHit_PropertiesEntry();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.key = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.value = Value.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): SearchHit_PropertiesEntry {
+    return {
+      key: isSet(object.key) ? globalThis.String(object.key) : "",
+      value: isSet(object.value) ? Value.fromJSON(object.value) : undefined,
+    };
+  },
+
+  toJSON(message: SearchHit_PropertiesEntry): unknown {
+    const obj: any = {};
+    if (message.key !== "") {
+      obj.key = message.key;
+    }
+    if (message.value !== undefined) {
+      obj.value = Value.toJSON(message.value);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<SearchHit_PropertiesEntry>, I>>(base?: I): SearchHit_PropertiesEntry {
+    return SearchHit_PropertiesEntry.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<SearchHit_PropertiesEntry>, I>>(object: I): SearchHit_PropertiesEntry {
+    const message = createBaseSearchHit_PropertiesEntry();
+    message.key = object.key ?? "";
+    message.value = (object.value !== undefined && object.value !== null) ? Value.fromPartial(object.value) : undefined;
+    return message;
+  },
+};
+
+function createBaseVectorSearchResponse(): VectorSearchResponse {
+  return { hits: [] };
+}
+
+export const VectorSearchResponse: MessageFns<VectorSearchResponse> = {
+  encode(message: VectorSearchResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.hits) {
+      SearchHit.encode(v!, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): VectorSearchResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseVectorSearchResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.hits.push(SearchHit.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): VectorSearchResponse {
+    return { hits: globalThis.Array.isArray(object?.hits) ? object.hits.map((e: any) => SearchHit.fromJSON(e)) : [] };
+  },
+
+  toJSON(message: VectorSearchResponse): unknown {
+    const obj: any = {};
+    if (message.hits?.length) {
+      obj.hits = message.hits.map((e) => SearchHit.toJSON(e));
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<VectorSearchResponse>, I>>(base?: I): VectorSearchResponse {
+    return VectorSearchResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<VectorSearchResponse>, I>>(object: I): VectorSearchResponse {
+    const message = createBaseVectorSearchResponse();
+    message.hits = object.hits?.map((e) => SearchHit.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBaseTextSearchResponse(): TextSearchResponse {
+  return { hits: [] };
+}
+
+export const TextSearchResponse: MessageFns<TextSearchResponse> = {
+  encode(message: TextSearchResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.hits) {
+      SearchHit.encode(v!, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): TextSearchResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseTextSearchResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.hits.push(SearchHit.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): TextSearchResponse {
+    return { hits: globalThis.Array.isArray(object?.hits) ? object.hits.map((e: any) => SearchHit.fromJSON(e)) : [] };
+  },
+
+  toJSON(message: TextSearchResponse): unknown {
+    const obj: any = {};
+    if (message.hits?.length) {
+      obj.hits = message.hits.map((e) => SearchHit.toJSON(e));
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<TextSearchResponse>, I>>(base?: I): TextSearchResponse {
+    return TextSearchResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<TextSearchResponse>, I>>(object: I): TextSearchResponse {
+    const message = createBaseTextSearchResponse();
+    message.hits = object.hits?.map((e) => SearchHit.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBaseHybridSearchResponse(): HybridSearchResponse {
+  return { hits: [] };
+}
+
+export const HybridSearchResponse: MessageFns<HybridSearchResponse> = {
+  encode(message: HybridSearchResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.hits) {
+      SearchHit.encode(v!, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): HybridSearchResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseHybridSearchResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.hits.push(SearchHit.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): HybridSearchResponse {
+    return { hits: globalThis.Array.isArray(object?.hits) ? object.hits.map((e: any) => SearchHit.fromJSON(e)) : [] };
+  },
+
+  toJSON(message: HybridSearchResponse): unknown {
+    const obj: any = {};
+    if (message.hits?.length) {
+      obj.hits = message.hits.map((e) => SearchHit.toJSON(e));
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<HybridSearchResponse>, I>>(base?: I): HybridSearchResponse {
+    return HybridSearchResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<HybridSearchResponse>, I>>(object: I): HybridSearchResponse {
+    const message = createBaseHybridSearchResponse();
+    message.hits = object.hits?.map((e) => SearchHit.fromPartial(e)) || [];
     return message;
   },
 };
@@ -3818,7 +7783,6 @@ export interface SessionServiceServer extends UntypedServiceImplementation {
   ping: handleUnaryCall<PingRequest, PongResponse>;
 }
 
-// @ts-expect-error SessionService.close() conflicts with grpc.Client.close()
 export interface SessionServiceClient extends Client {
   /** Establish a session. Negotiates protocol version and authenticates. */
   handshake(
@@ -4042,141 +8006,579 @@ export const GqlServiceClient = makeGenericClientConstructor(GqlServiceService, 
   serviceName: string;
 };
 
-export type DatabaseServiceService = typeof DatabaseServiceService;
-export const DatabaseServiceService = {
-  /** List all databases with summary info. */
-  listDatabases: {
-    path: "/gql.DatabaseService/ListDatabases",
+export type CatalogServiceService = typeof CatalogServiceService;
+export const CatalogServiceService = {
+  /** Schema management (sec 12.2, 12.3 - Feature GC01) */
+  listSchemas: {
+    path: "/gql.CatalogService/ListSchemas",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: ListDatabasesRequest): Buffer => Buffer.from(ListDatabasesRequest.encode(value).finish()),
-    requestDeserialize: (value: Buffer): ListDatabasesRequest => ListDatabasesRequest.decode(value),
-    responseSerialize: (value: ListDatabasesResponse): Buffer =>
-      Buffer.from(ListDatabasesResponse.encode(value).finish()),
-    responseDeserialize: (value: Buffer): ListDatabasesResponse => ListDatabasesResponse.decode(value),
+    requestSerialize: (value: ListSchemasRequest): Buffer => Buffer.from(ListSchemasRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): ListSchemasRequest => ListSchemasRequest.decode(value),
+    responseSerialize: (value: ListSchemasResponse): Buffer => Buffer.from(ListSchemasResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): ListSchemasResponse => ListSchemasResponse.decode(value),
   },
-  /** Create a new named database. */
-  createDatabase: {
-    path: "/gql.DatabaseService/CreateDatabase",
+  createSchema: {
+    path: "/gql.CatalogService/CreateSchema",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: CreateDatabaseRequest): Buffer =>
-      Buffer.from(CreateDatabaseRequest.encode(value).finish()),
-    requestDeserialize: (value: Buffer): CreateDatabaseRequest => CreateDatabaseRequest.decode(value),
-    responseSerialize: (value: CreateDatabaseResponse): Buffer =>
-      Buffer.from(CreateDatabaseResponse.encode(value).finish()),
-    responseDeserialize: (value: Buffer): CreateDatabaseResponse => CreateDatabaseResponse.decode(value),
+    requestSerialize: (value: CreateSchemaRequest): Buffer => Buffer.from(CreateSchemaRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): CreateSchemaRequest => CreateSchemaRequest.decode(value),
+    responseSerialize: (value: CreateSchemaResponse): Buffer =>
+      Buffer.from(CreateSchemaResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): CreateSchemaResponse => CreateSchemaResponse.decode(value),
   },
-  /** Delete a database by name. Cannot delete "default". */
-  deleteDatabase: {
-    path: "/gql.DatabaseService/DeleteDatabase",
+  dropSchema: {
+    path: "/gql.CatalogService/DropSchema",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: DeleteDatabaseRequest): Buffer =>
-      Buffer.from(DeleteDatabaseRequest.encode(value).finish()),
-    requestDeserialize: (value: Buffer): DeleteDatabaseRequest => DeleteDatabaseRequest.decode(value),
-    responseSerialize: (value: DeleteDatabaseResponse): Buffer =>
-      Buffer.from(DeleteDatabaseResponse.encode(value).finish()),
-    responseDeserialize: (value: Buffer): DeleteDatabaseResponse => DeleteDatabaseResponse.decode(value),
+    requestSerialize: (value: DropSchemaRequest): Buffer => Buffer.from(DropSchemaRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): DropSchemaRequest => DropSchemaRequest.decode(value),
+    responseSerialize: (value: DropSchemaResponse): Buffer => Buffer.from(DropSchemaResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): DropSchemaResponse => DropSchemaResponse.decode(value),
   },
-  /** Get database info (node/edge counts, metadata). */
-  getDatabaseInfo: {
-    path: "/gql.DatabaseService/GetDatabaseInfo",
+  /** Graph management (sec 12.4, 12.5 - Feature GC04) */
+  listGraphs: {
+    path: "/gql.CatalogService/ListGraphs",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: GetDatabaseInfoRequest): Buffer =>
-      Buffer.from(GetDatabaseInfoRequest.encode(value).finish()),
-    requestDeserialize: (value: Buffer): GetDatabaseInfoRequest => GetDatabaseInfoRequest.decode(value),
-    responseSerialize: (value: GetDatabaseInfoResponse): Buffer =>
-      Buffer.from(GetDatabaseInfoResponse.encode(value).finish()),
-    responseDeserialize: (value: Buffer): GetDatabaseInfoResponse => GetDatabaseInfoResponse.decode(value),
+    requestSerialize: (value: ListGraphsRequest): Buffer => Buffer.from(ListGraphsRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): ListGraphsRequest => ListGraphsRequest.decode(value),
+    responseSerialize: (value: ListGraphsResponse): Buffer => Buffer.from(ListGraphsResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): ListGraphsResponse => ListGraphsResponse.decode(value),
+  },
+  createGraph: {
+    path: "/gql.CatalogService/CreateGraph",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: CreateGraphRequest): Buffer => Buffer.from(CreateGraphRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): CreateGraphRequest => CreateGraphRequest.decode(value),
+    responseSerialize: (value: CreateGraphResponse): Buffer => Buffer.from(CreateGraphResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): CreateGraphResponse => CreateGraphResponse.decode(value),
+  },
+  dropGraph: {
+    path: "/gql.CatalogService/DropGraph",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: DropGraphRequest): Buffer => Buffer.from(DropGraphRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): DropGraphRequest => DropGraphRequest.decode(value),
+    responseSerialize: (value: DropGraphResponse): Buffer => Buffer.from(DropGraphResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): DropGraphResponse => DropGraphResponse.decode(value),
+  },
+  getGraphInfo: {
+    path: "/gql.CatalogService/GetGraphInfo",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: GetGraphInfoRequest): Buffer => Buffer.from(GetGraphInfoRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): GetGraphInfoRequest => GetGraphInfoRequest.decode(value),
+    responseSerialize: (value: GetGraphInfoResponse): Buffer =>
+      Buffer.from(GetGraphInfoResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): GetGraphInfoResponse => GetGraphInfoResponse.decode(value),
+  },
+  /** Graph type management (sec 12.6, 12.7 - Feature GG02) */
+  listGraphTypes: {
+    path: "/gql.CatalogService/ListGraphTypes",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: ListGraphTypesRequest): Buffer =>
+      Buffer.from(ListGraphTypesRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): ListGraphTypesRequest => ListGraphTypesRequest.decode(value),
+    responseSerialize: (value: ListGraphTypesResponse): Buffer =>
+      Buffer.from(ListGraphTypesResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): ListGraphTypesResponse => ListGraphTypesResponse.decode(value),
+  },
+  createGraphType: {
+    path: "/gql.CatalogService/CreateGraphType",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: CreateGraphTypeRequest): Buffer =>
+      Buffer.from(CreateGraphTypeRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): CreateGraphTypeRequest => CreateGraphTypeRequest.decode(value),
+    responseSerialize: (value: CreateGraphTypeResponse): Buffer =>
+      Buffer.from(CreateGraphTypeResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): CreateGraphTypeResponse => CreateGraphTypeResponse.decode(value),
+  },
+  dropGraphType: {
+    path: "/gql.CatalogService/DropGraphType",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: DropGraphTypeRequest): Buffer => Buffer.from(DropGraphTypeRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): DropGraphTypeRequest => DropGraphTypeRequest.decode(value),
+    responseSerialize: (value: DropGraphTypeResponse): Buffer =>
+      Buffer.from(DropGraphTypeResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): DropGraphTypeResponse => DropGraphTypeResponse.decode(value),
   },
 } as const;
 
-export interface DatabaseServiceServer extends UntypedServiceImplementation {
-  /** List all databases with summary info. */
-  listDatabases: handleUnaryCall<ListDatabasesRequest, ListDatabasesResponse>;
-  /** Create a new named database. */
-  createDatabase: handleUnaryCall<CreateDatabaseRequest, CreateDatabaseResponse>;
-  /** Delete a database by name. Cannot delete "default". */
-  deleteDatabase: handleUnaryCall<DeleteDatabaseRequest, DeleteDatabaseResponse>;
-  /** Get database info (node/edge counts, metadata). */
-  getDatabaseInfo: handleUnaryCall<GetDatabaseInfoRequest, GetDatabaseInfoResponse>;
+export interface CatalogServiceServer extends UntypedServiceImplementation {
+  /** Schema management (sec 12.2, 12.3 - Feature GC01) */
+  listSchemas: handleUnaryCall<ListSchemasRequest, ListSchemasResponse>;
+  createSchema: handleUnaryCall<CreateSchemaRequest, CreateSchemaResponse>;
+  dropSchema: handleUnaryCall<DropSchemaRequest, DropSchemaResponse>;
+  /** Graph management (sec 12.4, 12.5 - Feature GC04) */
+  listGraphs: handleUnaryCall<ListGraphsRequest, ListGraphsResponse>;
+  createGraph: handleUnaryCall<CreateGraphRequest, CreateGraphResponse>;
+  dropGraph: handleUnaryCall<DropGraphRequest, DropGraphResponse>;
+  getGraphInfo: handleUnaryCall<GetGraphInfoRequest, GetGraphInfoResponse>;
+  /** Graph type management (sec 12.6, 12.7 - Feature GG02) */
+  listGraphTypes: handleUnaryCall<ListGraphTypesRequest, ListGraphTypesResponse>;
+  createGraphType: handleUnaryCall<CreateGraphTypeRequest, CreateGraphTypeResponse>;
+  dropGraphType: handleUnaryCall<DropGraphTypeRequest, DropGraphTypeResponse>;
 }
 
-export interface DatabaseServiceClient extends Client {
-  /** List all databases with summary info. */
-  listDatabases(
-    request: ListDatabasesRequest,
-    callback: (error: ServiceError | null, response: ListDatabasesResponse) => void,
+export interface CatalogServiceClient extends Client {
+  /** Schema management (sec 12.2, 12.3 - Feature GC01) */
+  listSchemas(
+    request: ListSchemasRequest,
+    callback: (error: ServiceError | null, response: ListSchemasResponse) => void,
   ): ClientUnaryCall;
-  listDatabases(
-    request: ListDatabasesRequest,
+  listSchemas(
+    request: ListSchemasRequest,
     metadata: Metadata,
-    callback: (error: ServiceError | null, response: ListDatabasesResponse) => void,
+    callback: (error: ServiceError | null, response: ListSchemasResponse) => void,
   ): ClientUnaryCall;
-  listDatabases(
-    request: ListDatabasesRequest,
-    metadata: Metadata,
-    options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: ListDatabasesResponse) => void,
-  ): ClientUnaryCall;
-  /** Create a new named database. */
-  createDatabase(
-    request: CreateDatabaseRequest,
-    callback: (error: ServiceError | null, response: CreateDatabaseResponse) => void,
-  ): ClientUnaryCall;
-  createDatabase(
-    request: CreateDatabaseRequest,
-    metadata: Metadata,
-    callback: (error: ServiceError | null, response: CreateDatabaseResponse) => void,
-  ): ClientUnaryCall;
-  createDatabase(
-    request: CreateDatabaseRequest,
+  listSchemas(
+    request: ListSchemasRequest,
     metadata: Metadata,
     options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: CreateDatabaseResponse) => void,
+    callback: (error: ServiceError | null, response: ListSchemasResponse) => void,
   ): ClientUnaryCall;
-  /** Delete a database by name. Cannot delete "default". */
-  deleteDatabase(
-    request: DeleteDatabaseRequest,
-    callback: (error: ServiceError | null, response: DeleteDatabaseResponse) => void,
+  createSchema(
+    request: CreateSchemaRequest,
+    callback: (error: ServiceError | null, response: CreateSchemaResponse) => void,
   ): ClientUnaryCall;
-  deleteDatabase(
-    request: DeleteDatabaseRequest,
+  createSchema(
+    request: CreateSchemaRequest,
     metadata: Metadata,
-    callback: (error: ServiceError | null, response: DeleteDatabaseResponse) => void,
+    callback: (error: ServiceError | null, response: CreateSchemaResponse) => void,
   ): ClientUnaryCall;
-  deleteDatabase(
-    request: DeleteDatabaseRequest,
-    metadata: Metadata,
-    options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: DeleteDatabaseResponse) => void,
-  ): ClientUnaryCall;
-  /** Get database info (node/edge counts, metadata). */
-  getDatabaseInfo(
-    request: GetDatabaseInfoRequest,
-    callback: (error: ServiceError | null, response: GetDatabaseInfoResponse) => void,
-  ): ClientUnaryCall;
-  getDatabaseInfo(
-    request: GetDatabaseInfoRequest,
-    metadata: Metadata,
-    callback: (error: ServiceError | null, response: GetDatabaseInfoResponse) => void,
-  ): ClientUnaryCall;
-  getDatabaseInfo(
-    request: GetDatabaseInfoRequest,
+  createSchema(
+    request: CreateSchemaRequest,
     metadata: Metadata,
     options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: GetDatabaseInfoResponse) => void,
+    callback: (error: ServiceError | null, response: CreateSchemaResponse) => void,
+  ): ClientUnaryCall;
+  dropSchema(
+    request: DropSchemaRequest,
+    callback: (error: ServiceError | null, response: DropSchemaResponse) => void,
+  ): ClientUnaryCall;
+  dropSchema(
+    request: DropSchemaRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: DropSchemaResponse) => void,
+  ): ClientUnaryCall;
+  dropSchema(
+    request: DropSchemaRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: DropSchemaResponse) => void,
+  ): ClientUnaryCall;
+  /** Graph management (sec 12.4, 12.5 - Feature GC04) */
+  listGraphs(
+    request: ListGraphsRequest,
+    callback: (error: ServiceError | null, response: ListGraphsResponse) => void,
+  ): ClientUnaryCall;
+  listGraphs(
+    request: ListGraphsRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: ListGraphsResponse) => void,
+  ): ClientUnaryCall;
+  listGraphs(
+    request: ListGraphsRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: ListGraphsResponse) => void,
+  ): ClientUnaryCall;
+  createGraph(
+    request: CreateGraphRequest,
+    callback: (error: ServiceError | null, response: CreateGraphResponse) => void,
+  ): ClientUnaryCall;
+  createGraph(
+    request: CreateGraphRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: CreateGraphResponse) => void,
+  ): ClientUnaryCall;
+  createGraph(
+    request: CreateGraphRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: CreateGraphResponse) => void,
+  ): ClientUnaryCall;
+  dropGraph(
+    request: DropGraphRequest,
+    callback: (error: ServiceError | null, response: DropGraphResponse) => void,
+  ): ClientUnaryCall;
+  dropGraph(
+    request: DropGraphRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: DropGraphResponse) => void,
+  ): ClientUnaryCall;
+  dropGraph(
+    request: DropGraphRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: DropGraphResponse) => void,
+  ): ClientUnaryCall;
+  getGraphInfo(
+    request: GetGraphInfoRequest,
+    callback: (error: ServiceError | null, response: GetGraphInfoResponse) => void,
+  ): ClientUnaryCall;
+  getGraphInfo(
+    request: GetGraphInfoRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: GetGraphInfoResponse) => void,
+  ): ClientUnaryCall;
+  getGraphInfo(
+    request: GetGraphInfoRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: GetGraphInfoResponse) => void,
+  ): ClientUnaryCall;
+  /** Graph type management (sec 12.6, 12.7 - Feature GG02) */
+  listGraphTypes(
+    request: ListGraphTypesRequest,
+    callback: (error: ServiceError | null, response: ListGraphTypesResponse) => void,
+  ): ClientUnaryCall;
+  listGraphTypes(
+    request: ListGraphTypesRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: ListGraphTypesResponse) => void,
+  ): ClientUnaryCall;
+  listGraphTypes(
+    request: ListGraphTypesRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: ListGraphTypesResponse) => void,
+  ): ClientUnaryCall;
+  createGraphType(
+    request: CreateGraphTypeRequest,
+    callback: (error: ServiceError | null, response: CreateGraphTypeResponse) => void,
+  ): ClientUnaryCall;
+  createGraphType(
+    request: CreateGraphTypeRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: CreateGraphTypeResponse) => void,
+  ): ClientUnaryCall;
+  createGraphType(
+    request: CreateGraphTypeRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: CreateGraphTypeResponse) => void,
+  ): ClientUnaryCall;
+  dropGraphType(
+    request: DropGraphTypeRequest,
+    callback: (error: ServiceError | null, response: DropGraphTypeResponse) => void,
+  ): ClientUnaryCall;
+  dropGraphType(
+    request: DropGraphTypeRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: DropGraphTypeResponse) => void,
+  ): ClientUnaryCall;
+  dropGraphType(
+    request: DropGraphTypeRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: DropGraphTypeResponse) => void,
   ): ClientUnaryCall;
 }
 
-export const DatabaseServiceClient = makeGenericClientConstructor(
-  DatabaseServiceService,
-  "gql.DatabaseService",
+export const CatalogServiceClient = makeGenericClientConstructor(
+  CatalogServiceService,
+  "gql.CatalogService",
 ) as unknown as {
-  new (address: string, credentials: ChannelCredentials, options?: Partial<ClientOptions>): DatabaseServiceClient;
-  service: typeof DatabaseServiceService;
+  new (address: string, credentials: ChannelCredentials, options?: Partial<ClientOptions>): CatalogServiceClient;
+  service: typeof CatalogServiceService;
+  serviceName: string;
+};
+
+export type AdminServiceService = typeof AdminServiceService;
+export const AdminServiceService = {
+  /** Get detailed graph statistics (counts, memory, disk, indexes). */
+  getGraphStats: {
+    path: "/gql.AdminService/GetGraphStats",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: GetGraphStatsRequest): Buffer => Buffer.from(GetGraphStatsRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): GetGraphStatsRequest => GetGraphStatsRequest.decode(value),
+    responseSerialize: (value: GetGraphStatsResponse): Buffer =>
+      Buffer.from(GetGraphStatsResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): GetGraphStatsResponse => GetGraphStatsResponse.decode(value),
+  },
+  /** Get WAL (Write-Ahead Log) status. */
+  walStatus: {
+    path: "/gql.AdminService/WalStatus",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: WalStatusRequest): Buffer => Buffer.from(WalStatusRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): WalStatusRequest => WalStatusRequest.decode(value),
+    responseSerialize: (value: WalStatusResponse): Buffer => Buffer.from(WalStatusResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): WalStatusResponse => WalStatusResponse.decode(value),
+  },
+  /** Force a WAL checkpoint (flush pending records to storage). */
+  walCheckpoint: {
+    path: "/gql.AdminService/WalCheckpoint",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: WalCheckpointRequest): Buffer => Buffer.from(WalCheckpointRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): WalCheckpointRequest => WalCheckpointRequest.decode(value),
+    responseSerialize: (value: WalCheckpointResponse): Buffer =>
+      Buffer.from(WalCheckpointResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): WalCheckpointResponse => WalCheckpointResponse.decode(value),
+  },
+  /** Validate graph integrity (dangling edges, index consistency). */
+  validate: {
+    path: "/gql.AdminService/Validate",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: ValidateRequest): Buffer => Buffer.from(ValidateRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): ValidateRequest => ValidateRequest.decode(value),
+    responseSerialize: (value: ValidateResponse): Buffer => Buffer.from(ValidateResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): ValidateResponse => ValidateResponse.decode(value),
+  },
+  /** Create an index (property, vector, or text). */
+  createIndex: {
+    path: "/gql.AdminService/CreateIndex",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: CreateIndexRequest): Buffer => Buffer.from(CreateIndexRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): CreateIndexRequest => CreateIndexRequest.decode(value),
+    responseSerialize: (value: CreateIndexResponse): Buffer => Buffer.from(CreateIndexResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): CreateIndexResponse => CreateIndexResponse.decode(value),
+  },
+  /** Drop an index. */
+  dropIndex: {
+    path: "/gql.AdminService/DropIndex",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: DropIndexRequest): Buffer => Buffer.from(DropIndexRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): DropIndexRequest => DropIndexRequest.decode(value),
+    responseSerialize: (value: DropIndexResponse): Buffer => Buffer.from(DropIndexResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): DropIndexResponse => DropIndexResponse.decode(value),
+  },
+} as const;
+
+export interface AdminServiceServer extends UntypedServiceImplementation {
+  /** Get detailed graph statistics (counts, memory, disk, indexes). */
+  getGraphStats: handleUnaryCall<GetGraphStatsRequest, GetGraphStatsResponse>;
+  /** Get WAL (Write-Ahead Log) status. */
+  walStatus: handleUnaryCall<WalStatusRequest, WalStatusResponse>;
+  /** Force a WAL checkpoint (flush pending records to storage). */
+  walCheckpoint: handleUnaryCall<WalCheckpointRequest, WalCheckpointResponse>;
+  /** Validate graph integrity (dangling edges, index consistency). */
+  validate: handleUnaryCall<ValidateRequest, ValidateResponse>;
+  /** Create an index (property, vector, or text). */
+  createIndex: handleUnaryCall<CreateIndexRequest, CreateIndexResponse>;
+  /** Drop an index. */
+  dropIndex: handleUnaryCall<DropIndexRequest, DropIndexResponse>;
+}
+
+export interface AdminServiceClient extends Client {
+  /** Get detailed graph statistics (counts, memory, disk, indexes). */
+  getGraphStats(
+    request: GetGraphStatsRequest,
+    callback: (error: ServiceError | null, response: GetGraphStatsResponse) => void,
+  ): ClientUnaryCall;
+  getGraphStats(
+    request: GetGraphStatsRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: GetGraphStatsResponse) => void,
+  ): ClientUnaryCall;
+  getGraphStats(
+    request: GetGraphStatsRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: GetGraphStatsResponse) => void,
+  ): ClientUnaryCall;
+  /** Get WAL (Write-Ahead Log) status. */
+  walStatus(
+    request: WalStatusRequest,
+    callback: (error: ServiceError | null, response: WalStatusResponse) => void,
+  ): ClientUnaryCall;
+  walStatus(
+    request: WalStatusRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: WalStatusResponse) => void,
+  ): ClientUnaryCall;
+  walStatus(
+    request: WalStatusRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: WalStatusResponse) => void,
+  ): ClientUnaryCall;
+  /** Force a WAL checkpoint (flush pending records to storage). */
+  walCheckpoint(
+    request: WalCheckpointRequest,
+    callback: (error: ServiceError | null, response: WalCheckpointResponse) => void,
+  ): ClientUnaryCall;
+  walCheckpoint(
+    request: WalCheckpointRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: WalCheckpointResponse) => void,
+  ): ClientUnaryCall;
+  walCheckpoint(
+    request: WalCheckpointRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: WalCheckpointResponse) => void,
+  ): ClientUnaryCall;
+  /** Validate graph integrity (dangling edges, index consistency). */
+  validate(
+    request: ValidateRequest,
+    callback: (error: ServiceError | null, response: ValidateResponse) => void,
+  ): ClientUnaryCall;
+  validate(
+    request: ValidateRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: ValidateResponse) => void,
+  ): ClientUnaryCall;
+  validate(
+    request: ValidateRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: ValidateResponse) => void,
+  ): ClientUnaryCall;
+  /** Create an index (property, vector, or text). */
+  createIndex(
+    request: CreateIndexRequest,
+    callback: (error: ServiceError | null, response: CreateIndexResponse) => void,
+  ): ClientUnaryCall;
+  createIndex(
+    request: CreateIndexRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: CreateIndexResponse) => void,
+  ): ClientUnaryCall;
+  createIndex(
+    request: CreateIndexRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: CreateIndexResponse) => void,
+  ): ClientUnaryCall;
+  /** Drop an index. */
+  dropIndex(
+    request: DropIndexRequest,
+    callback: (error: ServiceError | null, response: DropIndexResponse) => void,
+  ): ClientUnaryCall;
+  dropIndex(
+    request: DropIndexRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: DropIndexResponse) => void,
+  ): ClientUnaryCall;
+  dropIndex(
+    request: DropIndexRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: DropIndexResponse) => void,
+  ): ClientUnaryCall;
+}
+
+export const AdminServiceClient = makeGenericClientConstructor(AdminServiceService, "gql.AdminService") as unknown as {
+  new (address: string, credentials: ChannelCredentials, options?: Partial<ClientOptions>): AdminServiceClient;
+  service: typeof AdminServiceService;
+  serviceName: string;
+};
+
+export type SearchServiceService = typeof SearchServiceService;
+export const SearchServiceService = {
+  /** Vector similarity search (KNN via HNSW index). */
+  vectorSearch: {
+    path: "/gql.SearchService/VectorSearch",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: VectorSearchRequest): Buffer => Buffer.from(VectorSearchRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): VectorSearchRequest => VectorSearchRequest.decode(value),
+    responseSerialize: (value: VectorSearchResponse): Buffer =>
+      Buffer.from(VectorSearchResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): VectorSearchResponse => VectorSearchResponse.decode(value),
+  },
+  /** Full-text search (BM25 scoring). */
+  textSearch: {
+    path: "/gql.SearchService/TextSearch",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: TextSearchRequest): Buffer => Buffer.from(TextSearchRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): TextSearchRequest => TextSearchRequest.decode(value),
+    responseSerialize: (value: TextSearchResponse): Buffer => Buffer.from(TextSearchResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): TextSearchResponse => TextSearchResponse.decode(value),
+  },
+  /** Hybrid search combining text and vector results with rank fusion. */
+  hybridSearch: {
+    path: "/gql.SearchService/HybridSearch",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: HybridSearchRequest): Buffer => Buffer.from(HybridSearchRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): HybridSearchRequest => HybridSearchRequest.decode(value),
+    responseSerialize: (value: HybridSearchResponse): Buffer =>
+      Buffer.from(HybridSearchResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): HybridSearchResponse => HybridSearchResponse.decode(value),
+  },
+} as const;
+
+export interface SearchServiceServer extends UntypedServiceImplementation {
+  /** Vector similarity search (KNN via HNSW index). */
+  vectorSearch: handleUnaryCall<VectorSearchRequest, VectorSearchResponse>;
+  /** Full-text search (BM25 scoring). */
+  textSearch: handleUnaryCall<TextSearchRequest, TextSearchResponse>;
+  /** Hybrid search combining text and vector results with rank fusion. */
+  hybridSearch: handleUnaryCall<HybridSearchRequest, HybridSearchResponse>;
+}
+
+export interface SearchServiceClient extends Client {
+  /** Vector similarity search (KNN via HNSW index). */
+  vectorSearch(
+    request: VectorSearchRequest,
+    callback: (error: ServiceError | null, response: VectorSearchResponse) => void,
+  ): ClientUnaryCall;
+  vectorSearch(
+    request: VectorSearchRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: VectorSearchResponse) => void,
+  ): ClientUnaryCall;
+  vectorSearch(
+    request: VectorSearchRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: VectorSearchResponse) => void,
+  ): ClientUnaryCall;
+  /** Full-text search (BM25 scoring). */
+  textSearch(
+    request: TextSearchRequest,
+    callback: (error: ServiceError | null, response: TextSearchResponse) => void,
+  ): ClientUnaryCall;
+  textSearch(
+    request: TextSearchRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: TextSearchResponse) => void,
+  ): ClientUnaryCall;
+  textSearch(
+    request: TextSearchRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: TextSearchResponse) => void,
+  ): ClientUnaryCall;
+  /** Hybrid search combining text and vector results with rank fusion. */
+  hybridSearch(
+    request: HybridSearchRequest,
+    callback: (error: ServiceError | null, response: HybridSearchResponse) => void,
+  ): ClientUnaryCall;
+  hybridSearch(
+    request: HybridSearchRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: HybridSearchResponse) => void,
+  ): ClientUnaryCall;
+  hybridSearch(
+    request: HybridSearchRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: HybridSearchResponse) => void,
+  ): ClientUnaryCall;
+}
+
+export const SearchServiceClient = makeGenericClientConstructor(
+  SearchServiceService,
+  "gql.SearchService",
+) as unknown as {
+  new (address: string, credentials: ChannelCredentials, options?: Partial<ClientOptions>): SearchServiceClient;
+  service: typeof SearchServiceService;
   serviceName: string;
 };
 

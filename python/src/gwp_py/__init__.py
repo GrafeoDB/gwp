@@ -1,7 +1,7 @@
 """GWP - Python client for the GQL Wire Protocol."""
 
 from gwp_py.connection import GqlConnection
-from gwp_py.database import CreateDatabaseConfig, DatabaseClient, DatabaseInfo
+from gwp_py.catalog import CatalogClient, CreateGraphConfig, GraphInfo, GraphTypeInfo, SchemaInfo
 from gwp_py.errors import (
     ConnectionError as GqlConnectionError,
     GqlError,
@@ -31,9 +31,11 @@ __version__ = "0.1.2"
 __all__ = [
     "GqlConnection",
     "GqlSession",
-    "DatabaseClient",
-    "DatabaseInfo",
-    "CreateDatabaseConfig",
+    "CatalogClient",
+    "SchemaInfo",
+    "GraphInfo",
+    "GraphTypeInfo",
+    "CreateGraphConfig",
     "ResultCursor",
     "ResultSummary",
     "Transaction",

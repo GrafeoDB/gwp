@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import grpc
 
-from gwp_py.database import DatabaseClient
+from gwp_py.catalog import CatalogClient
 from gwp_py.errors import ConnectionError
 from gwp_py.session import GqlSession
 
@@ -47,9 +47,9 @@ class GqlConnection:
         """Perform handshake and return a session."""
         return await GqlSession.create(self._channel)
 
-    def create_database_client(self) -> DatabaseClient:
-        """Create a database management client."""
-        return DatabaseClient(self._channel)
+    def create_catalog_client(self) -> CatalogClient:
+        """Create a catalog management client for schemas, graphs, and graph types."""
+        return CatalogClient(self._channel)
 
     async def close(self) -> None:
         """Close the underlying gRPC channel."""

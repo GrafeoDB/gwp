@@ -175,7 +175,8 @@ impl TryFrom<Value> for bool {
         match v {
             Value::Boolean(b) => Ok(b),
             other => Err(crate::error::GqlError::Protocol(format!(
-                "expected Boolean, got {}", other.type_name()
+                "expected Boolean, got {}",
+                other.type_name()
             ))),
         }
     }
@@ -187,7 +188,8 @@ impl TryFrom<Value> for i64 {
         match v {
             Value::Integer(i) => Ok(i),
             other => Err(crate::error::GqlError::Protocol(format!(
-                "expected Integer, got {}", other.type_name()
+                "expected Integer, got {}",
+                other.type_name()
             ))),
         }
     }
@@ -199,7 +201,8 @@ impl TryFrom<Value> for u64 {
         match v {
             Value::UnsignedInteger(u) => Ok(u),
             other => Err(crate::error::GqlError::Protocol(format!(
-                "expected UnsignedInteger, got {}", other.type_name()
+                "expected UnsignedInteger, got {}",
+                other.type_name()
             ))),
         }
     }
@@ -211,7 +214,8 @@ impl TryFrom<Value> for f64 {
         match v {
             Value::Float(f) => Ok(f),
             other => Err(crate::error::GqlError::Protocol(format!(
-                "expected Float, got {}", other.type_name()
+                "expected Float, got {}",
+                other.type_name()
             ))),
         }
     }
@@ -223,7 +227,8 @@ impl TryFrom<Value> for std::string::String {
         match v {
             Value::String(s) => Ok(s),
             other => Err(crate::error::GqlError::Protocol(format!(
-                "expected String, got {}", other.type_name()
+                "expected String, got {}",
+                other.type_name()
             ))),
         }
     }
@@ -235,7 +240,8 @@ impl TryFrom<Value> for Vec<u8> {
         match v {
             Value::Bytes(b) => Ok(b),
             other => Err(crate::error::GqlError::Protocol(format!(
-                "expected Bytes, got {}", other.type_name()
+                "expected Bytes, got {}",
+                other.type_name()
             ))),
         }
     }
@@ -247,7 +253,8 @@ impl TryFrom<Value> for Vec<Value> {
         match v {
             Value::List(l) => Ok(l),
             other => Err(crate::error::GqlError::Protocol(format!(
-                "expected List, got {}", other.type_name()
+                "expected List, got {}",
+                other.type_name()
             ))),
         }
     }
@@ -259,7 +266,8 @@ impl TryFrom<Value> for Node {
         match v {
             Value::Node(n) => Ok(n),
             other => Err(crate::error::GqlError::Protocol(format!(
-                "expected Node, got {}", other.type_name()
+                "expected Node, got {}",
+                other.type_name()
             ))),
         }
     }
@@ -271,7 +279,8 @@ impl TryFrom<Value> for Edge {
         match v {
             Value::Edge(e) => Ok(e),
             other => Err(crate::error::GqlError::Protocol(format!(
-                "expected Edge, got {}", other.type_name()
+                "expected Edge, got {}",
+                other.type_name()
             ))),
         }
     }
@@ -283,7 +292,8 @@ impl TryFrom<Value> for Path {
         match v {
             Value::Path(p) => Ok(p),
             other => Err(crate::error::GqlError::Protocol(format!(
-                "expected Path, got {}", other.type_name()
+                "expected Path, got {}",
+                other.type_name()
             ))),
         }
     }
@@ -295,7 +305,8 @@ impl TryFrom<Value> for Record {
         match v {
             Value::Record(r) => Ok(r),
             other => Err(crate::error::GqlError::Protocol(format!(
-                "expected Record, got {}", other.type_name()
+                "expected Record, got {}",
+                other.type_name()
             ))),
         }
     }

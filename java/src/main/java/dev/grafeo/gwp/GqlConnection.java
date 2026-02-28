@@ -79,12 +79,12 @@ public class GqlConnection implements AutoCloseable {
     }
 
     /**
-     * Create a database management client.
+     * Create a catalog management client for schemas, graphs, and graph types.
      *
-     * @return a new DatabaseClient
+     * @return a new CatalogClient
      */
-    public DatabaseClient createDatabaseClient() {
-        return new DatabaseClient(channel);
+    public CatalogClient createCatalogClient() {
+        return new CatalogClient(channel);
     }
 
     /**

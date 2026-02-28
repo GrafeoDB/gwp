@@ -2,7 +2,7 @@
 
 import { Client, credentials, type ChannelCredentials } from "@grpc/grpc-js";
 import { SessionServiceClient, GqlServiceClient } from "./generated/gql_service";
-import { DatabaseClient } from "./database";
+import { CatalogClient } from "./catalog";
 import { GqlSession } from "./session";
 
 /** A connection to a GWP server. */
@@ -44,9 +44,9 @@ export class GqlConnection {
     return GqlSession.create(this.sessionClient, this.gqlClient);
   }
 
-  /** Create a database management client. */
-  createDatabaseClient(): DatabaseClient {
-    return new DatabaseClient(this._endpoint, this._creds);
+  /** Create a catalog management client for schemas, graphs, and graph types. */
+  createCatalogClient(): CatalogClient {
+    return new CatalogClient(this._endpoint, this._creds);
   }
 
   /** Close the underlying gRPC channels. */

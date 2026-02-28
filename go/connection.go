@@ -54,9 +54,9 @@ func (c *GqlConnection) CreateSession(ctx context.Context) (*GqlSession, error) 
 	}, nil
 }
 
-// CreateDatabaseClient creates a new database management client.
-func (c *GqlConnection) CreateDatabaseClient() *DatabaseClient {
-	return NewDatabaseClient(c.conn)
+// CreateCatalogClient creates a new catalog management client for schemas, graphs, and graph types.
+func (c *GqlConnection) CreateCatalogClient() *CatalogClient {
+	return NewCatalogClient(c.conn)
 }
 
 // Close closes the underlying gRPC connection.

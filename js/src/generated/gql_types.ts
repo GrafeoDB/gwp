@@ -9,11 +9,53 @@ import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 
 export const protobufPackage = "gql";
 
+/** Duration unit group qualifier per ISO/IEC 39075 sec 4.16.6.3. */
+export enum DurationQualifier {
+  DURATION_UNSPECIFIED = 0,
+  DURATION_YEAR_TO_MONTH = 1,
+  DURATION_DAY_TO_SECOND = 2,
+  UNRECOGNIZED = -1,
+}
+
+export function durationQualifierFromJSON(object: any): DurationQualifier {
+  switch (object) {
+    case 0:
+    case "DURATION_UNSPECIFIED":
+      return DurationQualifier.DURATION_UNSPECIFIED;
+    case 1:
+    case "DURATION_YEAR_TO_MONTH":
+      return DurationQualifier.DURATION_YEAR_TO_MONTH;
+    case 2:
+    case "DURATION_DAY_TO_SECOND":
+      return DurationQualifier.DURATION_DAY_TO_SECOND;
+    case -1:
+    case "UNRECOGNIZED":
+    default:
+      return DurationQualifier.UNRECOGNIZED;
+  }
+}
+
+export function durationQualifierToJSON(object: DurationQualifier): string {
+  switch (object) {
+    case DurationQualifier.DURATION_UNSPECIFIED:
+      return "DURATION_UNSPECIFIED";
+    case DurationQualifier.DURATION_YEAR_TO_MONTH:
+      return "DURATION_YEAR_TO_MONTH";
+    case DurationQualifier.DURATION_DAY_TO_SECOND:
+      return "DURATION_DAY_TO_SECOND";
+    case DurationQualifier.UNRECOGNIZED:
+    default:
+      return "UNRECOGNIZED";
+  }
+}
+
 /** GQL type enumeration covering all types from ISO/IEC 39075. */
 export enum GqlType {
   TYPE_UNKNOWN = 0,
   TYPE_NULL = 1,
   TYPE_BOOLEAN = 2,
+  /** TYPE_EMPTY - NOTHING / empty type (sec 4.16.8) */
+  TYPE_EMPTY = 3,
   /** TYPE_INT8 - Signed integers */
   TYPE_INT8 = 10,
   TYPE_INT16 = 11,
@@ -45,7 +87,12 @@ export enum GqlType {
   TYPE_ZONED_TIME = 72,
   TYPE_LOCAL_DATETIME = 73,
   TYPE_ZONED_DATETIME = 74,
+  /** TYPE_DURATION - Unqualified duration */
   TYPE_DURATION = 75,
+  /** TYPE_YEAR_MONTH_DURATION - DURATION(YEAR TO MONTH) (sec 4.16.6.3) */
+  TYPE_YEAR_MONTH_DURATION = 76,
+  /** TYPE_DAY_TIME_DURATION - DURATION(DAY TO SECOND) (sec 4.16.6.3) */
+  TYPE_DAY_TIME_DURATION = 77,
   /** TYPE_LIST - Constructed */
   TYPE_LIST = 80,
   TYPE_RECORD = 81,
@@ -53,6 +100,11 @@ export enum GqlType {
   /** TYPE_NODE - Graph elements */
   TYPE_NODE = 90,
   TYPE_EDGE = 91,
+  /** TYPE_NODE_REFERENCE - Reference value types (sec 4.16.7) */
+  TYPE_NODE_REFERENCE = 92,
+  TYPE_EDGE_REFERENCE = 93,
+  TYPE_GRAPH_REFERENCE = 100,
+  TYPE_BINDING_TABLE_REFERENCE = 101,
   /** TYPE_ANY - Dynamic */
   TYPE_ANY = 110,
   TYPE_PROPERTY_VALUE = 111,
@@ -70,6 +122,9 @@ export function gqlTypeFromJSON(object: any): GqlType {
     case 2:
     case "TYPE_BOOLEAN":
       return GqlType.TYPE_BOOLEAN;
+    case 3:
+    case "TYPE_EMPTY":
+      return GqlType.TYPE_EMPTY;
     case 10:
     case "TYPE_INT8":
       return GqlType.TYPE_INT8;
@@ -148,6 +203,12 @@ export function gqlTypeFromJSON(object: any): GqlType {
     case 75:
     case "TYPE_DURATION":
       return GqlType.TYPE_DURATION;
+    case 76:
+    case "TYPE_YEAR_MONTH_DURATION":
+      return GqlType.TYPE_YEAR_MONTH_DURATION;
+    case 77:
+    case "TYPE_DAY_TIME_DURATION":
+      return GqlType.TYPE_DAY_TIME_DURATION;
     case 80:
     case "TYPE_LIST":
       return GqlType.TYPE_LIST;
@@ -163,6 +224,18 @@ export function gqlTypeFromJSON(object: any): GqlType {
     case 91:
     case "TYPE_EDGE":
       return GqlType.TYPE_EDGE;
+    case 92:
+    case "TYPE_NODE_REFERENCE":
+      return GqlType.TYPE_NODE_REFERENCE;
+    case 93:
+    case "TYPE_EDGE_REFERENCE":
+      return GqlType.TYPE_EDGE_REFERENCE;
+    case 100:
+    case "TYPE_GRAPH_REFERENCE":
+      return GqlType.TYPE_GRAPH_REFERENCE;
+    case 101:
+    case "TYPE_BINDING_TABLE_REFERENCE":
+      return GqlType.TYPE_BINDING_TABLE_REFERENCE;
     case 110:
     case "TYPE_ANY":
       return GqlType.TYPE_ANY;
@@ -184,6 +257,8 @@ export function gqlTypeToJSON(object: GqlType): string {
       return "TYPE_NULL";
     case GqlType.TYPE_BOOLEAN:
       return "TYPE_BOOLEAN";
+    case GqlType.TYPE_EMPTY:
+      return "TYPE_EMPTY";
     case GqlType.TYPE_INT8:
       return "TYPE_INT8";
     case GqlType.TYPE_INT16:
@@ -236,6 +311,10 @@ export function gqlTypeToJSON(object: GqlType): string {
       return "TYPE_ZONED_DATETIME";
     case GqlType.TYPE_DURATION:
       return "TYPE_DURATION";
+    case GqlType.TYPE_YEAR_MONTH_DURATION:
+      return "TYPE_YEAR_MONTH_DURATION";
+    case GqlType.TYPE_DAY_TIME_DURATION:
+      return "TYPE_DAY_TIME_DURATION";
     case GqlType.TYPE_LIST:
       return "TYPE_LIST";
     case GqlType.TYPE_RECORD:
@@ -246,6 +325,14 @@ export function gqlTypeToJSON(object: GqlType): string {
       return "TYPE_NODE";
     case GqlType.TYPE_EDGE:
       return "TYPE_EDGE";
+    case GqlType.TYPE_NODE_REFERENCE:
+      return "TYPE_NODE_REFERENCE";
+    case GqlType.TYPE_EDGE_REFERENCE:
+      return "TYPE_EDGE_REFERENCE";
+    case GqlType.TYPE_GRAPH_REFERENCE:
+      return "TYPE_GRAPH_REFERENCE";
+    case GqlType.TYPE_BINDING_TABLE_REFERENCE:
+      return "TYPE_BINDING_TABLE_REFERENCE";
     case GqlType.TYPE_ANY:
       return "TYPE_ANY";
     case GqlType.TYPE_PROPERTY_VALUE:
@@ -466,6 +553,31 @@ export interface TypeDescriptor {
     | undefined;
   /** For RECORD: field types */
   fields: FieldDescriptor[];
+  /** Numeric precision and scale (sec 18.9) */
+  precision?:
+    | number
+    | undefined;
+  /** Digits after decimal point (DECIMAL only) */
+  scale?:
+    | number
+    | undefined;
+  /** String / byte string length constraints (sec 18.9) */
+  minLength?: bigint | undefined;
+  maxLength?:
+    | bigint
+    | undefined;
+  /** LIST qualifiers (sec 4.15.3) */
+  maxCardinality?:
+    | bigint
+    | undefined;
+  /** GROUP LIST characteristic */
+  isGroup: boolean;
+  /** RECORD qualifier (sec 4.15.4) */
+  isOpen: boolean;
+  /** DURATION qualifier (sec 4.16.6.3) */
+  durationQualifier: DurationQualifier;
+  /** Closed dynamic union (sec 4.14): component types of ANY VALUE<T1 | T2> */
+  componentTypes: TypeDescriptor[];
 }
 
 export interface FieldDescriptor {
@@ -487,14 +599,18 @@ export interface GqlStatus {
   cause: GqlStatus | undefined;
 }
 
-/** Diagnostic context for error reporting. */
+/** Diagnostic context for error reporting (sec 23.2). */
 export interface DiagnosticRecord {
   /** e.g. "MATCH STATEMENT" */
   operation: string;
   /** e.g. 600 */
   operationCode: number;
-  /** Schema context */
-  currentSchema: string;
+  /** Schema context (null if undefined) */
+  currentSchema?:
+    | string
+    | undefined;
+  /** Identifier that caused 42002 */
+  invalidReference?: string | undefined;
 }
 
 /** Credentials provided at handshake. */
@@ -2564,7 +2680,21 @@ export const Field: MessageFns<Field> = {
 };
 
 function createBaseTypeDescriptor(): TypeDescriptor {
-  return { type: 0, nullable: false, elementType: undefined, fields: [] };
+  return {
+    type: 0,
+    nullable: false,
+    elementType: undefined,
+    fields: [],
+    precision: undefined,
+    scale: undefined,
+    minLength: undefined,
+    maxLength: undefined,
+    maxCardinality: undefined,
+    isGroup: false,
+    isOpen: false,
+    durationQualifier: 0,
+    componentTypes: [],
+  };
 }
 
 export const TypeDescriptor: MessageFns<TypeDescriptor> = {
@@ -2580,6 +2710,42 @@ export const TypeDescriptor: MessageFns<TypeDescriptor> = {
     }
     for (const v of message.fields) {
       FieldDescriptor.encode(v!, writer.uint32(34).fork()).join();
+    }
+    if (message.precision !== undefined) {
+      writer.uint32(40).uint32(message.precision);
+    }
+    if (message.scale !== undefined) {
+      writer.uint32(48).uint32(message.scale);
+    }
+    if (message.minLength !== undefined) {
+      if (BigInt.asUintN(64, message.minLength) !== message.minLength) {
+        throw new globalThis.Error("value provided for field message.minLength of type uint64 too large");
+      }
+      writer.uint32(56).uint64(message.minLength);
+    }
+    if (message.maxLength !== undefined) {
+      if (BigInt.asUintN(64, message.maxLength) !== message.maxLength) {
+        throw new globalThis.Error("value provided for field message.maxLength of type uint64 too large");
+      }
+      writer.uint32(64).uint64(message.maxLength);
+    }
+    if (message.maxCardinality !== undefined) {
+      if (BigInt.asUintN(64, message.maxCardinality) !== message.maxCardinality) {
+        throw new globalThis.Error("value provided for field message.maxCardinality of type uint64 too large");
+      }
+      writer.uint32(72).uint64(message.maxCardinality);
+    }
+    if (message.isGroup !== false) {
+      writer.uint32(80).bool(message.isGroup);
+    }
+    if (message.isOpen !== false) {
+      writer.uint32(88).bool(message.isOpen);
+    }
+    if (message.durationQualifier !== 0) {
+      writer.uint32(96).int32(message.durationQualifier);
+    }
+    for (const v of message.componentTypes) {
+      TypeDescriptor.encode(v!, writer.uint32(106).fork()).join();
     }
     return writer;
   },
@@ -2623,6 +2789,78 @@ export const TypeDescriptor: MessageFns<TypeDescriptor> = {
           message.fields.push(FieldDescriptor.decode(reader, reader.uint32()));
           continue;
         }
+        case 5: {
+          if (tag !== 40) {
+            break;
+          }
+
+          message.precision = reader.uint32();
+          continue;
+        }
+        case 6: {
+          if (tag !== 48) {
+            break;
+          }
+
+          message.scale = reader.uint32();
+          continue;
+        }
+        case 7: {
+          if (tag !== 56) {
+            break;
+          }
+
+          message.minLength = reader.uint64() as bigint;
+          continue;
+        }
+        case 8: {
+          if (tag !== 64) {
+            break;
+          }
+
+          message.maxLength = reader.uint64() as bigint;
+          continue;
+        }
+        case 9: {
+          if (tag !== 72) {
+            break;
+          }
+
+          message.maxCardinality = reader.uint64() as bigint;
+          continue;
+        }
+        case 10: {
+          if (tag !== 80) {
+            break;
+          }
+
+          message.isGroup = reader.bool();
+          continue;
+        }
+        case 11: {
+          if (tag !== 88) {
+            break;
+          }
+
+          message.isOpen = reader.bool();
+          continue;
+        }
+        case 12: {
+          if (tag !== 96) {
+            break;
+          }
+
+          message.durationQualifier = reader.int32() as any;
+          continue;
+        }
+        case 13: {
+          if (tag !== 106) {
+            break;
+          }
+
+          message.componentTypes.push(TypeDescriptor.decode(reader, reader.uint32()));
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -2644,6 +2882,43 @@ export const TypeDescriptor: MessageFns<TypeDescriptor> = {
       fields: globalThis.Array.isArray(object?.fields)
         ? object.fields.map((e: any) => FieldDescriptor.fromJSON(e))
         : [],
+      precision: isSet(object.precision) ? globalThis.Number(object.precision) : undefined,
+      scale: isSet(object.scale) ? globalThis.Number(object.scale) : undefined,
+      minLength: isSet(object.minLength)
+        ? BigInt(object.minLength)
+        : isSet(object.min_length)
+        ? BigInt(object.min_length)
+        : undefined,
+      maxLength: isSet(object.maxLength)
+        ? BigInt(object.maxLength)
+        : isSet(object.max_length)
+        ? BigInt(object.max_length)
+        : undefined,
+      maxCardinality: isSet(object.maxCardinality)
+        ? BigInt(object.maxCardinality)
+        : isSet(object.max_cardinality)
+        ? BigInt(object.max_cardinality)
+        : undefined,
+      isGroup: isSet(object.isGroup)
+        ? globalThis.Boolean(object.isGroup)
+        : isSet(object.is_group)
+        ? globalThis.Boolean(object.is_group)
+        : false,
+      isOpen: isSet(object.isOpen)
+        ? globalThis.Boolean(object.isOpen)
+        : isSet(object.is_open)
+        ? globalThis.Boolean(object.is_open)
+        : false,
+      durationQualifier: isSet(object.durationQualifier)
+        ? durationQualifierFromJSON(object.durationQualifier)
+        : isSet(object.duration_qualifier)
+        ? durationQualifierFromJSON(object.duration_qualifier)
+        : 0,
+      componentTypes: globalThis.Array.isArray(object?.componentTypes)
+        ? object.componentTypes.map((e: any) => TypeDescriptor.fromJSON(e))
+        : globalThis.Array.isArray(object?.component_types)
+        ? object.component_types.map((e: any) => TypeDescriptor.fromJSON(e))
+        : [],
     };
   },
 
@@ -2661,6 +2936,33 @@ export const TypeDescriptor: MessageFns<TypeDescriptor> = {
     if (message.fields?.length) {
       obj.fields = message.fields.map((e) => FieldDescriptor.toJSON(e));
     }
+    if (message.precision !== undefined) {
+      obj.precision = Math.round(message.precision);
+    }
+    if (message.scale !== undefined) {
+      obj.scale = Math.round(message.scale);
+    }
+    if (message.minLength !== undefined) {
+      obj.minLength = message.minLength.toString();
+    }
+    if (message.maxLength !== undefined) {
+      obj.maxLength = message.maxLength.toString();
+    }
+    if (message.maxCardinality !== undefined) {
+      obj.maxCardinality = message.maxCardinality.toString();
+    }
+    if (message.isGroup !== false) {
+      obj.isGroup = message.isGroup;
+    }
+    if (message.isOpen !== false) {
+      obj.isOpen = message.isOpen;
+    }
+    if (message.durationQualifier !== 0) {
+      obj.durationQualifier = durationQualifierToJSON(message.durationQualifier);
+    }
+    if (message.componentTypes?.length) {
+      obj.componentTypes = message.componentTypes.map((e) => TypeDescriptor.toJSON(e));
+    }
     return obj;
   },
 
@@ -2675,6 +2977,15 @@ export const TypeDescriptor: MessageFns<TypeDescriptor> = {
       ? TypeDescriptor.fromPartial(object.elementType)
       : undefined;
     message.fields = object.fields?.map((e) => FieldDescriptor.fromPartial(e)) || [];
+    message.precision = object.precision ?? undefined;
+    message.scale = object.scale ?? undefined;
+    message.minLength = object.minLength ?? undefined;
+    message.maxLength = object.maxLength ?? undefined;
+    message.maxCardinality = object.maxCardinality ?? undefined;
+    message.isGroup = object.isGroup ?? false;
+    message.isOpen = object.isOpen ?? false;
+    message.durationQualifier = object.durationQualifier ?? 0;
+    message.componentTypes = object.componentTypes?.map((e) => TypeDescriptor.fromPartial(e)) || [];
     return message;
   },
 };
@@ -2870,7 +3181,7 @@ export const GqlStatus: MessageFns<GqlStatus> = {
 };
 
 function createBaseDiagnosticRecord(): DiagnosticRecord {
-  return { operation: "", operationCode: 0, currentSchema: "" };
+  return { operation: "", operationCode: 0, currentSchema: undefined, invalidReference: undefined };
 }
 
 export const DiagnosticRecord: MessageFns<DiagnosticRecord> = {
@@ -2881,8 +3192,11 @@ export const DiagnosticRecord: MessageFns<DiagnosticRecord> = {
     if (message.operationCode !== 0) {
       writer.uint32(16).int32(message.operationCode);
     }
-    if (message.currentSchema !== "") {
+    if (message.currentSchema !== undefined) {
       writer.uint32(26).string(message.currentSchema);
+    }
+    if (message.invalidReference !== undefined) {
+      writer.uint32(34).string(message.invalidReference);
     }
     return writer;
   },
@@ -2918,6 +3232,14 @@ export const DiagnosticRecord: MessageFns<DiagnosticRecord> = {
           message.currentSchema = reader.string();
           continue;
         }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.invalidReference = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -2939,7 +3261,12 @@ export const DiagnosticRecord: MessageFns<DiagnosticRecord> = {
         ? globalThis.String(object.currentSchema)
         : isSet(object.current_schema)
         ? globalThis.String(object.current_schema)
-        : "",
+        : undefined,
+      invalidReference: isSet(object.invalidReference)
+        ? globalThis.String(object.invalidReference)
+        : isSet(object.invalid_reference)
+        ? globalThis.String(object.invalid_reference)
+        : undefined,
     };
   },
 
@@ -2951,8 +3278,11 @@ export const DiagnosticRecord: MessageFns<DiagnosticRecord> = {
     if (message.operationCode !== 0) {
       obj.operationCode = Math.round(message.operationCode);
     }
-    if (message.currentSchema !== "") {
+    if (message.currentSchema !== undefined) {
       obj.currentSchema = message.currentSchema;
+    }
+    if (message.invalidReference !== undefined) {
+      obj.invalidReference = message.invalidReference;
     }
     return obj;
   },
@@ -2964,7 +3294,8 @@ export const DiagnosticRecord: MessageFns<DiagnosticRecord> = {
     const message = createBaseDiagnosticRecord();
     message.operation = object.operation ?? "";
     message.operationCode = object.operationCode ?? 0;
-    message.currentSchema = object.currentSchema ?? "";
+    message.currentSchema = object.currentSchema ?? undefined;
+    message.invalidReference = object.invalidReference ?? undefined;
     return message;
   },
 };

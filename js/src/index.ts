@@ -2,8 +2,8 @@
 
 export { GqlConnection } from "./connection";
 export { GqlSession } from "./session";
-export { DatabaseClient } from "./database";
-export type { DatabaseInfo, CreateDatabaseConfig } from "./database";
+export { CatalogClient } from "./catalog";
+export type { SchemaInfo, GraphInfo, GraphTypeDetails, CreateGraphConfig } from "./catalog";
 export { ResultCursor, ResultSummary } from "./result";
 export { Transaction } from "./transaction";
 

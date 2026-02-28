@@ -118,7 +118,9 @@ Application (GQL statements, parameters, results)
   gRPC Services
   - SessionService:  handshake, configure, reset, close, ping
   - GqlService:      execute, begin_transaction, commit, rollback
-  - DatabaseService: list, create, delete, get_info
+  - CatalogService:  schemas, graphs, graph types (catalog > schema > graph)
+  - AdminService:    stats, WAL, validate, indexes
+  - SearchService:   vector, text, hybrid search
   - HealthService:   grpc.health.v1.Health (check, watch)
        |
        v
@@ -149,7 +151,7 @@ Application (GQL statements, parameters, results)
 | `proto` | Generated protobuf types and gRPC stubs |
 | `types` | Ergonomic Rust wrappers over proto types |
 | `server` | `GqlBackend` trait, session/transaction management, gRPC server |
-| `client` | `GqlConnection`, `GqlSession`, `ResultCursor`, `Transaction`, `DatabaseClient` |
+| `client` | `GqlConnection`, `GqlSession`, `ResultCursor`, `Transaction`, `CatalogClient`, `AdminClient`, `SearchClient` |
 | `error` | `GqlError` enum |
 | `status` | GQLSTATUS code constants and helpers |
 
@@ -162,7 +164,7 @@ Application (GQL statements, parameters, results)
 | Go | `github.com/GrafeoDB/gwp/go` | `go get github.com/GrafeoDB/gwp/go` |
 | Java | `dev.grafeo:gwp` | Maven Central |
 
-All bindings include `GqlConnection`, `GqlSession`, `Transaction`, `ResultCursor`, and `DatabaseClient`.
+All bindings include `GqlConnection`, `GqlSession`, `Transaction`, `ResultCursor`, and `CatalogClient`.
 
 ## Requirements
 

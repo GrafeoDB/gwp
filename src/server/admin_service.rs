@@ -1,6 +1,6 @@
 //! `AdminService` gRPC implementation.
 //!
-//! Database introspection, maintenance, and index management.
+//! Graph introspection, maintenance, and index management.
 //! All errors are returned as gRPC status codes.
 
 use std::sync::Arc;
@@ -26,25 +26,25 @@ impl<B: GqlBackend> AdminServiceImpl<B> {
 
 #[tonic::async_trait]
 impl<B: GqlBackend> AdminService for AdminServiceImpl<B> {
-    #[tracing::instrument(skip(self, request), fields(database))]
-    async fn get_database_stats(
+    #[tracing::instrument(skip(self, request), fields(graph))]
+    async fn get_graph_stats(
         &self,
-        request: Request<proto::GetDatabaseStatsRequest>,
-    ) -> Result<Response<proto::GetDatabaseStatsResponse>, Status> {
+        request: Request<proto::GetGraphStatsRequest>,
+    ) -> Result<Response<proto::GetGraphStatsResponse>, Status> {
         let req = request.into_inner();
-        tracing::Span::current().record("database", &req.database);
+        tracing::Span::current().record("graph", &req.graph);
 
-        if req.database.is_empty() {
-            return Err(Status::invalid_argument("database name is required"));
+        if req.graph.is_empty() {
+            return Err(Status::invalid_argument("graph name is required"));
         }
 
         let stats = self
             .backend
-            .get_database_stats(&req.database)
+            .get_graph_stats(&req.graph)
             .await
             .map_err(|e| e.to_optional_service_status())?;
 
-        Ok(Response::new(proto::GetDatabaseStatsResponse {
+        Ok(Response::new(proto::GetGraphStatsResponse {
             node_count: stats.node_count,
             edge_count: stats.edge_count,
             label_count: stats.label_count,
@@ -56,21 +56,21 @@ impl<B: GqlBackend> AdminService for AdminServiceImpl<B> {
         }))
     }
 
-    #[tracing::instrument(skip(self, request), fields(database))]
+    #[tracing::instrument(skip(self, request), fields(graph))]
     async fn wal_status(
         &self,
         request: Request<proto::WalStatusRequest>,
     ) -> Result<Response<proto::WalStatusResponse>, Status> {
         let req = request.into_inner();
-        tracing::Span::current().record("database", &req.database);
+        tracing::Span::current().record("graph", &req.graph);
 
-        if req.database.is_empty() {
-            return Err(Status::invalid_argument("database name is required"));
+        if req.graph.is_empty() {
+            return Err(Status::invalid_argument("graph name is required"));
         }
 
         let status = self
             .backend
-            .wal_status(&req.database)
+            .wal_status(&req.graph)
             .await
             .map_err(|e| e.to_optional_service_status())?;
 
@@ -84,43 +84,43 @@ impl<B: GqlBackend> AdminService for AdminServiceImpl<B> {
         }))
     }
 
-    #[tracing::instrument(skip(self, request), fields(database))]
+    #[tracing::instrument(skip(self, request), fields(graph))]
     async fn wal_checkpoint(
         &self,
         request: Request<proto::WalCheckpointRequest>,
     ) -> Result<Response<proto::WalCheckpointResponse>, Status> {
         let req = request.into_inner();
-        tracing::Span::current().record("database", &req.database);
+        tracing::Span::current().record("graph", &req.graph);
 
-        if req.database.is_empty() {
-            return Err(Status::invalid_argument("database name is required"));
+        if req.graph.is_empty() {
+            return Err(Status::invalid_argument("graph name is required"));
         }
 
         self.backend
-            .wal_checkpoint(&req.database)
+            .wal_checkpoint(&req.graph)
             .await
             .map_err(|e| e.to_optional_service_status())?;
 
-        tracing::info!(database = %req.database, "WAL checkpoint completed");
+        tracing::info!(graph = %req.graph, "WAL checkpoint completed");
 
         Ok(Response::new(proto::WalCheckpointResponse {}))
     }
 
-    #[tracing::instrument(skip(self, request), fields(database))]
+    #[tracing::instrument(skip(self, request), fields(graph))]
     async fn validate(
         &self,
         request: Request<proto::ValidateRequest>,
     ) -> Result<Response<proto::ValidateResponse>, Status> {
         let req = request.into_inner();
-        tracing::Span::current().record("database", &req.database);
+        tracing::Span::current().record("graph", &req.graph);
 
-        if req.database.is_empty() {
-            return Err(Status::invalid_argument("database name is required"));
+        if req.graph.is_empty() {
+            return Err(Status::invalid_argument("graph name is required"));
         }
 
         let result = self
             .backend
-            .validate(&req.database)
+            .validate(&req.graph)
             .await
             .map_err(|e| e.to_optional_service_status())?;
 
@@ -147,16 +147,16 @@ impl<B: GqlBackend> AdminService for AdminServiceImpl<B> {
         }))
     }
 
-    #[tracing::instrument(skip(self, request), fields(database))]
+    #[tracing::instrument(skip(self, request), fields(graph))]
     async fn create_index(
         &self,
         request: Request<proto::CreateIndexRequest>,
     ) -> Result<Response<proto::CreateIndexResponse>, Status> {
         let req = request.into_inner();
-        tracing::Span::current().record("database", &req.database);
+        tracing::Span::current().record("graph", &req.graph);
 
-        if req.database.is_empty() {
-            return Err(Status::invalid_argument("database name is required"));
+        if req.graph.is_empty() {
+            return Err(Status::invalid_argument("graph name is required"));
         }
 
         let index_def = match req.index {
@@ -183,25 +183,25 @@ impl<B: GqlBackend> AdminService for AdminServiceImpl<B> {
         };
 
         self.backend
-            .create_index(&req.database, index_def)
+            .create_index(&req.graph, index_def)
             .await
             .map_err(|e| e.to_optional_service_status())?;
 
-        tracing::info!(database = %req.database, "index created");
+        tracing::info!(graph = %req.graph, "index created");
 
         Ok(Response::new(proto::CreateIndexResponse {}))
     }
 
-    #[tracing::instrument(skip(self, request), fields(database))]
+    #[tracing::instrument(skip(self, request), fields(graph))]
     async fn drop_index(
         &self,
         request: Request<proto::DropIndexRequest>,
     ) -> Result<Response<proto::DropIndexResponse>, Status> {
         let req = request.into_inner();
-        tracing::Span::current().record("database", &req.database);
+        tracing::Span::current().record("graph", &req.graph);
 
-        if req.database.is_empty() {
-            return Err(Status::invalid_argument("database name is required"));
+        if req.graph.is_empty() {
+            return Err(Status::invalid_argument("graph name is required"));
         }
 
         let index_def = match req.index {
@@ -229,7 +229,7 @@ impl<B: GqlBackend> AdminService for AdminServiceImpl<B> {
 
         let existed = self
             .backend
-            .drop_index(&req.database, index_def)
+            .drop_index(&req.graph, index_def)
             .await
             .map_err(|e| e.to_optional_service_status())?;
 

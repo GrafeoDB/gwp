@@ -41,19 +41,19 @@ fn to_proto_hit(hit: &super::backend::SearchHit) -> proto::SearchHit {
 
 #[tonic::async_trait]
 impl<B: GqlBackend> SearchService for SearchServiceImpl<B> {
-    #[tracing::instrument(skip(self, request), fields(database, label, property))]
+    #[tracing::instrument(skip(self, request), fields(graph, label, property))]
     async fn vector_search(
         &self,
         request: Request<proto::VectorSearchRequest>,
     ) -> Result<Response<proto::VectorSearchResponse>, Status> {
         let req = request.into_inner();
         let span = tracing::Span::current();
-        span.record("database", &req.database);
+        span.record("graph", &req.graph);
         span.record("label", &req.label);
         span.record("property", &req.property);
 
-        if req.database.is_empty() {
-            return Err(Status::invalid_argument("database name is required"));
+        if req.graph.is_empty() {
+            return Err(Status::invalid_argument("graph name is required"));
         }
         if req.query_vector.is_empty() {
             return Err(Status::invalid_argument("query_vector is required"));
@@ -68,7 +68,7 @@ impl<B: GqlBackend> SearchService for SearchServiceImpl<B> {
         let hits = self
             .backend
             .vector_search(VectorSearchParams {
-                database: req.database,
+                graph: req.graph,
                 label: req.label,
                 property: req.property,
                 query_vector: req.query_vector,
@@ -84,19 +84,19 @@ impl<B: GqlBackend> SearchService for SearchServiceImpl<B> {
         }))
     }
 
-    #[tracing::instrument(skip(self, request), fields(database, label, property))]
+    #[tracing::instrument(skip(self, request), fields(graph, label, property))]
     async fn text_search(
         &self,
         request: Request<proto::TextSearchRequest>,
     ) -> Result<Response<proto::TextSearchResponse>, Status> {
         let req = request.into_inner();
         let span = tracing::Span::current();
-        span.record("database", &req.database);
+        span.record("graph", &req.graph);
         span.record("label", &req.label);
         span.record("property", &req.property);
 
-        if req.database.is_empty() {
-            return Err(Status::invalid_argument("database name is required"));
+        if req.graph.is_empty() {
+            return Err(Status::invalid_argument("graph name is required"));
         }
         if req.query.is_empty() {
             return Err(Status::invalid_argument("query text is required"));
@@ -105,7 +105,7 @@ impl<B: GqlBackend> SearchService for SearchServiceImpl<B> {
         let hits = self
             .backend
             .text_search(TextSearchParams {
-                database: req.database,
+                graph: req.graph,
                 label: req.label,
                 property: req.property,
                 query: req.query,
@@ -119,18 +119,18 @@ impl<B: GqlBackend> SearchService for SearchServiceImpl<B> {
         }))
     }
 
-    #[tracing::instrument(skip(self, request), fields(database, label))]
+    #[tracing::instrument(skip(self, request), fields(graph, label))]
     async fn hybrid_search(
         &self,
         request: Request<proto::HybridSearchRequest>,
     ) -> Result<Response<proto::HybridSearchResponse>, Status> {
         let req = request.into_inner();
         let span = tracing::Span::current();
-        span.record("database", &req.database);
+        span.record("graph", &req.graph);
         span.record("label", &req.label);
 
-        if req.database.is_empty() {
-            return Err(Status::invalid_argument("database name is required"));
+        if req.graph.is_empty() {
+            return Err(Status::invalid_argument("graph name is required"));
         }
         if req.query_text.is_empty() {
             return Err(Status::invalid_argument("query_text is required"));
@@ -139,7 +139,7 @@ impl<B: GqlBackend> SearchService for SearchServiceImpl<B> {
         let hits = self
             .backend
             .hybrid_search(HybridSearchParams {
-                database: req.database,
+                graph: req.graph,
                 label: req.label,
                 text_property: req.text_property,
                 vector_property: req.vector_property,

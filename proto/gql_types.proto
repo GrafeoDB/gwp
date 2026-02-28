@@ -186,6 +186,34 @@ message TypeDescriptor {
   bool nullable = 2;
   TypeDescriptor element_type = 3;        // For LIST: element type
   repeated FieldDescriptor fields = 4;    // For RECORD: field types
+
+  // Numeric precision and scale (sec 18.9)
+  optional uint32 precision = 5;          // Bits (integer/float) or digits (decimal)
+  optional uint32 scale = 6;              // Digits after decimal point (DECIMAL only)
+
+  // String / byte string length constraints (sec 18.9)
+  optional uint64 min_length = 7;
+  optional uint64 max_length = 8;
+
+  // LIST qualifiers (sec 4.15.3)
+  optional uint64 max_cardinality = 9;    // Maximum number of elements
+  bool is_group = 10;                     // GROUP LIST characteristic
+
+  // RECORD qualifier (sec 4.15.4)
+  bool is_open = 11;                      // true = ANY RECORD (open), false = closed
+
+  // DURATION qualifier (sec 4.16.6.3)
+  DurationQualifier duration_qualifier = 12;
+
+  // Closed dynamic union (sec 4.14): component types of ANY VALUE<T1 | T2>
+  repeated TypeDescriptor component_types = 13;
+}
+
+// Duration unit group qualifier per ISO/IEC 39075 sec 4.16.6.3.
+enum DurationQualifier {
+  DURATION_UNSPECIFIED = 0;
+  DURATION_YEAR_TO_MONTH = 1;
+  DURATION_DAY_TO_SECOND = 2;
 }
 
 message FieldDescriptor {
@@ -198,6 +226,7 @@ enum GqlType {
   TYPE_UNKNOWN = 0;
   TYPE_NULL = 1;
   TYPE_BOOLEAN = 2;
+  TYPE_EMPTY = 3;                    // NOTHING / empty type (sec 4.16.8)
 
   // Signed integers
   TYPE_INT8 = 10;
@@ -235,7 +264,9 @@ enum GqlType {
   TYPE_ZONED_TIME = 72;
   TYPE_LOCAL_DATETIME = 73;
   TYPE_ZONED_DATETIME = 74;
-  TYPE_DURATION = 75;
+  TYPE_DURATION = 75;                // Unqualified duration
+  TYPE_YEAR_MONTH_DURATION = 76;     // DURATION(YEAR TO MONTH) (sec 4.16.6.3)
+  TYPE_DAY_TIME_DURATION = 77;       // DURATION(DAY TO SECOND) (sec 4.16.6.3)
 
   // Constructed
   TYPE_LIST = 80;
@@ -245,6 +276,12 @@ enum GqlType {
   // Graph elements
   TYPE_NODE = 90;
   TYPE_EDGE = 91;
+
+  // Reference value types (sec 4.16.7)
+  TYPE_NODE_REFERENCE = 92;
+  TYPE_EDGE_REFERENCE = 93;
+  TYPE_GRAPH_REFERENCE = 100;
+  TYPE_BINDING_TABLE_REFERENCE = 101;
 
   // Dynamic
   TYPE_ANY = 110;
@@ -263,11 +300,12 @@ message GqlStatus {
   GqlStatus cause = 4;                     // Optional chained cause
 }
 
-// Diagnostic context for error reporting.
+// Diagnostic context for error reporting (sec 23.2).
 message DiagnosticRecord {
   string operation = 1;                    // e.g. "MATCH STATEMENT"
   int32 operation_code = 2;               // e.g. 600
-  string current_schema = 3;              // Schema context
+  optional string current_schema = 3;     // Schema context (null if undefined)
+  optional string invalid_reference = 4;  // Identifier that caused 42002
 }
 
 // ============================================================================

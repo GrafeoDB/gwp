@@ -86,13 +86,68 @@ pub trait ResultStream: Send + 'static {
     ) -> std::task::Poll<Option<Result<ResultFrame, GqlError>>>;
 }
 
-/// Configuration for creating a new database.
+// ============================================================================
+// Catalog types
+// ============================================================================
+
+/// Summary information about a schema.
 #[derive(Debug, Clone)]
-pub struct CreateDatabaseConfig {
-    /// Database name.
+pub struct SchemaInfo {
+    /// Schema name.
     pub name: String,
-    /// Database type (e.g. "Lpg", "Rdf").
-    pub database_type: String,
+    /// Number of graphs in the schema.
+    pub graph_count: u32,
+    /// Number of graph types in the schema.
+    pub graph_type_count: u32,
+}
+
+/// Summary information about a graph.
+#[derive(Debug, Clone)]
+pub struct GraphInfo {
+    /// Schema this graph belongs to.
+    pub schema: String,
+    /// Graph name.
+    pub name: String,
+    /// Number of nodes in the graph.
+    pub node_count: u64,
+    /// Number of edges in the graph.
+    pub edge_count: u64,
+    /// Graph type name (empty if open).
+    pub graph_type: String,
+    /// Storage mode (e.g. `InMemory`, `Persistent`).
+    pub storage_mode: String,
+    /// Memory limit in bytes, if configured.
+    pub memory_limit_bytes: Option<u64>,
+    /// Whether backward edges are maintained.
+    pub backward_edges: Option<bool>,
+    /// Number of worker threads.
+    pub threads: Option<u32>,
+}
+
+/// Graph type specification for creating a graph.
+#[derive(Debug, Clone)]
+pub enum GraphTypeSpec {
+    /// Open graph type (ANY GRAPH).
+    Open,
+    /// Reference to a named graph type.
+    Named(String),
+}
+
+/// Configuration for creating a new graph.
+#[derive(Debug, Clone)]
+pub struct CreateGraphConfig {
+    /// Schema to create the graph in.
+    pub schema: String,
+    /// Graph name.
+    pub name: String,
+    /// Whether to skip if the graph already exists.
+    pub if_not_exists: bool,
+    /// Whether to replace an existing graph.
+    pub or_replace: bool,
+    /// Graph type specification.
+    pub type_spec: Option<GraphTypeSpec>,
+    /// Optional source graph to copy from (`schema.graph` qualified name).
+    pub copy_of: Option<String>,
     /// Storage mode (e.g. `InMemory`, `Persistent`).
     pub storage_mode: String,
     /// Optional memory limit in bytes.
@@ -107,27 +162,13 @@ pub struct CreateDatabaseConfig {
     pub wal_durability: Option<String>,
 }
 
-/// Summary information about a database.
+/// Summary information about a graph type.
 #[derive(Debug, Clone)]
-pub struct DatabaseInfo {
-    /// Database name.
+pub struct GraphTypeInfo {
+    /// Schema this graph type belongs to.
+    pub schema: String,
+    /// Graph type name.
     pub name: String,
-    /// Number of nodes in the database.
-    pub node_count: u64,
-    /// Number of edges in the database.
-    pub edge_count: u64,
-    /// Whether the database is persistent.
-    pub persistent: bool,
-    /// Database type (e.g. "Lpg", "Rdf").
-    pub database_type: String,
-    /// Storage mode (e.g. `InMemory`, `Persistent`).
-    pub storage_mode: String,
-    /// Memory limit in bytes, if configured.
-    pub memory_limit_bytes: Option<u64>,
-    /// Whether backward edges are maintained.
-    pub backward_edges: Option<bool>,
-    /// Number of worker threads.
-    pub threads: Option<u32>,
 }
 
 /// The pluggable backend trait for GQL database engines.
@@ -201,81 +242,111 @@ pub trait GqlBackend: Send + Sync + 'static {
         transaction: &TransactionHandle,
     ) -> Result<(), GqlError>;
 
-    /// List all databases.
-    ///
-    /// Default implementation returns `Unimplemented` for backends that
-    /// don't support database management.
-    async fn list_databases(&self) -> Result<Vec<DatabaseInfo>, GqlError> {
-        Err(GqlError::Protocol(
-            "database management not supported".into(),
-        ))
+    // =========================================================================
+    // Catalog operations (optional - sec 12)
+    // =========================================================================
+
+    /// List all schemas.
+    async fn list_schemas(&self) -> Result<Vec<SchemaInfo>, GqlError> {
+        Err(GqlError::Protocol("catalog not supported".into()))
     }
 
-    /// Create a new database.
-    ///
-    /// Default implementation returns `Unimplemented` for backends that
-    /// don't support database management.
-    async fn create_database(
+    /// Create a schema.
+    async fn create_schema(
         &self,
-        _config: CreateDatabaseConfig,
-    ) -> Result<DatabaseInfo, GqlError> {
-        Err(GqlError::Protocol(
-            "database management not supported".into(),
-        ))
+        _name: &str,
+        _if_not_exists: bool,
+    ) -> Result<(), GqlError> {
+        Err(GqlError::Protocol("catalog not supported".into()))
     }
 
-    /// Delete a database by name.
-    ///
-    /// Returns the name of the deleted database on success.
-    /// Default implementation returns `Unimplemented` for backends that
-    /// don't support database management.
-    async fn delete_database(&self, _name: &str) -> Result<String, GqlError> {
-        Err(GqlError::Protocol(
-            "database management not supported".into(),
-        ))
+    /// Drop a schema. Returns whether it existed.
+    async fn drop_schema(&self, _name: &str, _if_exists: bool) -> Result<bool, GqlError> {
+        Err(GqlError::Protocol("catalog not supported".into()))
     }
 
-    /// Get info for a specific database.
-    ///
-    /// Default implementation returns `Unimplemented` for backends that
-    /// don't support database management.
-    async fn get_database_info(&self, _name: &str) -> Result<DatabaseInfo, GqlError> {
-        Err(GqlError::Protocol(
-            "database management not supported".into(),
-        ))
+    /// List all graphs in a schema.
+    async fn list_graphs(&self, _schema: &str) -> Result<Vec<GraphInfo>, GqlError> {
+        Err(GqlError::Protocol("catalog not supported".into()))
+    }
+
+    /// Create a graph. Returns the new graph info.
+    async fn create_graph(&self, _config: CreateGraphConfig) -> Result<GraphInfo, GqlError> {
+        Err(GqlError::Protocol("catalog not supported".into()))
+    }
+
+    /// Drop a graph. Returns whether it existed.
+    async fn drop_graph(
+        &self,
+        _schema: &str,
+        _name: &str,
+        _if_exists: bool,
+    ) -> Result<bool, GqlError> {
+        Err(GqlError::Protocol("catalog not supported".into()))
+    }
+
+    /// Get detailed information about a graph.
+    async fn get_graph_info(&self, _schema: &str, _name: &str) -> Result<GraphInfo, GqlError> {
+        Err(GqlError::Protocol("catalog not supported".into()))
+    }
+
+    /// List graph types in a schema.
+    async fn list_graph_types(&self, _schema: &str) -> Result<Vec<GraphTypeInfo>, GqlError> {
+        Err(GqlError::Protocol("catalog not supported".into()))
+    }
+
+    /// Create a graph type.
+    async fn create_graph_type(
+        &self,
+        _schema: &str,
+        _name: &str,
+        _if_not_exists: bool,
+        _or_replace: bool,
+    ) -> Result<(), GqlError> {
+        Err(GqlError::Protocol("catalog not supported".into()))
+    }
+
+    /// Drop a graph type. Returns whether it existed.
+    async fn drop_graph_type(
+        &self,
+        _schema: &str,
+        _name: &str,
+        _if_exists: bool,
+    ) -> Result<bool, GqlError> {
+        Err(GqlError::Protocol("catalog not supported".into()))
     }
 
     // =========================================================================
     // Admin operations (optional)
     // =========================================================================
 
-    /// Get detailed database statistics.
-    async fn get_database_stats(&self, _name: &str) -> Result<AdminStats, GqlError> {
+    /// Get detailed graph statistics.
+    async fn get_graph_stats(&self, _graph: &str) -> Result<AdminStats, GqlError> {
         Err(GqlError::Protocol("admin not supported".into()))
     }
 
-    /// Get WAL status for a database.
-    async fn wal_status(&self, _name: &str) -> Result<AdminWalStatus, GqlError> {
+    /// Get WAL status for a graph.
+    async fn wal_status(&self, _graph: &str) -> Result<AdminWalStatus, GqlError> {
         Err(GqlError::Protocol("admin not supported".into()))
     }
 
-    /// Force a WAL checkpoint on a database.
-    async fn wal_checkpoint(&self, _name: &str) -> Result<(), GqlError> {
+    /// Force a WAL checkpoint on a graph.
+    async fn wal_checkpoint(&self, _graph: &str) -> Result<(), GqlError> {
         Err(GqlError::Protocol("admin not supported".into()))
     }
 
-    /// Validate database integrity.
-    async fn validate(&self, _name: &str) -> Result<AdminValidationResult, GqlError> {
+    /// Validate graph integrity.
+    async fn validate(&self, _graph: &str) -> Result<AdminValidationResult, GqlError> {
         Err(GqlError::Protocol("admin not supported".into()))
     }
 
-    /// Create an index on a database.
-    async fn create_index(&self, _name: &str, _index: IndexDefinition) -> Result<(), GqlError> {
+    /// Create an index on a graph.
+    async fn create_index(&self, _graph: &str, _index: IndexDefinition) -> Result<(), GqlError> {
         Err(GqlError::Protocol("admin not supported".into()))
     }
 
-    /// Drop an index from a database.
-    async fn drop_index(&self, _name: &str, _index: IndexDefinition) -> Result<bool, GqlError> {
+    /// Drop an index from a graph.
+    async fn drop_index(&self, _graph: &str, _index: IndexDefinition) -> Result<bool, GqlError> {
         Err(GqlError::Protocol("admin not supported".into()))
     }
 
@@ -303,7 +374,7 @@ pub trait GqlBackend: Send + Sync + 'static {
 // Admin types
 // ============================================================================
 
-/// Detailed database statistics.
+/// Detailed graph statistics.
 #[derive(Debug, Clone)]
 pub struct AdminStats {
     /// Number of nodes.
@@ -402,8 +473,8 @@ pub enum IndexDefinition {
 /// Vector search parameters.
 #[derive(Debug, Clone)]
 pub struct VectorSearchParams {
-    /// Database name.
-    pub database: String,
+    /// Graph name.
+    pub graph: String,
     /// Node label.
     pub label: String,
     /// Property name.
@@ -421,8 +492,8 @@ pub struct VectorSearchParams {
 /// Text search parameters.
 #[derive(Debug, Clone)]
 pub struct TextSearchParams {
-    /// Database name.
-    pub database: String,
+    /// Graph name.
+    pub graph: String,
     /// Node label.
     pub label: String,
     /// Property name.
@@ -436,8 +507,8 @@ pub struct TextSearchParams {
 /// Hybrid search parameters.
 #[derive(Debug, Clone)]
 pub struct HybridSearchParams {
-    /// Database name.
-    pub database: String,
+    /// Graph name.
+    pub graph: String,
     /// Node label.
     pub label: String,
     /// Text property name.

@@ -32,10 +32,10 @@
 //! let mut session = conn.create_session().await?;
 //!
 //! let mut cursor = session.execute_simple("MATCH (n:Person) RETURN n.name").await?;
-//! let records = cursor.collect().await?;
+//! let rows = cursor.collect_rows().await?;
 //!
-//! for record in &records {
-//!     println!("{:?}", record);
+//! for row in &rows {
+//!     println!("{:?}", row);
 //! }
 //!
 //! session.close().await?;

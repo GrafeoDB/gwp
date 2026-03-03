@@ -28,12 +28,12 @@ use super::transaction::Transaction;
 ///
 /// // Simple query
 /// let mut cursor = session.execute_simple("RETURN 1 AS n").await?;
-/// let records = cursor.collect().await?;
+/// let rows = cursor.collect_rows().await?;
 ///
 /// // Explicit transaction
 /// let mut tx = session.begin_transaction().await?;
 /// let mut cursor = tx.execute_simple("INSERT (:Person {name: 'Alice'})").await?;
-/// let _ = cursor.collect().await?;
+/// let _ = cursor.collect_rows().await?;
 /// tx.commit().await?;
 ///
 /// session.close().await?;

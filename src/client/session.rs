@@ -18,6 +18,28 @@ use super::transaction::Transaction;
 /// Wraps the handshake response and provides typed methods for
 /// executing statements, managing transactions, and configuring
 /// session state.
+///
+/// ```rust,no_run
+/// use gwp::client::GqlConnection;
+///
+/// # async fn example() -> Result<(), gwp::error::GqlError> {
+/// let mut conn = GqlConnection::connect("http://localhost:7687").await?;
+/// let mut session = conn.create_session().await?;
+///
+/// // Simple query
+/// let mut cursor = session.execute_simple("RETURN 1 AS n").await?;
+/// let records = cursor.collect().await?;
+///
+/// // Explicit transaction
+/// let mut tx = session.begin_transaction().await?;
+/// let mut cursor = tx.execute_simple("INSERT (:Person {name: 'Alice'})").await?;
+/// let _ = cursor.collect().await?;
+/// tx.commit().await?;
+///
+/// session.close().await?;
+/// # Ok(())
+/// # }
+/// ```
 pub struct GqlSession {
     session_id: String,
     session_client: SessionServiceClient<Channel>,

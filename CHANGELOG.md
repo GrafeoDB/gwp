@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1 2026-04-11
+
+- **Breaking**: Proto RPC `Close` renamed to `CloseSession` (`CloseRequest`/`CloseResponse` to `CloseSessionRequest`/`CloseSessionResponse`) to avoid `grpc-js` `Client.close()` conflict
+
 ## 0.2.0 2026-04-11
 
 - **Breaking**: `AuthValidator::validate()` return type changed from `Result<(), GqlError>` to `Result<AuthInfo, GqlError>`

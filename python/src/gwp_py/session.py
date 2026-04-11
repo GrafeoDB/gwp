@@ -112,8 +112,8 @@ class GqlSession:
     async def close(self) -> None:
         """Close the session."""
         if not self._closed:
-            await self._session_stub.Close(
-                gql_pb2.CloseRequest(session_id=self._session_id)
+            await self._session_stub.CloseSession(
+                gql_pb2.CloseSessionRequest(session_id=self._session_id)
             )
             self._closed = True
 

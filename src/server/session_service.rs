@@ -174,10 +174,10 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
     }
 
     #[tracing::instrument(skip(self, request), fields(session_id))]
-    async fn close(
+    async fn close_session(
         &self,
-        request: Request<proto::CloseRequest>,
-    ) -> Result<Response<proto::CloseResponse>, Status> {
+        request: Request<proto::CloseSessionRequest>,
+    ) -> Result<Response<proto::CloseSessionResponse>, Status> {
         let req = request.into_inner();
         let session_id = &req.session_id;
         tracing::Span::current().record("session_id", session_id);
@@ -208,7 +208,7 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
 
         tracing::info!(session_id, "session closed");
 
-        Ok(Response::new(proto::CloseResponse {}))
+        Ok(Response::new(proto::CloseSessionResponse {}))
     }
 
     #[tracing::instrument(skip(self, request), fields(session_id))]

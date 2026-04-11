@@ -121,13 +121,13 @@ class ResetResponse(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...
 
-class CloseRequest(_message.Message):
+class CloseSessionRequest(_message.Message):
     __slots__ = ("session_id",)
     SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     session_id: str
     def __init__(self, session_id: _Optional[str] = ...) -> None: ...
 
-class CloseResponse(_message.Message):
+class CloseSessionResponse(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...
 

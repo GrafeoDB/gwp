@@ -10,7 +10,7 @@ use tonic::{Request, Response, Status};
 use crate::proto;
 use crate::proto::session_service_server::SessionService;
 
-use super::auth::AuthValidator;
+use super::auth::{AuthInfo, AuthValidator};
 use super::backend::{GqlBackend, ResetTarget, SessionConfig, SessionProperty};
 use super::{SessionManager, TransactionManager};
 
@@ -48,21 +48,25 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
     ) -> Result<Response<proto::HandshakeResponse>, Status> {
         let req = request.into_inner();
 
-        if let Some(ref auth) = self.auth {
+        let auth_info: Option<AuthInfo> = if let Some(ref auth) = self.auth {
             if let Some(ref creds) = req.credentials {
-                auth.validate(creds).await.map_err(|_| {
+                let info = auth.validate(creds).await.map_err(|_| {
                     tracing::warn!("authentication failed");
                     Status::unauthenticated("invalid credentials")
                 })?;
+                Some(info)
             } else {
                 tracing::warn!("handshake missing credentials");
                 return Err(Status::unauthenticated("credentials required"));
             }
-        }
+        } else {
+            None
+        };
 
         let config = SessionConfig {
             protocol_version: req.protocol_version,
             client_info: req.client_info,
+            auth_info,
         };
 
         let handle = self

@@ -318,6 +318,14 @@ impl TryFrom<Value> for Record {
 
 impl Value {
     /// Returns the type name for error messages.
+    ///
+    /// ```
+    /// use gwp::types::Value;
+    ///
+    /// assert_eq!(Value::Null.type_name(), "Null");
+    /// assert_eq!(Value::Integer(42).type_name(), "Integer");
+    /// assert_eq!(Value::String("hi".into()).type_name(), "String");
+    /// ```
     #[must_use]
     pub fn type_name(&self) -> &'static str {
         match self {
@@ -346,12 +354,26 @@ impl Value {
     }
 
     /// Returns `true` if this value is `Null`.
+    ///
+    /// ```
+    /// use gwp::types::Value;
+    ///
+    /// assert!(Value::Null.is_null());
+    /// assert!(!Value::Integer(1).is_null());
+    /// ```
     #[must_use]
     pub fn is_null(&self) -> bool {
         matches!(self, Self::Null)
     }
 
     /// Returns the boolean value, if this is a `Boolean`.
+    ///
+    /// ```
+    /// use gwp::types::Value;
+    ///
+    /// assert_eq!(Value::Boolean(true).as_bool(), Some(true));
+    /// assert_eq!(Value::Integer(1).as_bool(), None);
+    /// ```
     #[must_use]
     pub fn as_bool(&self) -> Option<bool> {
         match self {
@@ -361,6 +383,13 @@ impl Value {
     }
 
     /// Returns the integer value, if this is an `Integer`.
+    ///
+    /// ```
+    /// use gwp::types::Value;
+    ///
+    /// assert_eq!(Value::Integer(42).as_integer(), Some(42));
+    /// assert_eq!(Value::Float(1.0).as_integer(), None);
+    /// ```
     #[must_use]
     pub fn as_integer(&self) -> Option<i64> {
         match self {
@@ -388,6 +417,14 @@ impl Value {
     }
 
     /// Returns a string slice, if this is a `String`.
+    ///
+    /// ```
+    /// use gwp::types::Value;
+    ///
+    /// let val = Value::String("hello".into());
+    /// assert_eq!(val.as_str(), Some("hello"));
+    /// assert_eq!(Value::Null.as_str(), None);
+    /// ```
     #[must_use]
     pub fn as_str(&self) -> Option<&str> {
         match self {
@@ -397,6 +434,14 @@ impl Value {
     }
 
     /// Returns a byte slice, if this is a `Bytes`.
+    ///
+    /// ```
+    /// use gwp::types::Value;
+    ///
+    /// let val = Value::Bytes(vec![0xDE, 0xAD]);
+    /// assert_eq!(val.as_bytes(), Some(&[0xDE, 0xAD][..]));
+    /// assert_eq!(Value::Null.as_bytes(), None);
+    /// ```
     #[must_use]
     pub fn as_bytes(&self) -> Option<&[u8]> {
         match self {
@@ -406,6 +451,14 @@ impl Value {
     }
 
     /// Returns a slice of elements, if this is a `List`.
+    ///
+    /// ```
+    /// use gwp::types::Value;
+    ///
+    /// let val = Value::List(vec![Value::Integer(1), Value::Integer(2)]);
+    /// assert_eq!(val.as_list().unwrap().len(), 2);
+    /// assert_eq!(Value::Null.as_list(), None);
+    /// ```
     #[must_use]
     pub fn as_list(&self) -> Option<&[Value]> {
         match self {
@@ -424,6 +477,15 @@ impl Value {
     }
 
     /// Returns a reference to the node, if this is a `Node`.
+    ///
+    /// ```
+    /// use gwp::types::{Node, Value};
+    ///
+    /// let node = Node::new(vec![1]).with_label("Person");
+    /// let val = Value::Node(node);
+    /// assert!(val.as_node().unwrap().has_label("Person"));
+    /// assert_eq!(Value::Null.as_node(), None);
+    /// ```
     #[must_use]
     pub fn as_node(&self) -> Option<&Node> {
         match self {

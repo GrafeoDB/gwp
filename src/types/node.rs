@@ -6,6 +6,19 @@ use super::Value;
 use crate::proto;
 
 /// A property graph node with an opaque ID, labels, and properties.
+///
+/// ```
+/// use gwp::types::{Node, Value};
+///
+/// let node = Node::new(1_i64.to_be_bytes())
+///     .with_label("Person")
+///     .with_property("name", "Alice")
+///     .with_property("age", 30_i64);
+///
+/// assert!(node.has_label("Person"));
+/// assert_eq!(node.property("name"), Some(&Value::String("Alice".into())));
+/// assert_eq!(node.property("age"), Some(&Value::Integer(30)));
+/// ```
 #[derive(Debug, Clone, PartialEq)]
 pub struct Node {
     /// Opaque element identifier.

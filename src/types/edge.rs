@@ -6,6 +6,21 @@ use super::Value;
 use crate::proto;
 
 /// A property graph edge with an opaque ID, labels, endpoints, and properties.
+///
+/// ```
+/// use gwp::types::{Edge, Value};
+///
+/// let edge = Edge::directed(vec![0x10], vec![0x01], vec![0x02])
+///     .with_label("KNOWS")
+///     .with_property("since", 2020_i64);
+///
+/// assert!(!edge.undirected);
+/// assert_eq!(edge.property("since"), Some(&Value::Integer(2020)));
+///
+/// let friend = Edge::undirected(vec![0x20], vec![0x01], vec![0x02])
+///     .with_label("FRIENDS_WITH");
+/// assert!(friend.undirected);
+/// ```
 #[derive(Debug, Clone, PartialEq)]
 pub struct Edge {
     /// Opaque element identifier.

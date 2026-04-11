@@ -50,6 +50,16 @@ pub enum GqlError {
 
 impl GqlError {
     /// Create a backend error from any error type.
+    ///
+    /// ```
+    /// use gwp::error::GqlError;
+    ///
+    /// let err = GqlError::backend(std::io::Error::new(
+    ///     std::io::ErrorKind::ConnectionRefused,
+    ///     "connection refused",
+    /// ));
+    /// assert!(err.to_string().contains("connection refused"));
+    /// ```
     pub fn backend(err: impl std::error::Error + Send + Sync + 'static) -> Self {
         Self::Backend {
             source: Box::new(err),
@@ -57,6 +67,15 @@ impl GqlError {
     }
 
     /// Create a GQL-domain error from a status.
+    ///
+    /// ```
+    /// use gwp::error::GqlError;
+    /// use gwp::status::INVALID_SYNTAX;
+    ///
+    /// let err = GqlError::status(INVALID_SYNTAX, "unexpected token");
+    /// assert!(err.gql_status().is_some());
+    /// assert!(err.to_string().contains("42001"));
+    /// ```
     #[must_use]
     pub fn status(code: &str, message: impl Into<String>) -> Self {
         Self::Status {
@@ -99,6 +118,16 @@ impl GqlError {
     }
 
     /// Extract the `GqlStatus` if this is a GQL-domain error.
+    ///
+    /// ```
+    /// use gwp::error::GqlError;
+    ///
+    /// let protocol_err = GqlError::Protocol("bad frame".into());
+    /// assert!(protocol_err.gql_status().is_none());
+    ///
+    /// let status_err = GqlError::status("42001", "syntax error");
+    /// assert!(status_err.gql_status().is_some());
+    /// ```
     #[must_use]
     pub fn gql_status(&self) -> Option<&proto::GqlStatus> {
         match self {

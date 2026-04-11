@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0 2026-04-11
+
+- **Breaking**: `AuthValidator::validate()` return type changed from `Result<(), GqlError>` to `Result<AuthInfo, GqlError>`
+- **Feature**: `AuthInfo` struct with `principal: String` field, captured during handshake
+- **Feature**: `SessionConfig` gains `auth_info: Option<AuthInfo>` field, passing validated identity through to `create_session`
+
 ## 0.1.6 2026-02-28
 
 - **Breaking**: `DatabaseService` replaced by `CatalogService` (catalog > schema > graph hierarchy per GQL spec sec 12.2-12.7)

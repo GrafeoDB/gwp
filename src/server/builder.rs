@@ -24,6 +24,24 @@ use super::session_service::SessionServiceImpl;
 use super::{SessionManager, TransactionManager};
 
 /// Builder for the GQL wire protocol server.
+///
+/// ```rust,no_run
+/// use std::net::SocketAddr;
+/// use std::time::Duration;
+/// use gwp::server::{GqlServer, GqlBackend};
+///
+/// # async fn example(backend: impl GqlBackend) -> Result<(), tonic::transport::Error> {
+/// let addr: SocketAddr = "0.0.0.0:7687".parse().unwrap();
+///
+/// GqlServer::builder(backend)
+///     .idle_timeout(Duration::from_secs(300))
+///     .max_sessions(256)
+///     .shutdown(async { drop(tokio::signal::ctrl_c().await) })
+///     .serve(addr)
+///     .await?;
+/// # Ok(())
+/// # }
+/// ```
 pub struct GqlServer<B: GqlBackend> {
     backend: B,
     #[cfg(feature = "tls")]

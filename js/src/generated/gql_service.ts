@@ -206,11 +206,11 @@ export interface ResetRequest {
 export interface ResetResponse {
 }
 
-export interface CloseRequest {
+export interface CloseSessionRequest {
   sessionId: string;
 }
 
-export interface CloseResponse {
+export interface CloseSessionResponse {
 }
 
 export interface PingRequest {
@@ -1516,22 +1516,22 @@ export const ResetResponse: MessageFns<ResetResponse> = {
   },
 };
 
-function createBaseCloseRequest(): CloseRequest {
+function createBaseCloseSessionRequest(): CloseSessionRequest {
   return { sessionId: "" };
 }
 
-export const CloseRequest: MessageFns<CloseRequest> = {
-  encode(message: CloseRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const CloseSessionRequest: MessageFns<CloseSessionRequest> = {
+  encode(message: CloseSessionRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.sessionId !== "") {
       writer.uint32(10).string(message.sessionId);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): CloseRequest {
+  decode(input: BinaryReader | Uint8Array, length?: number): CloseSessionRequest {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseCloseRequest();
+    const message = createBaseCloseSessionRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -1552,7 +1552,7 @@ export const CloseRequest: MessageFns<CloseRequest> = {
     return message;
   },
 
-  fromJSON(object: any): CloseRequest {
+  fromJSON(object: any): CloseSessionRequest {
     return {
       sessionId: isSet(object.sessionId)
         ? globalThis.String(object.sessionId)
@@ -1562,7 +1562,7 @@ export const CloseRequest: MessageFns<CloseRequest> = {
     };
   },
 
-  toJSON(message: CloseRequest): unknown {
+  toJSON(message: CloseSessionRequest): unknown {
     const obj: any = {};
     if (message.sessionId !== "") {
       obj.sessionId = message.sessionId;
@@ -1570,29 +1570,29 @@ export const CloseRequest: MessageFns<CloseRequest> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<CloseRequest>, I>>(base?: I): CloseRequest {
-    return CloseRequest.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<CloseSessionRequest>, I>>(base?: I): CloseSessionRequest {
+    return CloseSessionRequest.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<CloseRequest>, I>>(object: I): CloseRequest {
-    const message = createBaseCloseRequest();
+  fromPartial<I extends Exact<DeepPartial<CloseSessionRequest>, I>>(object: I): CloseSessionRequest {
+    const message = createBaseCloseSessionRequest();
     message.sessionId = object.sessionId ?? "";
     return message;
   },
 };
 
-function createBaseCloseResponse(): CloseResponse {
+function createBaseCloseSessionResponse(): CloseSessionResponse {
   return {};
 }
 
-export const CloseResponse: MessageFns<CloseResponse> = {
-  encode(_: CloseResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const CloseSessionResponse: MessageFns<CloseSessionResponse> = {
+  encode(_: CloseSessionResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): CloseResponse {
+  decode(input: BinaryReader | Uint8Array, length?: number): CloseSessionResponse {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseCloseResponse();
+    const message = createBaseCloseSessionResponse();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -1605,20 +1605,20 @@ export const CloseResponse: MessageFns<CloseResponse> = {
     return message;
   },
 
-  fromJSON(_: any): CloseResponse {
+  fromJSON(_: any): CloseSessionResponse {
     return {};
   },
 
-  toJSON(_: CloseResponse): unknown {
+  toJSON(_: CloseSessionResponse): unknown {
     const obj: any = {};
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<CloseResponse>, I>>(base?: I): CloseResponse {
-    return CloseResponse.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<CloseSessionResponse>, I>>(base?: I): CloseSessionResponse {
+    return CloseSessionResponse.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<CloseResponse>, I>>(_: I): CloseResponse {
-    const message = createBaseCloseResponse();
+  fromPartial<I extends Exact<DeepPartial<CloseSessionResponse>, I>>(_: I): CloseSessionResponse {
+    const message = createBaseCloseSessionResponse();
     return message;
   },
 };
@@ -7749,14 +7749,15 @@ export const SessionServiceService = {
     responseDeserialize: (value: Buffer): ResetResponse => ResetResponse.decode(value),
   },
   /** Terminate the session. Rolls back any active transaction. */
-  close: {
-    path: "/gql.SessionService/Close",
+  closeSession: {
+    path: "/gql.SessionService/CloseSession",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: CloseRequest): Buffer => Buffer.from(CloseRequest.encode(value).finish()),
-    requestDeserialize: (value: Buffer): CloseRequest => CloseRequest.decode(value),
-    responseSerialize: (value: CloseResponse): Buffer => Buffer.from(CloseResponse.encode(value).finish()),
-    responseDeserialize: (value: Buffer): CloseResponse => CloseResponse.decode(value),
+    requestSerialize: (value: CloseSessionRequest): Buffer => Buffer.from(CloseSessionRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): CloseSessionRequest => CloseSessionRequest.decode(value),
+    responseSerialize: (value: CloseSessionResponse): Buffer =>
+      Buffer.from(CloseSessionResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): CloseSessionResponse => CloseSessionResponse.decode(value),
   },
   /** Health check and keepalive. */
   ping: {
@@ -7778,7 +7779,7 @@ export interface SessionServiceServer extends UntypedServiceImplementation {
   /** Reset session state to defaults. */
   reset: handleUnaryCall<ResetRequest, ResetResponse>;
   /** Terminate the session. Rolls back any active transaction. */
-  close: handleUnaryCall<CloseRequest, CloseResponse>;
+  closeSession: handleUnaryCall<CloseSessionRequest, CloseSessionResponse>;
   /** Health check and keepalive. */
   ping: handleUnaryCall<PingRequest, PongResponse>;
 }
@@ -7833,20 +7834,20 @@ export interface SessionServiceClient extends Client {
     callback: (error: ServiceError | null, response: ResetResponse) => void,
   ): ClientUnaryCall;
   /** Terminate the session. Rolls back any active transaction. */
-  close(
-    request: CloseRequest,
-    callback: (error: ServiceError | null, response: CloseResponse) => void,
+  closeSession(
+    request: CloseSessionRequest,
+    callback: (error: ServiceError | null, response: CloseSessionResponse) => void,
   ): ClientUnaryCall;
-  close(
-    request: CloseRequest,
+  closeSession(
+    request: CloseSessionRequest,
     metadata: Metadata,
-    callback: (error: ServiceError | null, response: CloseResponse) => void,
+    callback: (error: ServiceError | null, response: CloseSessionResponse) => void,
   ): ClientUnaryCall;
-  close(
-    request: CloseRequest,
+  closeSession(
+    request: CloseSessionRequest,
     metadata: Metadata,
     options: Partial<CallOptions>,
-    callback: (error: ServiceError | null, response: CloseResponse) => void,
+    callback: (error: ServiceError | null, response: CloseSessionResponse) => void,
   ): ClientUnaryCall;
   /** Health check and keepalive. */
   ping(request: PingRequest, callback: (error: ServiceError | null, response: PongResponse) => void): ClientUnaryCall;

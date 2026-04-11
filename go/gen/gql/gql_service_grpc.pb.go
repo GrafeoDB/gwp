@@ -19,11 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	SessionService_Handshake_FullMethodName = "/gql.SessionService/Handshake"
-	SessionService_Configure_FullMethodName = "/gql.SessionService/Configure"
-	SessionService_Reset_FullMethodName     = "/gql.SessionService/Reset"
-	SessionService_Close_FullMethodName     = "/gql.SessionService/Close"
-	SessionService_Ping_FullMethodName      = "/gql.SessionService/Ping"
+	SessionService_Handshake_FullMethodName    = "/gql.SessionService/Handshake"
+	SessionService_Configure_FullMethodName    = "/gql.SessionService/Configure"
+	SessionService_Reset_FullMethodName        = "/gql.SessionService/Reset"
+	SessionService_CloseSession_FullMethodName = "/gql.SessionService/CloseSession"
+	SessionService_Ping_FullMethodName         = "/gql.SessionService/Ping"
 )
 
 // SessionServiceClient is the client API for SessionService service.
@@ -37,7 +37,7 @@ type SessionServiceClient interface {
 	// Reset session state to defaults.
 	Reset(ctx context.Context, in *ResetRequest, opts ...grpc.CallOption) (*ResetResponse, error)
 	// Terminate the session. Rolls back any active transaction.
-	Close(ctx context.Context, in *CloseRequest, opts ...grpc.CallOption) (*CloseResponse, error)
+	CloseSession(ctx context.Context, in *CloseSessionRequest, opts ...grpc.CallOption) (*CloseSessionResponse, error)
 	// Health check and keepalive.
 	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PongResponse, error)
 }
@@ -80,10 +80,10 @@ func (c *sessionServiceClient) Reset(ctx context.Context, in *ResetRequest, opts
 	return out, nil
 }
 
-func (c *sessionServiceClient) Close(ctx context.Context, in *CloseRequest, opts ...grpc.CallOption) (*CloseResponse, error) {
+func (c *sessionServiceClient) CloseSession(ctx context.Context, in *CloseSessionRequest, opts ...grpc.CallOption) (*CloseSessionResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CloseResponse)
-	err := c.cc.Invoke(ctx, SessionService_Close_FullMethodName, in, out, cOpts...)
+	out := new(CloseSessionResponse)
+	err := c.cc.Invoke(ctx, SessionService_CloseSession_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ type SessionServiceServer interface {
 	// Reset session state to defaults.
 	Reset(context.Context, *ResetRequest) (*ResetResponse, error)
 	// Terminate the session. Rolls back any active transaction.
-	Close(context.Context, *CloseRequest) (*CloseResponse, error)
+	CloseSession(context.Context, *CloseSessionRequest) (*CloseSessionResponse, error)
 	// Health check and keepalive.
 	Ping(context.Context, *PingRequest) (*PongResponse, error)
 	mustEmbedUnimplementedSessionServiceServer()
@@ -133,8 +133,8 @@ func (UnimplementedSessionServiceServer) Configure(context.Context, *ConfigureRe
 func (UnimplementedSessionServiceServer) Reset(context.Context, *ResetRequest) (*ResetResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Reset not implemented")
 }
-func (UnimplementedSessionServiceServer) Close(context.Context, *CloseRequest) (*CloseResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method Close not implemented")
+func (UnimplementedSessionServiceServer) CloseSession(context.Context, *CloseSessionRequest) (*CloseSessionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CloseSession not implemented")
 }
 func (UnimplementedSessionServiceServer) Ping(context.Context, *PingRequest) (*PongResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Ping not implemented")
@@ -214,20 +214,20 @@ func _SessionService_Reset_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SessionService_Close_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CloseRequest)
+func _SessionService_CloseSession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CloseSessionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SessionServiceServer).Close(ctx, in)
+		return srv.(SessionServiceServer).CloseSession(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: SessionService_Close_FullMethodName,
+		FullMethod: SessionService_CloseSession_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SessionServiceServer).Close(ctx, req.(*CloseRequest))
+		return srv.(SessionServiceServer).CloseSession(ctx, req.(*CloseSessionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -270,8 +270,8 @@ var SessionService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SessionService_Reset_Handler,
 		},
 		{
-			MethodName: "Close",
-			Handler:    _SessionService_Close_Handler,
+			MethodName: "CloseSession",
+			Handler:    _SessionService_CloseSession_Handler,
 		},
 		{
 			MethodName: "Ping",

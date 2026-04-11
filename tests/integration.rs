@@ -97,7 +97,7 @@ async fn handshake_and_close() {
 
     // Close should succeed
     session_client
-        .close(proto::CloseRequest {
+        .close_session(proto::CloseSessionRequest {
             session_id: session_id.clone(),
         })
         .await

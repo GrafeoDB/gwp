@@ -210,8 +210,8 @@ public class GqlSession implements AutoCloseable {
     public void close() {
         if (!closed) {
             try {
-                sessionStub.close(
-                        gql.GqlServiceOuterClass.CloseRequest.newBuilder()
+                sessionStub.closeSession(
+                        gql.GqlServiceOuterClass.CloseSessionRequest.newBuilder()
                                 .setSessionId(sessionId)
                                 .build());
             } catch (Exception e) {

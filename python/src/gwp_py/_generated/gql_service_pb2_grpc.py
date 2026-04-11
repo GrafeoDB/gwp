@@ -55,10 +55,10 @@ class SessionServiceStub(object):
                 request_serializer=gql__service__pb2.ResetRequest.SerializeToString,
                 response_deserializer=gql__service__pb2.ResetResponse.FromString,
                 _registered_method=True)
-        self.Close = channel.unary_unary(
-                '/gql.SessionService/Close',
-                request_serializer=gql__service__pb2.CloseRequest.SerializeToString,
-                response_deserializer=gql__service__pb2.CloseResponse.FromString,
+        self.CloseSession = channel.unary_unary(
+                '/gql.SessionService/CloseSession',
+                request_serializer=gql__service__pb2.CloseSessionRequest.SerializeToString,
+                response_deserializer=gql__service__pb2.CloseSessionResponse.FromString,
                 _registered_method=True)
         self.Ping = channel.unary_unary(
                 '/gql.SessionService/Ping',
@@ -97,7 +97,7 @@ class SessionServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def Close(self, request, context):
+    def CloseSession(self, request, context):
         """Terminate the session. Rolls back any active transaction.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -129,10 +129,10 @@ def add_SessionServiceServicer_to_server(servicer, server):
                     request_deserializer=gql__service__pb2.ResetRequest.FromString,
                     response_serializer=gql__service__pb2.ResetResponse.SerializeToString,
             ),
-            'Close': grpc.unary_unary_rpc_method_handler(
-                    servicer.Close,
-                    request_deserializer=gql__service__pb2.CloseRequest.FromString,
-                    response_serializer=gql__service__pb2.CloseResponse.SerializeToString,
+            'CloseSession': grpc.unary_unary_rpc_method_handler(
+                    servicer.CloseSession,
+                    request_deserializer=gql__service__pb2.CloseSessionRequest.FromString,
+                    response_serializer=gql__service__pb2.CloseSessionResponse.SerializeToString,
             ),
             'Ping': grpc.unary_unary_rpc_method_handler(
                     servicer.Ping,
@@ -238,7 +238,7 @@ class SessionService(object):
             _registered_method=True)
 
     @staticmethod
-    def Close(request,
+    def CloseSession(request,
             target,
             options=(),
             channel_credentials=None,
@@ -251,9 +251,9 @@ class SessionService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/gql.SessionService/Close',
-            gql__service__pb2.CloseRequest.SerializeToString,
-            gql__service__pb2.CloseResponse.FromString,
+            '/gql.SessionService/CloseSession',
+            gql__service__pb2.CloseSessionRequest.SerializeToString,
+            gql__service__pb2.CloseSessionResponse.FromString,
             options,
             channel_credentials,
             insecure,

@@ -121,7 +121,7 @@ func (s *GqlSession) Close(ctx context.Context) error {
 	if s.closed {
 		return nil
 	}
-	_, err := s.sessionClient.Close(ctx, &pb.CloseRequest{
+	_, err := s.sessionClient.CloseSession(ctx, &pb.CloseSessionRequest{
 		SessionId: s.sessionID,
 	})
 	s.closed = true

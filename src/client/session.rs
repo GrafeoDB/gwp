@@ -230,7 +230,7 @@ impl GqlSession {
     /// Returns an error if the server rejects the request.
     pub async fn close(mut self) -> Result<(), GqlError> {
         self.session_client
-            .close(proto::CloseRequest {
+            .close_session(proto::CloseSessionRequest {
                 session_id: self.session_id.clone(),
             })
             .await?;

@@ -128,7 +128,7 @@ export class GqlSession {
   /** Close the session. */
   async close(): Promise<void> {
     if (!this.closed) {
-      await promisifyUnary(this.sessionClient, "close", {
+      await promisifyUnary(this.sessionClient, "closeSession", {
         sessionId: this._sessionId,
       });
       this.closed = true;

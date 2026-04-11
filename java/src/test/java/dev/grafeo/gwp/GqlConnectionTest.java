@@ -266,10 +266,10 @@ class GqlConnectionTest {
         }
 
         @Override
-        public void close(
-                GqlServiceOuterClass.CloseRequest request,
-                StreamObserver<GqlServiceOuterClass.CloseResponse> responseObserver) {
-            responseObserver.onNext(GqlServiceOuterClass.CloseResponse.getDefaultInstance());
+        public void closeSession(
+                GqlServiceOuterClass.CloseSessionRequest request,
+                StreamObserver<GqlServiceOuterClass.CloseSessionResponse> responseObserver) {
+            responseObserver.onNext(GqlServiceOuterClass.CloseSessionResponse.getDefaultInstance());
             responseObserver.onCompleted();
         }
 

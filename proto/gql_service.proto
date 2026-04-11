@@ -21,7 +21,7 @@ service SessionService {
   rpc Reset(ResetRequest) returns (ResetResponse);
 
   // Terminate the session. Rolls back any active transaction.
-  rpc Close(CloseRequest) returns (CloseResponse);
+  rpc CloseSession(CloseSessionRequest) returns (CloseSessionResponse);
 
   // Health check and keepalive.
   rpc Ping(PingRequest) returns (PongResponse);
@@ -106,11 +106,11 @@ enum ResetTarget {
 
 message ResetResponse {}
 
-message CloseRequest {
+message CloseSessionRequest {
   string session_id = 1;
 }
 
-message CloseResponse {}
+message CloseSessionResponse {}
 
 message PingRequest {
   string session_id = 1;

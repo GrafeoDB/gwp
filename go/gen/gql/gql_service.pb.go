@@ -657,27 +657,27 @@ func (*ResetResponse) Descriptor() ([]byte, []int) {
 	return file_gql_service_proto_rawDescGZIP(), []int{7}
 }
 
-type CloseRequest struct {
+type CloseSessionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CloseRequest) Reset() {
-	*x = CloseRequest{}
+func (x *CloseSessionRequest) Reset() {
+	*x = CloseSessionRequest{}
 	mi := &file_gql_service_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CloseRequest) String() string {
+func (x *CloseSessionRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CloseRequest) ProtoMessage() {}
+func (*CloseSessionRequest) ProtoMessage() {}
 
-func (x *CloseRequest) ProtoReflect() protoreflect.Message {
+func (x *CloseSessionRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_gql_service_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -689,38 +689,38 @@ func (x *CloseRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CloseRequest.ProtoReflect.Descriptor instead.
-func (*CloseRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use CloseSessionRequest.ProtoReflect.Descriptor instead.
+func (*CloseSessionRequest) Descriptor() ([]byte, []int) {
 	return file_gql_service_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *CloseRequest) GetSessionId() string {
+func (x *CloseSessionRequest) GetSessionId() string {
 	if x != nil {
 		return x.SessionId
 	}
 	return ""
 }
 
-type CloseResponse struct {
+type CloseSessionResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CloseResponse) Reset() {
-	*x = CloseResponse{}
+func (x *CloseSessionResponse) Reset() {
+	*x = CloseSessionResponse{}
 	mi := &file_gql_service_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CloseResponse) String() string {
+func (x *CloseSessionResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CloseResponse) ProtoMessage() {}
+func (*CloseSessionResponse) ProtoMessage() {}
 
-func (x *CloseResponse) ProtoReflect() protoreflect.Message {
+func (x *CloseSessionResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_gql_service_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -732,8 +732,8 @@ func (x *CloseResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CloseResponse.ProtoReflect.Descriptor instead.
-func (*CloseResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use CloseSessionResponse.ProtoReflect.Descriptor instead.
+func (*CloseSessionResponse) Descriptor() ([]byte, []int) {
 	return file_gql_service_proto_rawDescGZIP(), []int{9}
 }
 
@@ -4468,11 +4468,11 @@ const file_gql_service_proto_rawDesc = "" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12(\n" +
 	"\x06target\x18\x02 \x01(\x0e2\x10.gql.ResetTargetR\x06target\"\x0f\n" +
-	"\rResetResponse\"-\n" +
-	"\fCloseRequest\x12\x1d\n" +
+	"\rResetResponse\"4\n" +
+	"\x13CloseSessionRequest\x12\x1d\n" +
 	"\n" +
-	"session_id\x18\x01 \x01(\tR\tsessionId\"\x0f\n" +
-	"\rCloseResponse\",\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\"\x16\n" +
+	"\x14CloseSessionResponse\",\n" +
 	"\vPingRequest\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\",\n" +
@@ -4783,12 +4783,12 @@ const file_gql_service_proto_rawDesc = "" +
 	"\x0fTransactionMode\x12\x0e\n" +
 	"\n" +
 	"READ_WRITE\x10\x00\x12\r\n" +
-	"\tREAD_ONLY\x10\x012\x95\x02\n" +
+	"\tREAD_ONLY\x10\x012\xaa\x02\n" +
 	"\x0eSessionService\x12:\n" +
 	"\tHandshake\x12\x15.gql.HandshakeRequest\x1a\x16.gql.HandshakeResponse\x12:\n" +
 	"\tConfigure\x12\x15.gql.ConfigureRequest\x1a\x16.gql.ConfigureResponse\x12.\n" +
-	"\x05Reset\x12\x11.gql.ResetRequest\x1a\x12.gql.ResetResponse\x12.\n" +
-	"\x05Close\x12\x11.gql.CloseRequest\x1a\x12.gql.CloseResponse\x12+\n" +
+	"\x05Reset\x12\x11.gql.ResetRequest\x1a\x12.gql.ResetResponse\x12C\n" +
+	"\fCloseSession\x12\x18.gql.CloseSessionRequest\x1a\x19.gql.CloseSessionResponse\x12+\n" +
 	"\x04Ping\x12\x10.gql.PingRequest\x1a\x11.gql.PongResponse2\xeb\x01\n" +
 	"\n" +
 	"GqlService\x126\n" +
@@ -4848,8 +4848,8 @@ var file_gql_service_proto_goTypes = []any{
 	(*ConfigureResponse)(nil),       // 8: gql.ConfigureResponse
 	(*ResetRequest)(nil),            // 9: gql.ResetRequest
 	(*ResetResponse)(nil),           // 10: gql.ResetResponse
-	(*CloseRequest)(nil),            // 11: gql.CloseRequest
-	(*CloseResponse)(nil),           // 12: gql.CloseResponse
+	(*CloseSessionRequest)(nil),     // 11: gql.CloseSessionRequest
+	(*CloseSessionResponse)(nil),    // 12: gql.CloseSessionResponse
 	(*PingRequest)(nil),             // 13: gql.PingRequest
 	(*PongResponse)(nil),            // 14: gql.PongResponse
 	(*ExecuteRequest)(nil),          // 15: gql.ExecuteRequest
@@ -4972,7 +4972,7 @@ var file_gql_service_proto_depIdxs = []int32{
 	3,  // 44: gql.SessionService.Handshake:input_type -> gql.HandshakeRequest
 	6,  // 45: gql.SessionService.Configure:input_type -> gql.ConfigureRequest
 	9,  // 46: gql.SessionService.Reset:input_type -> gql.ResetRequest
-	11, // 47: gql.SessionService.Close:input_type -> gql.CloseRequest
+	11, // 47: gql.SessionService.CloseSession:input_type -> gql.CloseSessionRequest
 	13, // 48: gql.SessionService.Ping:input_type -> gql.PingRequest
 	15, // 49: gql.GqlService.Execute:input_type -> gql.ExecuteRequest
 	22, // 50: gql.GqlService.BeginTransaction:input_type -> gql.BeginRequest
@@ -5000,7 +5000,7 @@ var file_gql_service_proto_depIdxs = []int32{
 	4,  // 72: gql.SessionService.Handshake:output_type -> gql.HandshakeResponse
 	8,  // 73: gql.SessionService.Configure:output_type -> gql.ConfigureResponse
 	10, // 74: gql.SessionService.Reset:output_type -> gql.ResetResponse
-	12, // 75: gql.SessionService.Close:output_type -> gql.CloseResponse
+	12, // 75: gql.SessionService.CloseSession:output_type -> gql.CloseSessionResponse
 	14, // 76: gql.SessionService.Ping:output_type -> gql.PongResponse
 	16, // 77: gql.GqlService.Execute:output_type -> gql.ExecuteResponse
 	23, // 78: gql.GqlService.BeginTransaction:output_type -> gql.BeginResponse

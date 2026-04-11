@@ -11,6 +11,8 @@ use crate::error::GqlError;
 use crate::proto;
 use crate::types::Value;
 
+use super::auth::AuthInfo;
+
 /// Opaque session identifier issued at handshake.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SessionHandle(pub String);
@@ -26,6 +28,8 @@ pub struct SessionConfig {
     pub protocol_version: u32,
     /// Client metadata (driver name, version, platform).
     pub client_info: HashMap<String, String>,
+    /// Identity from the authentication validator, if authentication was performed.
+    pub auth_info: Option<AuthInfo>,
 }
 
 /// A session property to configure.

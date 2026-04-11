@@ -16,7 +16,7 @@ mod session_service;
 mod transaction_manager;
 
 pub use admin_service::AdminServiceImpl;
-pub use auth::AuthValidator;
+pub use auth::{AuthInfo, AuthValidator};
 pub use backend::{
     AdminStats, AdminValidationResult, AdminWalStatus, CreateGraphConfig, GqlBackend, GraphInfo,
     GraphTypeInfo, GraphTypeSpec, HybridSearchParams, IndexDefinition, ResetTarget, ResultFrame,

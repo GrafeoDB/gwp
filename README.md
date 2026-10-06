@@ -109,6 +109,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+### Write Counters
+
+A statement that changes the graph reports what it wrote in `ResultSummary.counters`, under the keys `nodes_created`, `nodes_deleted`, `edges_created`, `edges_deleted`, `properties_set`, `labels_added` and `labels_removed`. A missing key means 0, so servers may send only the non-zero ones; other entries (such as `execution_time_ms`) are statistics, not write counters.
+
+`ResultCursor::counters()` reads them as a typed `Counters`:
+
+```rust
+let mut cursor = session.execute_simple("INSERT (:Person {name: 'Alix'})").await?;
+let counters = cursor.counters().await?;
+if counters.contains_updates() {
+    println!("created {} nodes", counters.nodes_created);
+}
+```
+
+A backend fills the map with `Counters::insert_into`. The bindings offer the same: `cursor.Counters()` in Go, `await cursor.counters()` in JavaScript and Python, and `cursor.counters()` in Java, each next to the raw map on the summary.
+
 ## Architecture
 
 ```
@@ -159,12 +175,12 @@ Application (GQL statements, parameters, results)
 
 | Language | Package | Install |
 | ---------- | ------- | ------- |
-| Python | [gwp-py](https://pypi.org/project/gwp-py/) | `pip install gwp-py` |
+| Python | [gwp-py](https://pypi.org/project/gwp-py/) | `uv add gwp-py` |
 | JavaScript/TypeScript | [gwp-js](https://www.npmjs.com/package/gwp-js) | `npm install gwp-js` |
 | Go | `github.com/GrafeoDB/gwp/go` | `go get github.com/GrafeoDB/gwp/go` |
 | Java | `dev.grafeo:gwp` | Maven Central |
 
-All bindings include `GqlConnection`, `GqlSession`, `Transaction`, `ResultCursor`, and `CatalogClient`.
+All bindings include `GqlConnection`, `GqlSession`, `Transaction`, `ResultCursor`, `CatalogClient`, and typed write counters (`Counters`).
 
 ## Requirements
 

@@ -168,7 +168,15 @@ impl SessionManager {
         })?;
 
         match target {
-            super::backend::ResetTarget::All => *state = SessionState::default(),
+            // A session reset changes session characteristics only
+            // (ISO/IEC 39075 sec 7.2): an active transaction stays active
+            // and must stay tracked.
+            super::backend::ResetTarget::All => {
+                *state = SessionState {
+                    active_transaction: state.active_transaction.take(),
+                    ..SessionState::default()
+                };
+            }
             super::backend::ResetTarget::Schema => state.schema = None,
             super::backend::ResetTarget::Graph => state.graph = None,
             super::backend::ResetTarget::TimeZone => state.time_zone_offset_minutes = 0,
@@ -207,5 +215,140 @@ impl SessionManager {
 impl Default for SessionManager {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::server::ResetTarget;
+    use crate::types::Value;
+
+    async fn state(manager: &SessionManager, session_id: &str) -> SessionState {
+        manager.sessions.read().await[session_id].clone()
+    }
+
+    async fn configured() -> SessionManager {
+        let manager = SessionManager::new();
+        manager.register("s1").await.unwrap();
+        for property in [
+            SessionProperty::Schema("analytics".to_owned()),
+            SessionProperty::Graph("social".to_owned()),
+            SessionProperty::TimeZone(-330),
+            SessionProperty::Parameter {
+                name: "limit".to_owned(),
+                value: Value::Integer(10),
+            },
+            SessionProperty::Parameter {
+                name: "label".to_owned(),
+                value: Value::String("Person".to_owned()),
+            },
+        ] {
+            manager.configure("s1", &property).await.unwrap();
+        }
+        manager
+            .set_active_transaction("s1", Some("tx1".to_owned()))
+            .await
+            .unwrap();
+        manager
+    }
+
+    #[tokio::test]
+    async fn configure_applies_every_property() {
+        let manager = configured().await;
+        let s = state(&manager, "s1").await;
+        assert_eq!(s.schema.as_deref(), Some("analytics"));
+        assert_eq!(s.graph.as_deref(), Some("social"));
+        assert_eq!(s.time_zone_offset_minutes, -330);
+        assert_eq!(s.parameters.len(), 2);
+        assert_eq!(s.parameters["limit"], Value::Integer(10));
+
+        // Setting a parameter again replaces its value.
+        manager
+            .configure(
+                "s1",
+                &SessionProperty::Parameter {
+                    name: "limit".to_owned(),
+                    value: Value::Null,
+                },
+            )
+            .await
+            .unwrap();
+        let s = state(&manager, "s1").await;
+        assert_eq!(s.parameters.len(), 2);
+        assert_eq!(s.parameters["limit"], Value::Null);
+    }
+
+    #[tokio::test]
+    async fn reset_targets_one_characteristic_each() {
+        let manager = configured().await;
+
+        manager.reset("s1", ResetTarget::Schema).await.unwrap();
+        let s = state(&manager, "s1").await;
+        assert_eq!(s.schema, None);
+        assert_eq!(s.graph.as_deref(), Some("social"));
+
+        manager.reset("s1", ResetTarget::Graph).await.unwrap();
+        let s = state(&manager, "s1").await;
+        assert_eq!(s.graph, None);
+        assert_eq!(s.time_zone_offset_minutes, -330);
+
+        manager.reset("s1", ResetTarget::TimeZone).await.unwrap();
+        let s = state(&manager, "s1").await;
+        assert_eq!(s.time_zone_offset_minutes, 0);
+        assert_eq!(s.parameters.len(), 2);
+
+        manager.reset("s1", ResetTarget::Parameters).await.unwrap();
+        let s = state(&manager, "s1").await;
+        assert!(s.parameters.is_empty());
+        assert_eq!(s.active_transaction.as_deref(), Some("tx1"));
+    }
+
+    #[tokio::test]
+    async fn reset_all_keeps_the_active_transaction() {
+        let manager = configured().await;
+
+        manager.reset("s1", ResetTarget::All).await.unwrap();
+
+        let s = state(&manager, "s1").await;
+        assert_eq!(s.schema, None);
+        assert_eq!(s.graph, None);
+        assert_eq!(s.time_zone_offset_minutes, 0);
+        assert!(s.parameters.is_empty());
+        // Regression: a full reset used to forget the active transaction.
+        assert_eq!(s.active_transaction.as_deref(), Some("tx1"));
+        assert_eq!(
+            manager.active_transaction("s1").await.as_deref(),
+            Some("tx1")
+        );
+    }
+
+    #[tokio::test]
+    async fn unknown_session_is_an_error() {
+        let manager = SessionManager::new();
+        assert!(
+            manager
+                .configure("missing", &SessionProperty::TimeZone(60))
+                .await
+                .is_err()
+        );
+        assert!(manager.reset("missing", ResetTarget::All).await.is_err());
+        assert!(
+            manager
+                .set_active_transaction("missing", None)
+                .await
+                .is_err()
+        );
+        assert_eq!(manager.active_transaction("missing").await, None);
+        assert!(!manager.remove("missing").await);
+    }
+
+    #[tokio::test]
+    async fn capacity_is_enforced_and_freed_on_remove() {
+        let manager = SessionManager::with_capacity(1);
+        manager.register("s1").await.unwrap();
+        assert!(manager.register("s2").await.is_err());
+        assert!(manager.remove("s1").await);
+        manager.register("s2").await.unwrap();
     }
 }

@@ -7,7 +7,7 @@ use std::task::{Context, Poll};
 
 use crate::error::GqlError;
 use crate::proto;
-use crate::types::Value;
+use crate::types::{Counters, Value};
 
 use super::backend::{
     CreateGraphConfig, GqlBackend, GraphInfo, GraphTypeInfo, ResetTarget, ResultFrame,
@@ -80,12 +80,26 @@ impl GqlBackend for MockBackend {
         if trimmed.starts_with("MATCH") || trimmed.starts_with("RETURN") {
             // Simulate a binding table result with some rows
             Ok(Box::pin(MockResultStream::binding_table()))
-        } else if trimmed.starts_with("INSERT")
-            || trimmed.starts_with("DELETE")
-            || trimmed.starts_with("SET")
-        {
-            // Simulate a DML operation
-            Ok(Box::pin(MockResultStream::dml(3)))
+        } else if trimmed.starts_with("INSERT") {
+            // Simulate a DML operation, with write counters
+            Ok(Box::pin(MockResultStream::dml(
+                3,
+                &[
+                    (Counters::NODES_CREATED, 3),
+                    (Counters::LABELS_ADDED, 3),
+                    (Counters::PROPERTIES_SET, 6),
+                ],
+            )))
+        } else if trimmed.starts_with("DELETE") {
+            Ok(Box::pin(MockResultStream::dml(
+                3,
+                &[(Counters::NODES_DELETED, 3), (Counters::EDGES_DELETED, 1)],
+            )))
+        } else if trimmed.starts_with("SET") {
+            Ok(Box::pin(MockResultStream::dml(
+                3,
+                &[(Counters::PROPERTIES_SET, 3)],
+            )))
         } else if trimmed.starts_with("CREATE") || trimmed.starts_with("DROP") {
             // Simulate a DDL operation
             Ok(Box::pin(MockResultStream::ddl()))
@@ -365,18 +379,26 @@ impl MockResultStream {
         }
     }
 
-    fn dml(rows_affected: i64) -> Self {
+    /// A DML result: write counters under their `Counters` keys, plus an
+    /// `execution_time_ms` entry that is not a write counter.
+    fn dml(rows_affected: i64, written: &[(&str, i64)]) -> Self {
         let header = ResultFrame::Header(proto::ResultHeader {
             result_type: proto::ResultType::Omitted.into(),
             columns: Vec::new(),
             ordered: false,
         });
 
+        let mut counters: HashMap<String, i64> = written
+            .iter()
+            .map(|(key, value)| ((*key).to_owned(), *value))
+            .collect();
+        counters.insert("execution_time_ms".to_owned(), 1);
+
         let summary = ResultFrame::Summary(proto::ResultSummary {
             status: Some(crate::status::success()),
             warnings: Vec::new(),
             rows_affected,
-            counters: HashMap::new(),
+            counters,
         });
 
         Self {

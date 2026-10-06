@@ -7,6 +7,7 @@ from typing import Any
 import grpc
 
 from gwp_py._convert import value_from_proto
+from gwp_py.counters import Counters
 from gwp_py.status import is_success
 
 
@@ -33,8 +34,13 @@ class ResultSummary:
 
     @property
     def counters(self) -> dict[str, int]:
-        """Operation counters."""
+        """Raw counter map: the write counters plus any other entries the server sent."""
         return dict(self._proto.counters)
+
+    @property
+    def write_counters(self) -> Counters:
+        """Typed write counters. Counters the server did not send read as 0."""
+        return Counters.from_map(self._proto.counters)
 
     def is_success(self) -> bool:
         """Check if the execution was successful."""
@@ -129,6 +135,11 @@ class ResultCursor:
         """Get the number of rows affected."""
         s = await self.summary()
         return s.rows_affected if s else 0
+
+    async def counters(self) -> Counters:
+        """Get the write counters. Consumes remaining frames if needed."""
+        s = await self.summary()
+        return s.write_counters if s else Counters()
 
     def __aiter__(self) -> ResultCursor:
         return self

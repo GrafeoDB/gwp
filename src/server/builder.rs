@@ -6,7 +6,10 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
 
+use tokio::task::JoinHandle;
+use tokio_util::sync::CancellationToken;
 use tonic::transport::Server;
+use tonic::transport::server::{Router, TcpIncoming};
 
 use crate::proto::admin_service_server::AdminServiceServer;
 use crate::proto::catalog_service_server::CatalogServiceServer;
@@ -16,12 +19,30 @@ use crate::proto::session_service_server::SessionServiceServer;
 
 use super::admin_service::AdminServiceImpl;
 use super::auth::AuthValidator;
-use super::backend::{GqlBackend, SessionHandle};
+use super::backend::GqlBackend;
 use super::catalog_service::CatalogServiceImpl;
 use super::gql_service::GqlServiceImpl;
 use super::search_service::SearchServiceImpl;
-use super::session_service::SessionServiceImpl;
+use super::session_service::{SessionServiceImpl, release_session};
 use super::{SessionManager, TransactionManager};
+
+/// Shortest interval between two runs of the idle session reaper.
+///
+/// The reaper runs every `idle_timeout / 2`; this floor keeps a zero or
+/// sub-millisecond timeout from turning into a zero period, which
+/// `tokio::time::interval` rejects with a panic.
+const MIN_REAPER_INTERVAL: Duration = Duration::from_millis(1);
+
+/// Longest interval between two runs of the idle session reaper.
+///
+/// Keeps a huge timeout (such as `Duration::MAX`) from overflowing the
+/// interval's next deadline, which panics inside tokio when a tick is late.
+const MAX_REAPER_INTERVAL: Duration = Duration::from_secs(3600);
+
+/// How often the reaper looks for sessions idle longer than `timeout`.
+fn reaper_interval(timeout: Duration) -> Duration {
+    (timeout / 2).clamp(MIN_REAPER_INTERVAL, MAX_REAPER_INTERVAL)
+}
 
 /// Builder for the GQL wire protocol server.
 ///
@@ -50,6 +71,28 @@ pub struct GqlServer<B: GqlBackend> {
     idle_timeout: Option<Duration>,
     max_sessions: Option<usize>,
     shutdown: Option<Pin<Box<dyn Future<Output = ()> + Send>>>,
+}
+
+/// A configured router plus the background tasks that live as long as it.
+struct Prepared {
+    router: Router,
+    reaper: Option<Reaper>,
+    shutdown: Option<Pin<Box<dyn Future<Output = ()> + Send>>>,
+}
+
+/// The idle session reaper task and the token that stops it.
+struct Reaper {
+    handle: JoinHandle<()>,
+    token: CancellationToken,
+}
+
+/// Stop the idle session reaper once the server has stopped.
+async fn stop(reaper: Option<Reaper>) {
+    if let Some(Reaper { handle, token }) = reaper {
+        token.cancel();
+        let _ = handle.await;
+    }
+    tracing::info!("GWP server stopped");
 }
 
 impl<B: GqlBackend> GqlServer<B> {
@@ -125,6 +168,74 @@ impl<B: GqlBackend> GqlServer<B> {
     ///
     /// Returns an error if the server fails to bind or start.
     pub async fn serve(self, addr: SocketAddr) -> Result<(), tonic::transport::Error> {
+        let Prepared {
+            router,
+            reaper,
+            shutdown,
+        } = self.prepare().await?;
+
+        tracing::info!(%addr, "GWP server listening");
+
+        let result = if let Some(signal) = shutdown {
+            router.serve_with_shutdown(addr, signal).await
+        } else {
+            router.serve(addr).await
+        };
+
+        stop(reaper).await;
+        result
+    }
+
+    /// Build and start serving on an already bound TCP listener.
+    ///
+    /// Behaves like [`serve`](Self::serve), but takes the listener instead
+    /// of an address. Binding to port 0 first and passing the listener lets
+    /// tests and embedders learn the port before the server starts, without
+    /// the race of binding, dropping and binding again.
+    ///
+    /// ```rust,no_run
+    /// use gwp::server::{GqlServer, GqlBackend};
+    ///
+    /// # async fn example(backend: impl GqlBackend) -> Result<(), Box<dyn std::error::Error>> {
+    /// let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+    /// let addr = listener.local_addr()?;
+    /// tokio::spawn(GqlServer::builder(backend).serve_with_listener(listener));
+    /// // connect to `addr` ...
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the server fails to start.
+    pub async fn serve_with_listener(
+        self,
+        listener: tokio::net::TcpListener,
+    ) -> Result<(), tonic::transport::Error> {
+        let Prepared {
+            router,
+            reaper,
+            shutdown,
+        } = self.prepare().await?;
+
+        if let Ok(addr) = listener.local_addr() {
+            tracing::info!(%addr, "GWP server listening");
+        }
+        // Same socket option as `Server::builder()` applies in `serve`.
+        let incoming = TcpIncoming::from(listener).with_nodelay(Some(true));
+
+        let result = if let Some(signal) = shutdown {
+            router.serve_with_incoming_shutdown(incoming, signal).await
+        } else {
+            router.serve_with_incoming(incoming).await
+        };
+
+        stop(reaper).await;
+        result
+    }
+
+    /// Wire up the services, the health reporter and the idle reaper.
+    async fn prepare(self) -> Result<Prepared, tonic::transport::Error> {
         let backend = Arc::new(self.backend);
         let sessions = match self.max_sessions {
             Some(limit) => SessionManager::with_capacity(limit),
@@ -164,38 +275,6 @@ impl<B: GqlBackend> GqlServer<B> {
             .set_serving::<SearchServiceServer<SearchServiceImpl<B>>>()
             .await;
 
-        // Idle session reaper
-        let reaper_handle = if let Some(timeout) = self.idle_timeout {
-            let reaper_sessions = sessions.clone();
-            let reaper_transactions = transactions.clone();
-            let reaper_backend = Arc::clone(&backend);
-            let token = tokio_util::sync::CancellationToken::new();
-            let reaper_token = token.clone();
-            let handle = tokio::spawn(async move {
-                let mut interval = tokio::time::interval(timeout / 2);
-                loop {
-                    tokio::select! {
-                        _ = interval.tick() => {
-                            let expired = reaper_sessions.reap_idle(timeout).await;
-                            for session_id in &expired {
-                                reaper_transactions.remove_for_session(session_id).await;
-                                let _ = reaper_backend
-                                    .close_session(&SessionHandle(session_id.clone()))
-                                    .await;
-                            }
-                        }
-                        () = reaper_token.cancelled() => {
-                            tracing::info!("session reaper stopped");
-                            break;
-                        }
-                    }
-                }
-            });
-            Some((handle, token))
-        } else {
-            None
-        };
-
         let mut server = Server::builder();
 
         #[cfg(feature = "tls")]
@@ -211,23 +290,15 @@ impl<B: GqlBackend> GqlServer<B> {
             .add_service(AdminServiceServer::new(admin_service))
             .add_service(SearchServiceServer::new(search_service));
 
-        tracing::info!(%addr, "GWP server listening");
+        let reaper = self
+            .idle_timeout
+            .map(|timeout| spawn_reaper(backend, sessions, transactions, timeout));
 
-        let result = if let Some(signal) = self.shutdown {
-            router.serve_with_shutdown(addr, signal).await
-        } else {
-            router.serve(addr).await
-        };
-
-        // Stop the reaper on shutdown
-        if let Some((handle, token)) = reaper_handle {
-            token.cancel();
-            let _ = handle.await;
-        }
-
-        tracing::info!("GWP server stopped");
-
-        result
+        Ok(Prepared {
+            router,
+            reaper,
+            shutdown: self.shutdown,
+        })
     }
 
     /// Convenience method: build and serve with default settings.
@@ -251,5 +322,81 @@ impl<B: GqlBackend> GqlServer<B> {
             })
             .serve(addr)
             .await
+    }
+}
+
+/// Spawn the idle session reaper.
+///
+/// Expired sessions are cleaned up exactly like an explicit `CloseSession`:
+/// their active transaction is rolled back, then the backend session closed.
+fn spawn_reaper<B: GqlBackend>(
+    backend: Arc<B>,
+    sessions: SessionManager,
+    transactions: TransactionManager,
+    timeout: Duration,
+) -> Reaper {
+    let token = CancellationToken::new();
+    let reaper_token = token.clone();
+    let period = reaper_interval(timeout);
+    let handle = tokio::spawn(async move {
+        let mut interval = tokio::time::interval(period);
+        loop {
+            tokio::select! {
+                _ = interval.tick() => {
+                    let expired = sessions.reap_idle(timeout).await;
+                    for session_id in &expired {
+                        if let Err(err) =
+                            release_session(&*backend, &transactions, session_id).await
+                        {
+                            tracing::warn!(session_id, error = %err, "closing idle session failed");
+                        }
+                    }
+                }
+                () = reaper_token.cancelled() => {
+                    tracing::info!("session reaper stopped");
+                    break;
+                }
+            }
+        }
+    });
+    Reaper { handle, token }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn reaper_interval_is_half_the_timeout() {
+        assert_eq!(
+            reaper_interval(Duration::from_secs(300)),
+            Duration::from_secs(150)
+        );
+        assert_eq!(
+            reaper_interval(Duration::from_millis(10)),
+            Duration::from_millis(5)
+        );
+    }
+
+    #[test]
+    fn reaper_interval_is_never_zero() {
+        // `tokio::time::interval` panics on a zero period.
+        for timeout in [
+            Duration::ZERO,
+            Duration::from_nanos(1),
+            Duration::from_micros(1),
+        ] {
+            assert_eq!(reaper_interval(timeout), MIN_REAPER_INTERVAL);
+        }
+    }
+
+    #[test]
+    fn reaper_interval_of_a_huge_timeout_stays_addable() {
+        // A late tick adds the period to an `Instant` without a check.
+        for timeout in [Duration::MAX, Duration::from_secs(u64::MAX / 3)] {
+            let period = reaper_interval(timeout);
+            assert_eq!(period, MAX_REAPER_INTERVAL);
+            assert!(tokio::time::Instant::now().checked_add(period).is_some());
+        }
     }
 }

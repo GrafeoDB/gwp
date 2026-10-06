@@ -342,9 +342,13 @@ pub fn error_with_diagnostic(
 // ============================================================================
 
 /// Returns the class (first 2 characters) of a GQLSTATUS code.
+///
+/// Codes come from the other side of the wire, so a malformed code is
+/// tolerated: if its first two bytes are not two whole characters, the
+/// code is returned unchanged (and matches no known class).
 #[must_use]
 pub fn class(code: &str) -> &str {
-    if code.len() >= 2 { &code[..2] } else { code }
+    code.get(..2).unwrap_or(code)
 }
 
 /// Returns true if the code represents a successful completion (class 00).
@@ -515,6 +519,31 @@ mod tests {
         assert_eq!(class("00000"), "00");
         assert_eq!(class("42001"), "42");
         assert_eq!(class("G2000"), "G2");
+    }
+
+    #[test]
+    fn malformed_codes_do_not_panic() {
+        // Regression: slicing at byte 2 panicked inside a multi-byte character.
+        for code in [
+            "\u{20ac}",
+            "\u{20ac}0000",
+            "0\u{e9}000",
+            "\u{1f600}",
+            "",
+            "0",
+        ] {
+            let _ = class(code);
+            assert!(!is_success(code), "{code:?}");
+            let _ = is_warning(code);
+            let _ = is_no_data(code);
+            let _ = is_informational(code);
+            let _ = is_exception(code);
+        }
+        assert_eq!(class("\u{20ac}0000"), "\u{20ac}0000");
+        assert_eq!(class(""), "");
+        // A code with an unknown, non-ASCII class counts as an exception.
+        assert!(is_exception("\u{e9}0000"));
+        assert!(is_exception("\u{20ac}0000"));
     }
 
     #[test]

@@ -5,7 +5,7 @@ Python client for the GQL Wire Protocol (GWP).
 ## Install
 
 ```bash
-pip install gwp-py
+uv add gwp-py
 ```
 
 ## Quick Start
@@ -30,6 +30,9 @@ asyncio.run(main())
 - Full GQL type support (nodes, edges, paths, temporals, lists, maps)
 - Transaction support with auto-rollback context managers
 - GQLSTATUS error handling
+- Typed write counters: `await cursor.counters()` returns a `Counters` with
+  `nodes_created`, `edges_created`, `properties_set` and so on, plus
+  `contains_updates()`; the raw map stays on `summary.counters`
 
 ## License
 

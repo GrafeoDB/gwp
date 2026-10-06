@@ -392,3 +392,60 @@ func TestRollbackAfterCommit(t *testing.T) {
 		t.Fatalf("Rollback after commit: %v", err)
 	}
 }
+
+func TestWriteCounters(t *testing.T) {
+	ctx := context.Background()
+	conn, err := Connect(ctx, testEndpoint)
+	if err != nil {
+		t.Fatalf("Connect: %v", err)
+	}
+	defer conn.Close()
+
+	session, err := conn.CreateSession(ctx)
+	if err != nil {
+		t.Fatalf("CreateSession: %v", err)
+	}
+	defer session.Close(ctx)
+
+	// The test server reports write counters for INSERT.
+	cursor, err := session.Execute(ctx, "INSERT (:Person {name: 'Alix'})", nil)
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	counters, err := cursor.Counters()
+	if err != nil {
+		t.Fatalf("Counters: %v", err)
+	}
+	want := Counters{NodesCreated: 3, LabelsAdded: 3, PropertiesSet: 6}
+	if counters != want {
+		t.Fatalf("got %+v, want %+v", counters, want)
+	}
+	if !counters.ContainsUpdates() {
+		t.Fatal("an INSERT must contain updates")
+	}
+
+	// Other entries stay in the raw map.
+	summary, err := cursor.Summary()
+	if err != nil {
+		t.Fatalf("Summary: %v", err)
+	}
+	if raw := summary.Counters(); raw["execution_time_ms"] != 1 || raw[CounterNodesCreated] != 3 {
+		t.Fatalf("unexpected raw counters %v", raw)
+	}
+	if summary.WriteCounters() != want {
+		t.Fatalf("summary write counters differ: %+v", summary.WriteCounters())
+	}
+
+	// A read writes nothing.
+	cursor, err = session.Execute(ctx, "MATCH (n) RETURN n", nil)
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	counters, err = cursor.Counters()
+	if err != nil {
+		t.Fatalf("Counters: %v", err)
+	}
+	if counters.ContainsUpdates() {
+		t.Fatalf("a read must not contain updates: %+v", counters)
+	}
+}

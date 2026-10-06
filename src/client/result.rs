@@ -5,7 +5,7 @@ use std::collections::VecDeque;
 use crate::error::GqlError;
 use crate::proto;
 use crate::status;
-use crate::types::Value;
+use crate::types::{Counters, Value};
 
 /// A cursor over the streaming results from a GQL statement.
 ///
@@ -167,6 +167,20 @@ impl ResultCursor {
     pub async fn rows_affected(&mut self) -> Result<i64, GqlError> {
         let summary = self.summary().await?;
         Ok(summary.map_or(0, |s| s.rows_affected))
+    }
+
+    /// Get the write counters from the result summary.
+    ///
+    /// Consumes remaining frames if needed. Counters the server did not send
+    /// read as 0; other entries of `ResultSummary.counters` (such as timing
+    /// figures) stay available through [`summary`](Self::summary).
+    ///
+    /// # Errors
+    ///
+    /// Returns a transport error if the gRPC stream fails.
+    pub async fn counters(&mut self) -> Result<Counters, GqlError> {
+        let summary = self.summary().await?;
+        Ok(summary.map_or_else(Counters::default, |s| Counters::from_map(&s.counters)))
     }
 
     /// Advance the stream until we find the header.

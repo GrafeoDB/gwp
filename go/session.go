@@ -139,12 +139,12 @@ func newResultCursor(stream resultCursorStream) *ResultCursor {
 
 // ResultCursor is a cursor over streaming result frames.
 type ResultCursor struct {
-	stream      resultCursorStream
-	header      *pb.ResultHeader
-	summary     *pb.ResultSummary
+	stream       resultCursorStream
+	header       *pb.ResultHeader
+	summary      *pb.ResultSummary
 	bufferedRows [][]any
-	rowIndex    int
-	done        bool
+	rowIndex     int
+	done         bool
 }
 
 func (c *ResultCursor) consumeUntilRowsOrDone() error {
@@ -269,6 +269,19 @@ func (c *ResultCursor) RowsAffected() (int64, error) {
 	return s.RowsAffected(), nil
 }
 
+// Counters returns the write counters from the result summary. Consumes
+// remaining frames if needed. Counters the server did not send read as 0.
+func (c *ResultCursor) Counters() (Counters, error) {
+	s, err := c.Summary()
+	if err != nil {
+		return Counters{}, err
+	}
+	if s == nil {
+		return Counters{}, nil
+	}
+	return s.WriteCounters(), nil
+}
+
 // ResultSummary wraps a protobuf result summary.
 type ResultSummary struct {
 	proto *pb.ResultSummary
@@ -293,6 +306,21 @@ func (s *ResultSummary) Message() string {
 // RowsAffected returns the number of rows affected.
 func (s *ResultSummary) RowsAffected() int64 {
 	return s.proto.RowsAffected
+}
+
+// Counters returns a copy of the raw counter map: the write counters under
+// their CounterKeys names, plus any other entries the server sent.
+func (s *ResultSummary) Counters() map[string]int64 {
+	out := make(map[string]int64, len(s.proto.Counters))
+	for k, v := range s.proto.Counters {
+		out[k] = v
+	}
+	return out
+}
+
+// WriteCounters returns the typed write counters.
+func (s *ResultSummary) WriteCounters() Counters {
+	return CountersFromMap(s.proto.Counters)
 }
 
 // IsSuccess checks if the execution was successful.

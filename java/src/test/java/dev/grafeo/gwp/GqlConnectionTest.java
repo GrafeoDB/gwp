@@ -151,6 +151,30 @@ class GqlConnectionTest {
         }
     }
 
+    @Test
+    void writeCounters() {
+        SessionServiceGrpc.SessionServiceBlockingStub sessionStub =
+                SessionServiceGrpc.newBlockingStub(channel);
+        GqlServiceGrpc.GqlServiceBlockingStub gqlStub =
+                GqlServiceGrpc.newBlockingStub(channel);
+
+        try (GqlSession session = GqlSession.create(sessionStub, gqlStub)) {
+            try (ResultCursor cursor = session.execute("INSERT (:Person {name: 'Alix'})")) {
+                Counters counters = cursor.counters();
+                assertEquals(new Counters(3, 0, 0, 0, 6, 3, 0), counters);
+                assertTrue(counters.containsUpdates());
+
+                // Other entries stay in the raw map.
+                ResultCursor.ResultSummary summary = cursor.summary();
+                assertEquals(1L, summary.counters().get("execution_time_ms"));
+                assertEquals(counters, summary.writeCounters());
+            }
+            try (ResultCursor cursor = session.execute("MATCH (n) RETURN n.name")) {
+                assertFalse(cursor.counters().containsUpdates());
+            }
+        }
+    }
+
     // ========================================================================
     // Transaction
     // ========================================================================
@@ -319,15 +343,22 @@ class GqlConnectionTest {
                             .build())
                     .build());
 
-            // Send summary
-            responseObserver.onNext(GqlServiceOuterClass.ExecuteResponse.newBuilder()
-                    .setSummary(GqlServiceOuterClass.ResultSummary.newBuilder()
+            // Send summary (an INSERT also reports write counters)
+            GqlServiceOuterClass.ResultSummary.Builder summary =
+                    GqlServiceOuterClass.ResultSummary.newBuilder()
                             .setStatus(GqlTypes.GqlStatus.newBuilder()
                                     .setCode("00000")
                                     .setMessage("Success")
                                     .build())
-                            .setRowsAffected(2)
-                            .build())
+                            .setRowsAffected(2);
+            if (request.getStatement().startsWith("INSERT")) {
+                summary.putCounters(Counters.NODES_CREATED, 3)
+                        .putCounters(Counters.LABELS_ADDED, 3)
+                        .putCounters(Counters.PROPERTIES_SET, 6)
+                        .putCounters("execution_time_ms", 1);
+            }
+            responseObserver.onNext(GqlServiceOuterClass.ExecuteResponse.newBuilder()
+                    .setSummary(summary.build())
                     .build());
 
             responseObserver.onCompleted();

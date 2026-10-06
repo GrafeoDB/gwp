@@ -48,14 +48,17 @@ pub struct GqlSession {
 
 impl GqlSession {
     /// Create a new session by performing a handshake.
-    pub(crate) async fn new(channel: Channel) -> Result<Self, GqlError> {
+    pub(crate) async fn new(
+        channel: Channel,
+        credentials: Option<proto::AuthCredentials>,
+    ) -> Result<Self, GqlError> {
         let mut session_client = SessionServiceClient::new(channel.clone());
         let gql_client = GqlServiceClient::new(channel);
 
         let resp = session_client
             .handshake(proto::HandshakeRequest {
                 protocol_version: 1,
-                credentials: None,
+                credentials,
                 client_info: HashMap::new(),
             })
             .await?
@@ -185,6 +188,40 @@ impl GqlSession {
                 session_id: self.session_id.clone(),
                 property: Some(proto::configure_request::Property::TimeZoneOffsetMinutes(
                     offset_minutes,
+                )),
+            })
+            .await?;
+        Ok(())
+    }
+
+    /// Set a named session parameter.
+    ///
+    /// What a parameter means is up to the server. Setting a parameter that
+    /// already exists replaces its value.
+    ///
+    /// ```rust,no_run
+    /// # async fn example(session: &mut gwp::client::GqlSession) -> Result<(), gwp::error::GqlError> {
+    /// session.set_parameter("language", "cypher").await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the server rejects the configuration.
+    pub async fn set_parameter(
+        &mut self,
+        name: &str,
+        value: impl Into<Value>,
+    ) -> Result<(), GqlError> {
+        self.session_client
+            .configure(proto::ConfigureRequest {
+                session_id: self.session_id.clone(),
+                property: Some(proto::configure_request::Property::Parameter(
+                    proto::SessionParameter {
+                        name: name.to_owned(),
+                        value: Some(proto::Value::from(value.into())),
+                    },
                 )),
             })
             .await?;

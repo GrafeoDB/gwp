@@ -1,6 +1,7 @@
 """GWP - Python client for the GQL Wire Protocol."""
 
 from gwp_py.connection import GqlConnection
+from gwp_py.counters import COUNTER_KEYS, Counters
 from gwp_py.catalog import (
     CatalogClient,
     CreateGraphConfig,
@@ -32,7 +33,7 @@ from gwp_py.types import (
     Record,
 )
 
-__version__ = "0.1.2"
+__version__ = "0.3.0"
 
 __all__ = [
     "GqlConnection",
@@ -44,6 +45,8 @@ __all__ = [
     "CreateGraphConfig",
     "ResultCursor",
     "ResultSummary",
+    "Counters",
+    "COUNTER_KEYS",
     "Transaction",
     "GqlError",
     "GqlStatusError",

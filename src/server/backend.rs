@@ -80,6 +80,11 @@ pub enum ResultFrame {
 ///
 /// Backends return a `ResultStream` from `execute()`. The server
 /// converts each frame into a gRPC `ExecuteResponse` message.
+///
+/// The server polls the stream only as fast as the client reads (HTTP/2
+/// flow control), stops after the first `Summary` frame or error, and
+/// drops the stream when it is done or when the client cancels the call or
+/// disconnects. A backend that does work per frame can stop it in `Drop`.
 pub trait ResultStream: Send + 'static {
     /// Get the next result frame.
     ///
@@ -225,7 +230,10 @@ pub trait GqlBackend: Send + Sync + 'static {
     /// Begin an explicit transaction.
     ///
     /// Returns a transaction handle for use in subsequent `execute`,
-    /// `commit`, and `rollback` calls.
+    /// `commit`, and `rollback` calls. The handle must be unique across
+    /// sessions. The server calls this only when the session has no
+    /// transaction; just two begins racing on one session can both get
+    /// here, and the server then rolls back the one it cannot register.
     async fn begin_transaction(
         &self,
         session: &SessionHandle,
@@ -233,6 +241,13 @@ pub trait GqlBackend: Send + Sync + 'static {
     ) -> Result<TransactionHandle, GqlError>;
 
     /// Commit the transaction.
+    ///
+    /// A commit ends the transaction whatever its outcome (ISO/IEC 39075
+    /// sec 8.4): when this returns an error, the server reports it (as
+    /// `40000 transaction rollback` unless the error carries a GQLSTATUS),
+    /// forgets the transaction and calls [`rollback`](Self::rollback) once,
+    /// so that the backend can release it. That rollback may fail if the
+    /// backend already cancelled the transaction; the error is ignored.
     async fn commit(
         &self,
         session: &SessionHandle,
@@ -240,6 +255,8 @@ pub trait GqlBackend: Send + Sync + 'static {
     ) -> Result<(), GqlError>;
 
     /// Roll back the transaction.
+    ///
+    /// The server forgets the transaction even when this returns an error.
     async fn rollback(
         &self,
         session: &SessionHandle,

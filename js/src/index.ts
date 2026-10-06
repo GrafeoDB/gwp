@@ -5,6 +5,8 @@ export { GqlSession } from "./session";
 export { CatalogClient } from "./catalog";
 export type { SchemaInfo, GraphInfo, GraphTypeDetails, CreateGraphConfig } from "./catalog";
 export { ResultCursor, ResultSummary } from "./result";
+export { Counters, COUNTER_KEYS } from "./counters";
+export type { CounterKey } from "./counters";
 export { Transaction } from "./transaction";
 
 export {

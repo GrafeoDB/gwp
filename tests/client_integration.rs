@@ -104,6 +104,37 @@ async fn client_execute_query() {
 
     // Check summary
     assert!(cursor.is_success().await.unwrap());
+    // A read writes nothing.
+    assert!(!cursor.counters().await.unwrap().contains_updates());
+}
+
+#[tokio::test]
+async fn client_write_counters() {
+    let addr = start_server().await;
+    let conn = GqlConnection::connect(&format!("http://{addr}"))
+        .await
+        .unwrap();
+    let mut session = conn.create_session().await.unwrap();
+
+    let mut cursor = session
+        .execute_simple("INSERT (:Person {name: 'Alix', age: 30})")
+        .await
+        .unwrap();
+    let counters = cursor.counters().await.unwrap();
+    assert_eq!(counters.nodes_created, 3);
+    assert_eq!(counters.labels_added, 3);
+    assert_eq!(counters.properties_set, 6);
+    assert_eq!(counters.nodes_deleted, 0);
+    assert!(counters.contains_updates());
+    // The timing entry is not a write counter but stays in the raw map.
+    let summary = cursor.summary().await.unwrap().unwrap();
+    assert_eq!(summary.counters["execution_time_ms"], 1);
+
+    let mut cursor = session.execute_simple("DELETE n").await.unwrap();
+    let counters = cursor.counters().await.unwrap();
+    assert_eq!(counters.nodes_deleted, 3);
+    assert_eq!(counters.edges_deleted, 1);
+    assert_eq!(counters.nodes_created, 0);
 }
 
 #[tokio::test]

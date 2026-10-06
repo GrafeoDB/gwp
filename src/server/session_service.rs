@@ -7,12 +7,39 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use tonic::{Request, Response, Status};
 
+use crate::error::GqlError;
 use crate::proto;
 use crate::proto::session_service_server::SessionService;
 
 use super::auth::{AuthInfo, AuthValidator};
-use super::backend::{GqlBackend, ResetTarget, SessionConfig, SessionProperty};
+use super::backend::{
+    GqlBackend, ResetTarget, SessionConfig, SessionHandle, SessionProperty, TransactionHandle,
+};
 use super::{SessionManager, TransactionManager};
+
+/// Release the backend resources of a session that has already been removed
+/// from the [`SessionManager`]: roll back its active transaction, then close
+/// the backend session.
+///
+/// Used by `CloseSession` and by the idle session reaper, so that both clean
+/// up the same way. A rollback failure is logged and does not stop the close.
+pub(crate) async fn release_session<B: GqlBackend>(
+    backend: &B,
+    transactions: &TransactionManager,
+    session_id: &str,
+) -> Result<(), GqlError> {
+    let session = SessionHandle(session_id.to_owned());
+    for transaction_id in transactions.take_for_session(session_id).await {
+        tracing::info!(session_id, %transaction_id, "rolling back transaction on close");
+        if let Err(err) = backend
+            .rollback(&session, &TransactionHandle(transaction_id.clone()))
+            .await
+        {
+            tracing::warn!(session_id, %transaction_id, error = %err, "rollback on close failed");
+        }
+    }
+    backend.close_session(&session).await
+}
 
 /// Implementation of the `SessionService` gRPC service.
 pub struct SessionServiceImpl<B: GqlBackend> {
@@ -182,29 +209,15 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
         let session_id = &req.session_id;
         tracing::Span::current().record("session_id", session_id);
 
-        if !self.sessions.exists(session_id).await {
+        // Unregister first: from here on every request on this session is
+        // rejected, and of two concurrent closes only one gets past this.
+        if !self.sessions.remove(session_id).await {
             return Err(Status::not_found(format!("session {session_id} not found")));
         }
 
-        // Roll back any active transactions
-        let active_txns = self.transactions.remove_for_session(session_id).await;
-        for tx_id in &active_txns {
-            tracing::info!(session_id, transaction_id = %tx_id, "rolling back transaction on close");
-            let _ = self
-                .backend
-                .rollback(
-                    &super::SessionHandle(session_id.clone()),
-                    &super::TransactionHandle(tx_id.clone()),
-                )
-                .await;
-        }
-
-        self.backend
-            .close_session(&super::SessionHandle(session_id.clone()))
+        release_session(&*self.backend, &self.transactions, session_id)
             .await
             .map_err(|e| e.to_grpc_status())?;
-
-        self.sessions.remove(session_id).await;
 
         tracing::info!(session_id, "session closed");
 

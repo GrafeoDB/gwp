@@ -3,6 +3,7 @@
 import type { ClientReadableStream } from "@grpc/grpc-js";
 import type { ExecuteResponse } from "./generated/gql_service";
 import { valueFromProto } from "./convert";
+import { Counters } from "./counters";
 import { isSuccess } from "./status";
 import type { GqlValue } from "./types";
 
@@ -26,9 +27,14 @@ export class ResultSummary {
     return this.proto.rowsAffected;
   }
 
-  /** Operation counters. */
+  /** Raw counter map: the write counters plus any other entries the server sent. */
   get counters(): ReadonlyMap<string, bigint> {
     return new Map(Object.entries(this.proto.counters));
+  }
+
+  /** Typed write counters. Counters the server did not send read as 0. */
+  get writeCounters(): Counters {
+    return Counters.fromMap(this.proto.counters);
   }
 
   /** Check if the execution was successful. */
@@ -159,6 +165,12 @@ export class ResultCursor implements AsyncIterable<GqlValue[]> {
   async rowsAffected(): Promise<bigint> {
     const s = await this.summary();
     return s?.rowsAffected ?? 0n;
+  }
+
+  /** Get the write counters. Consumes remaining frames if needed. */
+  async counters(): Promise<Counters> {
+    const s = await this.summary();
+    return s?.writeCounters ?? new Counters();
   }
 
   async *[Symbol.asyncIterator](): AsyncIterator<GqlValue[]> {

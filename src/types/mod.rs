@@ -4,6 +4,7 @@
 //! Backend implementors and client users interact with these types rather
 //! than the raw protobuf representations.
 
+mod counters;
 mod edge;
 mod node;
 mod path;
@@ -11,6 +12,7 @@ mod record;
 mod temporal;
 mod value;
 
+pub use counters::Counters;
 pub use edge::Edge;
 pub use node::Node;
 pub use path::Path;

@@ -137,6 +137,16 @@ public class ResultCursor implements Iterator<List<Object>>, AutoCloseable {
         return s != null ? s.rowsAffected() : 0;
     }
 
+    /**
+     * Get the write counters. Consumes all remaining frames if needed.
+     *
+     * @return the write counters; all zero if there is no summary or the server sent none
+     */
+    public Counters counters() {
+        ResultSummary s = summary();
+        return s != null ? s.writeCounters() : Counters.NONE;
+    }
+
     // ========================================================================
     // Iterator implementation
     // ========================================================================
@@ -244,9 +254,14 @@ public class ResultCursor implements Iterator<List<Object>>, AutoCloseable {
             return proto.getRowsAffected();
         }
 
-        /** Operation counters (e.g. nodes_created, edges_deleted). */
+        /** Raw counter map: the write counters plus any other entries the server sent. */
         public Map<String, Long> counters() {
             return proto.getCountersMap();
+        }
+
+        /** Typed write counters. Counters the server did not send read as 0. */
+        public Counters writeCounters() {
+            return Counters.fromMap(proto.getCountersMap());
         }
 
         /** Check if the execution was successful. */

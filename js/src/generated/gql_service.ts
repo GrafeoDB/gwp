@@ -268,7 +268,14 @@ export interface ResultSummary {
   status: GqlStatus | undefined;
   warnings: GqlStatus[];
   rowsAffected: bigint;
-  /** nodes_created, edges_deleted, etc. */
+  /**
+   * Statement statistics. Write counters use these keys, and a missing key
+   * means 0 (servers may send only the non-zero ones):
+   *   nodes_created, nodes_deleted, edges_created, edges_deleted,
+   *   properties_set, labels_added, labels_removed
+   * Values above the int64 range are sent as the int64 maximum. Servers may
+   * add other entries (for example execution_time_ms or rows_scanned).
+   */
   counters: { [key: string]: bigint };
 }
 

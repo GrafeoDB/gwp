@@ -1195,11 +1195,19 @@ func (x *Row) GetValues() []*Value {
 
 // Final frame: completion status and statistics.
 type ResultSummary struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Status        *GqlStatus             `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
-	Warnings      []*GqlStatus           `protobuf:"bytes,2,rep,name=warnings,proto3" json:"warnings,omitempty"`
-	RowsAffected  int64                  `protobuf:"varint,3,opt,name=rows_affected,json=rowsAffected,proto3" json:"rows_affected,omitempty"`
-	Counters      map[string]int64       `protobuf:"bytes,4,rep,name=counters,proto3" json:"counters,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"` // nodes_created, edges_deleted, etc.
+	state        protoimpl.MessageState `protogen:"open.v1"`
+	Status       *GqlStatus             `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	Warnings     []*GqlStatus           `protobuf:"bytes,2,rep,name=warnings,proto3" json:"warnings,omitempty"`
+	RowsAffected int64                  `protobuf:"varint,3,opt,name=rows_affected,json=rowsAffected,proto3" json:"rows_affected,omitempty"`
+	// Statement statistics. Write counters use these keys, and a missing key
+	// means 0 (servers may send only the non-zero ones):
+	//
+	//	nodes_created, nodes_deleted, edges_created, edges_deleted,
+	//	properties_set, labels_added, labels_removed
+	//
+	// Values above the int64 range are sent as the int64 maximum. Servers may
+	// add other entries (for example execution_time_ms or rows_scanned).
+	Counters      map[string]int64 `protobuf:"bytes,4,rep,name=counters,proto3" json:"counters,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }

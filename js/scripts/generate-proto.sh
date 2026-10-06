@@ -9,7 +9,7 @@ OUT_DIR="$ROOT/src/generated"
 mkdir -p "$OUT_DIR"
 
 protoc \
-  --plugin="protoc-gen-ts_proto=$(npm bin)/protoc-gen-ts_proto" \
+  --plugin="protoc-gen-ts_proto=$ROOT/node_modules/.bin/protoc-gen-ts_proto" \
   --ts_proto_out="$OUT_DIR" \
   --ts_proto_opt=outputServices=grpc-js \
   --ts_proto_opt=esModuleInterop=true \

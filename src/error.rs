@@ -35,8 +35,9 @@ pub enum GqlError {
     /// GQL-domain error carrying a GQLSTATUS code.
     #[error("GQL error {}: {}", .status.code, .status.message)]
     Status {
-        /// The GQLSTATUS from the failed operation.
-        status: proto::GqlStatus,
+        /// The GQLSTATUS from the failed operation, boxed to keep
+        /// `GqlError` (and every `Result` that carries it) small.
+        status: Box<proto::GqlStatus>,
     },
 
     /// Transport-level error from tonic/gRPC.
@@ -79,7 +80,7 @@ impl GqlError {
     #[must_use]
     pub fn status(code: &str, message: impl Into<String>) -> Self {
         Self::Status {
-            status: crate::status::error(code, message),
+            status: Box::new(crate::status::error(code, message)),
         }
     }
 

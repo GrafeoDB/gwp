@@ -3,6 +3,7 @@
 use tonic::transport::Channel;
 
 use crate::error::GqlError;
+use crate::proto;
 
 use super::GqlSession;
 use super::admin::AdminClient;
@@ -55,7 +56,38 @@ impl GqlConnection {
     ///
     /// Returns an error if the handshake fails.
     pub async fn create_session(&self) -> Result<GqlSession, GqlError> {
-        GqlSession::new(self.channel.clone()).await
+        GqlSession::new(self.channel.clone(), None).await
+    }
+
+    /// Perform a handshake with credentials and return a session.
+    ///
+    /// Use this against a server that has an
+    /// [`AuthValidator`](crate::server::AuthValidator) configured.
+    ///
+    /// ```rust,no_run
+    /// use gwp::client::GqlConnection;
+    /// use gwp::proto::{AuthCredentials, auth_credentials::Method};
+    ///
+    /// # async fn example() -> Result<(), gwp::error::GqlError> {
+    /// let conn = GqlConnection::connect("http://localhost:7687").await?;
+    /// let session = conn
+    ///     .create_session_with_credentials(AuthCredentials {
+    ///         method: Some(Method::BearerToken("my-token".to_owned())),
+    ///     })
+    ///     .await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the handshake fails, for example with an
+    /// `UNAUTHENTICATED` gRPC status when the credentials are rejected.
+    pub async fn create_session_with_credentials(
+        &self,
+        credentials: proto::AuthCredentials,
+    ) -> Result<GqlSession, GqlError> {
+        GqlSession::new(self.channel.clone(), Some(credentials)).await
     }
 
     /// Create a catalog management client (schemas, graphs, graph types).

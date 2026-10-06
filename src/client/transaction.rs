@@ -42,7 +42,9 @@ impl Transaction {
         // Check for GQLSTATUS error
         if let Some(ref s) = resp.status {
             if status::is_exception(&s.code) {
-                return Err(GqlError::Status { status: s.clone() });
+                return Err(GqlError::Status {
+                    status: Box::new(s.clone()),
+                });
             }
         }
 
@@ -126,7 +128,9 @@ impl Transaction {
 
         if let Some(ref s) = resp.status {
             if status::is_exception(&s.code) {
-                return Err(GqlError::Status { status: s.clone() });
+                return Err(GqlError::Status {
+                    status: Box::new(s.clone()),
+                });
             }
         }
 
@@ -161,7 +165,9 @@ impl Transaction {
 
         if let Some(ref s) = resp.status {
             if status::is_exception(&s.code) {
-                return Err(GqlError::Status { status: s.clone() });
+                return Err(GqlError::Status {
+                    status: Box::new(s.clone()),
+                });
             }
         }
 
@@ -173,11 +179,18 @@ impl Drop for Transaction {
     fn drop(&mut self) {
         if !self.committed && !self.rolled_back {
             // Fire-and-forget rollback on drop.
-            // We can't await in drop, so we spawn a task.
+            // We can't await in drop, so we spawn a task. Outside a tokio
+            // runtime (for example after it shut down) there is nothing to
+            // spawn on: `tokio::spawn` would panic, so skip the rollback and
+            // leave it to the server, which rolls back a session's
+            // transaction when the session is closed or reaped.
+            let Ok(runtime) = tokio::runtime::Handle::try_current() else {
+                return;
+            };
             let mut client = self.client.clone();
             let session_id = self.session_id.clone();
             let transaction_id = self.id.clone();
-            tokio::spawn(async move {
+            runtime.spawn(async move {
                 let _ = client
                     .rollback(proto::RollbackRequest {
                         session_id,

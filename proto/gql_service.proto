@@ -171,7 +171,13 @@ message ResultSummary {
   GqlStatus status = 1;
   repeated GqlStatus warnings = 2;
   int64 rows_affected = 3;
-  map<string, int64> counters = 4;  // nodes_created, edges_deleted, etc.
+  // Statement statistics. Write counters use these keys, and a missing key
+  // means 0 (servers may send only the non-zero ones):
+  //   nodes_created, nodes_deleted, edges_created, edges_deleted,
+  //   properties_set, labels_added, labels_removed
+  // Values above the int64 range are sent as the int64 maximum. Servers may
+  // add other entries (for example execution_time_ms or rows_scanned).
+  map<string, int64> counters = 4;
 }
 
 // ============================================================================

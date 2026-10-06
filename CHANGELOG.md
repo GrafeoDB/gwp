@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.3.0 Unreleased
+
+- **Breaking**: `GqlError::Status` holds its status boxed (`status: Box<proto::GqlStatus>`), which keeps `GqlError` and every `Result` carrying it small (clippy `result_large_err` on Rust 1.98). Code that builds the variant wraps the status in `Box::new(...)`; code that matches it and reads fields is unchanged through auto-deref
+- **Bug fix**: A failed `Commit` now ends the transaction (ISO/IEC 39075 sec 8.4) and asks the backend to roll it back. Before, the transaction stayed registered and every later `BeginTransaction` on the session failed with `25G01`. A failed `Rollback` also ends the transaction
+- **Bug fix**: An `Execute` whose statement has a multi-byte character across byte 100 no longer panics the handler (the statement was cut at a fixed byte offset for the tracing span)
+- **Bug fix**: `BeginTransaction` with an unknown `TransactionMode` is rejected with `INVALID_ARGUMENT` instead of starting a READ WRITE transaction
+- **Bug fix**: A second `BeginTransaction` on a session that has a transaction is rejected with `25G01` before the backend is called (the backend used to start and then roll back a second transaction)
+- **Bug fix**: Commit, rollback and statements on one transaction no longer race: a commit or rollback claims the transaction, so a concurrent commit, rollback or statement on it gets `25000` (`FAILED_PRECONDITION` for `Execute`) and a concurrent begin gets `25G01`
+- **Bug fix**: `CloseSession` unregisters the session before cleaning up, so concurrent closes close the backend session once, and a transaction begun while its session closes is rolled back instead of staying registered
+- **Bug fix**: The idle session reaper rolls back the active transaction before closing the backend session, like `CloseSession`; an idle timeout of zero, or one large enough to overflow the reaper's next tick (such as `Duration::MAX`), no longer panics the reaper task, which left idle sessions unreaped. The reaper now runs at least once an hour
+- **Bug fix**: Nothing is streamed after the summary: after a summary, or a backend error mid-stream (sent as an error summary), the backend stream is dropped and the response ends
+- **Bug fix**: `Reset` with `RESET_ALL` no longer drops the active transaction from the server's session state
+- **Bug fix**: `status::class()` and the `is_*()` helpers no longer panic on a code whose first two bytes are not whole characters
+- **Bug fix**: Dropping a client `Transaction` outside a tokio runtime no longer panics
+- **Feature**: `types::Counters` and `ResultCursor::counters()`: typed write counters from `ResultSummary.counters`, whose key names are now documented in the proto
+- **Feature**: Typed write counters in every binding, next to the raw map on the summary: Go `Counters`, `ResultCursor.Counters()` and `ResultSummary.WriteCounters()`; JS `Counters`, `cursor.counters()` and `summary.writeCounters`; Python `Counters`, `await cursor.counters()` and `summary.write_counters`; Java `Counters`, `cursor.counters()` and `summary.writeCounters()`
+- **Feature**: `MockBackend` (and so `gwp-test-server`) reports write counters for `INSERT`, `DELETE` and `SET`, plus an `execution_time_ms` entry
+- **Feature**: `GqlServer::serve_with_listener()` serves on an already bound `TcpListener`
+- **Feature**: `GqlConnection::create_session_with_credentials()` for servers with an `AuthValidator`
+- **Feature**: `GqlSession::set_parameter()` sets a named session parameter
+- **Feature**: `TransactionManager::begin_termination()` and `has_transaction()`; `register()` rejects a transaction id already in use
+- **Docs**: `GqlBackend` documents what the server does after a failed commit or rollback, and that a `ResultStream` is dropped when the client cancels or disconnects
+- **Docs**: README documents write counters; Python installs with `uv add gwp-py`
+- **Infra**: Go and JS stubs regenerated from the current proto (only the `ResultSummary.counters` comment changed; Python stubs carry no comments and are unchanged); `js/scripts/generate-proto.sh` no longer calls `npm bin`, which npm 9 removed
+- **Bug fix**: Python `gwp_py.__version__` matches the package version
+- **Tests**: Protocol tests over real sockets against a stateful backend: value round-trips for every GQL type and their boundaries, the catalog flow with `IF NOT EXISTS` / `IF EXISTS`, session properties, transaction failures and races, untrusted input, disconnects and backpressure
+
 ## 0.2.1 2026-04-11
 
 - **Breaking**: Proto RPC `Close` renamed to `CloseSession` (`CloseRequest`/`CloseResponse` to `CloseSessionRequest`/`CloseSessionResponse`) to avoid `grpc-js` `Client.close()` conflict

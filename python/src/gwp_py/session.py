@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Self
 
 import grpc
 
@@ -117,7 +117,7 @@ class GqlSession:
             )
             self._closed = True
 
-    async def __aenter__(self) -> GqlSession:
+    async def __aenter__(self) -> Self:
         return self
 
     async def __aexit__(self, *args: object) -> None:

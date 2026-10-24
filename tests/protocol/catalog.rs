@@ -361,3 +361,61 @@ async fn catalog_rpcs_need_no_session() {
             .all(|e| !e.starts_with("create session"))
     );
 }
+
+#[tokio::test]
+async fn session_catalog_names_its_session() {
+    let server = common::start().await;
+    let conn = GqlConnection::connect(&server.endpoint()).await.unwrap();
+    let session = conn.create_session().await.unwrap();
+    let id = session.session_id().to_owned();
+
+    let mut bound = session.catalog();
+    assert_eq!(bound.session_id(), Some(id.as_str()));
+    bound.list_schemas().await.unwrap();
+    bound
+        .create_graph(graph_config(DEFAULT_SCHEMA, "in_session"))
+        .await
+        .unwrap();
+
+    let mut unbound = conn.create_catalog_client();
+    assert_eq!(unbound.session_id(), None);
+    unbound.list_schemas().await.unwrap();
+
+    assert_eq!(
+        server.backend.events_with("catalog"),
+        vec![
+            format!("catalog list_schemas session={id}"),
+            format!("catalog create_graph session={id}"),
+            "catalog list_schemas session=-".to_owned(),
+        ]
+    );
+}
+
+#[tokio::test]
+async fn catalog_request_for_an_unknown_session_is_not_found() {
+    let server = common::start().await;
+    let mut client =
+        gwp::proto::catalog_service_client::CatalogServiceClient::new(server.channel().await);
+
+    let status = client
+        .list_schemas(gwp::proto::ListSchemasRequest {
+            session_id: "no-such-session".to_owned(),
+        })
+        .await
+        .unwrap_err();
+    assert_eq!(status.code(), tonic::Code::NotFound);
+    assert_eq!(status.message(), "session no-such-session not found");
+    assert_eq!(server.backend.events_with("catalog"), Vec::<String>::new());
+}
+
+#[tokio::test]
+async fn session_catalog_after_close_is_not_found() {
+    let server = common::start().await;
+    let conn = GqlConnection::connect(&server.endpoint()).await.unwrap();
+    let session = conn.create_session().await.unwrap();
+    let mut bound = session.catalog();
+    session.close().await.unwrap();
+
+    assert_eq!(grpc_code(bound.list_schemas().await), tonic::Code::NotFound);
+    assert_eq!(server.backend.events_with("catalog"), Vec::<String>::new());
+}

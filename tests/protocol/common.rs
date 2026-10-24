@@ -33,10 +33,10 @@ use gwp::proto;
 use gwp::proto::gql_service_client::GqlServiceClient;
 use gwp::proto::session_service_client::SessionServiceClient;
 use gwp::server::{
-    AdminServiceImpl, CatalogServiceImpl, CreateGraphConfig, GqlBackend, GqlServiceImpl, GraphInfo,
-    GraphTypeInfo, GraphTypeSpec, ResetTarget, ResultFrame, ResultStream, SchemaInfo,
-    SearchServiceImpl, SessionConfig, SessionHandle, SessionManager, SessionProperty,
-    SessionServiceImpl, TransactionHandle, TransactionManager,
+    AdminServiceImpl, CatalogContext, CatalogServiceImpl, CreateGraphConfig, GqlBackend,
+    GqlServiceImpl, GraphInfo, GraphTypeInfo, GraphTypeSpec, ResetTarget, ResultFrame,
+    ResultStream, SchemaInfo, SearchServiceImpl, SessionConfig, SessionHandle, SessionManager,
+    SessionProperty, SessionServiceImpl, TransactionHandle, TransactionManager,
 };
 use gwp::status;
 use gwp::types::Value;
@@ -49,6 +49,11 @@ fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
     mutex
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+/// The session a catalog request named, or `-` for none.
+fn session_of(ctx: &CatalogContext) -> &str {
+    ctx.session.as_ref().map_or("-", |s| s.0.as_str())
 }
 
 /// A point where the backend waits until the test lets it continue.
@@ -492,6 +497,22 @@ impl GqlBackend for TestBackend {
 
     // Catalog
 
+    // Two context methods record the session they get; the rest keep the
+    // defaults, which call the methods below.
+    async fn list_schemas_in(&self, ctx: &CatalogContext) -> Result<Vec<SchemaInfo>, GqlError> {
+        self.record(format!("catalog list_schemas session={}", session_of(ctx)));
+        self.list_schemas().await
+    }
+
+    async fn create_graph_in(
+        &self,
+        ctx: &CatalogContext,
+        config: CreateGraphConfig,
+    ) -> Result<GraphInfo, GqlError> {
+        self.record(format!("catalog create_graph session={}", session_of(ctx)));
+        self.create_graph(config).await
+    }
+
     async fn list_schemas(&self) -> Result<Vec<SchemaInfo>, GqlError> {
         let state = self.state();
         Ok(state
@@ -848,7 +869,8 @@ pub async fn start_with(backend: TestBackend) -> TestServer {
     );
     let gql_service =
         GqlServiceImpl::new(Arc::clone(&shared), sessions.clone(), transactions.clone());
-    let catalog_service = CatalogServiceImpl::new(Arc::clone(&shared));
+    let catalog_service =
+        CatalogServiceImpl::new(Arc::clone(&shared)).with_sessions(sessions.clone());
     let admin_service = AdminServiceImpl::new(Arc::clone(&shared));
     let search_service = SearchServiceImpl::new(shared);
 

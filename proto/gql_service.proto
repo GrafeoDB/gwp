@@ -246,7 +246,10 @@ service CatalogService {
 // Schema Messages
 // ============================================================================
 
-message ListSchemasRequest {}
+message ListSchemasRequest {
+  // Session whose catalog to use; empty for none.
+  string session_id = 15;
+}
 
 message SchemaInfo {
   string name = 1;
@@ -261,6 +264,8 @@ message ListSchemasResponse {
 message CreateSchemaRequest {
   string name = 1;
   bool if_not_exists = 2;
+  // Session whose catalog to use; empty for none.
+  string session_id = 15;
 }
 
 message CreateSchemaResponse {}
@@ -268,6 +273,8 @@ message CreateSchemaResponse {}
 message DropSchemaRequest {
   string name = 1;
   bool if_exists = 2;
+  // Session whose catalog to use; empty for none.
+  string session_id = 15;
 }
 
 message DropSchemaResponse {
@@ -280,6 +287,8 @@ message DropSchemaResponse {
 
 message ListGraphsRequest {
   string schema = 1;  // Schema to list graphs from
+  // Session whose catalog to use; empty for none.
+  string session_id = 15;
 }
 
 message GraphSummary {
@@ -312,6 +321,9 @@ message CreateGraphRequest {
   // Engine-specific options (GrafeoDB extensions)
   string storage_mode = 10;      // "InMemory" or "Persistent"
   GraphOptions options = 11;
+
+  // Session whose catalog to use; empty for none.
+  string session_id = 15;
 }
 
 message GraphOptions {
@@ -330,6 +342,8 @@ message DropGraphRequest {
   string schema = 1;
   string name = 2;
   bool if_exists = 3;
+  // Session whose catalog to use; empty for none.
+  string session_id = 15;
 }
 
 message DropGraphResponse {
@@ -339,6 +353,8 @@ message DropGraphResponse {
 message GetGraphInfoRequest {
   string schema = 1;
   string name = 2;
+  // Session whose catalog to use; empty for none.
+  string session_id = 15;
 }
 
 message GetGraphInfoResponse {
@@ -359,6 +375,8 @@ message GetGraphInfoResponse {
 
 message ListGraphTypesRequest {
   string schema = 1;
+  // Session whose catalog to use; empty for none.
+  string session_id = 15;
 }
 
 message GraphTypeInfo {
@@ -375,6 +393,8 @@ message CreateGraphTypeRequest {
   string name = 2;
   bool if_not_exists = 3;
   bool or_replace = 4;
+  // Session whose catalog to use; empty for none.
+  string session_id = 15;
 }
 
 message CreateGraphTypeResponse {}
@@ -383,6 +403,8 @@ message DropGraphTypeRequest {
   string schema = 1;
   string name = 2;
   bool if_exists = 3;
+  // Session whose catalog to use; empty for none.
+  string session_id = 15;
 }
 
 message DropGraphTypeResponse {

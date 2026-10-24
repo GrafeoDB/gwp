@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.2 2026-10-24
+
+- **Feature**: The `CatalogService` can work in the calling session's catalog (ISO/IEC 39075 sec 4.3.5: a session works in one GQL-catalog). Every catalog request has an optional `session_id` (field 15; empty means no session). The server checks that a named session exists (an unknown one gets `NOT_FOUND`, as on `GqlService`), counts the request as activity on it and passes it to the backend
+- **Feature**: `GqlBackend` gains a context twin for each catalog method (`list_schemas_in`, `create_schema_in`, `drop_schema_in`, `list_graphs_in`, `create_graph_in`, `drop_graph_in`, `get_graph_info_in`, `list_graph_types_in`, `create_graph_type_in`, `drop_graph_type_in`), each taking a `CatalogContext` with the calling session. The defaults ignore the context and call the existing methods, so existing backends keep working unchanged
+- **Feature**: `CatalogServiceImpl::with_sessions()` attaches the session manager (`GqlServer` does this); without one, a request that names a session is rejected with `NOT_FOUND`, since it cannot be checked
+- **Feature**: `GqlSession::catalog()` returns a `CatalogClient` whose requests name that session, and `CatalogClient::session_id()` tells which; `GqlConnection::create_catalog_client()` still names none. The Python, JS, Go and Java clients do not send the session yet
+- **Note**: Rust code that builds the ten catalog request messages as struct literals needs the new field, for example with `..Default::default()`
+
 ## 0.3.1 2026-10-24
 
 The 0.3.0 release reached crates.io and PyPI but not npm or Maven Central (oops). 0.3.1 publishes the same code everywhere; nothing changes for Rust or Python users.

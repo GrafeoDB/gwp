@@ -68,7 +68,7 @@ async fn list_schemas() {
     let mut client = connect(addr).await;
 
     let resp = client
-        .list_schemas(proto::ListSchemasRequest {})
+        .list_schemas(proto::ListSchemasRequest::default())
         .await
         .unwrap()
         .into_inner();
@@ -87,6 +87,7 @@ async fn create_schema() {
         .create_schema(proto::CreateSchemaRequest {
             name: "analytics".to_owned(),
             if_not_exists: false,
+            ..Default::default()
         })
         .await
         .unwrap();
@@ -101,6 +102,7 @@ async fn create_schema_already_exists() {
         .create_schema(proto::CreateSchemaRequest {
             name: "default".to_owned(),
             if_not_exists: false,
+            ..Default::default()
         })
         .await;
 
@@ -118,6 +120,7 @@ async fn create_schema_if_not_exists() {
         .create_schema(proto::CreateSchemaRequest {
             name: "default".to_owned(),
             if_not_exists: true,
+            ..Default::default()
         })
         .await
         .unwrap();
@@ -132,6 +135,7 @@ async fn drop_schema_default_fails() {
         .drop_schema(proto::DropSchemaRequest {
             name: "default".to_owned(),
             if_exists: false,
+            ..Default::default()
         })
         .await;
 
@@ -151,6 +155,7 @@ async fn list_graphs() {
     let resp = client
         .list_graphs(proto::ListGraphsRequest {
             schema: "default".to_owned(),
+            ..Default::default()
         })
         .await
         .unwrap()
@@ -180,6 +185,7 @@ async fn create_graph() {
             copy_of: None,
             storage_mode: "InMemory".to_owned(),
             options: None,
+            ..Default::default()
         })
         .await
         .unwrap()
@@ -213,6 +219,7 @@ async fn create_graph_with_options() {
                 wal_enabled: Some(true),
                 wal_durability: Some("fsync".to_owned()),
             }),
+            ..Default::default()
         })
         .await
         .unwrap()
@@ -237,6 +244,7 @@ async fn create_graph_already_exists() {
             copy_of: None,
             storage_mode: "InMemory".to_owned(),
             options: None,
+            ..Default::default()
         })
         .await;
 
@@ -259,6 +267,7 @@ async fn create_graph_empty_name() {
             copy_of: None,
             storage_mode: "InMemory".to_owned(),
             options: None,
+            ..Default::default()
         })
         .await;
 
@@ -276,6 +285,7 @@ async fn drop_graph() {
             schema: "default".to_owned(),
             name: "test".to_owned(),
             if_exists: false,
+            ..Default::default()
         })
         .await
         .unwrap()
@@ -294,6 +304,7 @@ async fn drop_default_graph_fails() {
             schema: "default".to_owned(),
             name: "default".to_owned(),
             if_exists: false,
+            ..Default::default()
         })
         .await;
 
@@ -310,6 +321,7 @@ async fn get_graph_info() {
         .get_graph_info(proto::GetGraphInfoRequest {
             schema: "default".to_owned(),
             name: "default".to_owned(),
+            ..Default::default()
         })
         .await
         .unwrap()
@@ -330,6 +342,7 @@ async fn get_graph_info_not_found() {
         .get_graph_info(proto::GetGraphInfoRequest {
             schema: "default".to_owned(),
             name: "nonexistent".to_owned(),
+            ..Default::default()
         })
         .await;
 
@@ -349,6 +362,7 @@ async fn list_graph_types() {
     let resp = client
         .list_graph_types(proto::ListGraphTypesRequest {
             schema: "default".to_owned(),
+            ..Default::default()
         })
         .await
         .unwrap()
@@ -369,6 +383,7 @@ async fn create_graph_type() {
             name: "SocialGraph".to_owned(),
             if_not_exists: false,
             or_replace: false,
+            ..Default::default()
         })
         .await
         .unwrap();
@@ -385,6 +400,7 @@ async fn create_graph_type_already_exists() {
             name: "PersonGraph".to_owned(),
             if_not_exists: false,
             or_replace: false,
+            ..Default::default()
         })
         .await;
 
@@ -402,6 +418,7 @@ async fn drop_graph_type() {
             schema: "default".to_owned(),
             name: "PersonGraph".to_owned(),
             if_exists: false,
+            ..Default::default()
         })
         .await
         .unwrap()

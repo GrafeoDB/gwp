@@ -99,6 +99,34 @@ pub trait ResultStream: Send + 'static {
 // Catalog types
 // ============================================================================
 
+/// Context of a catalog request, passed to the `*_in` catalog methods of
+/// [`GqlBackend`].
+///
+/// A catalog request may name the session it runs in; the server checks
+/// that the session exists before the backend sees it. A backend that keeps
+/// one catalog per session (ISO/IEC 39075 sec 4.3.5: a session works in one
+/// GQL-catalog) reads [`session`](Self::session) to pick it.
+///
+/// More fields may be added in later releases, so the struct is
+/// non-exhaustive: build it with [`Default`] (no session) or
+/// [`for_session`](Self::for_session).
+#[derive(Debug, Clone, Default)]
+#[non_exhaustive]
+pub struct CatalogContext {
+    /// The calling session, when the request named one.
+    pub session: Option<SessionHandle>,
+}
+
+impl CatalogContext {
+    /// A context for a request made in `session`.
+    #[must_use]
+    pub fn for_session(session: SessionHandle) -> Self {
+        Self {
+            session: Some(session),
+        }
+    }
+}
+
 /// Summary information about a schema.
 #[derive(Debug, Clone)]
 pub struct SchemaInfo {
@@ -331,6 +359,113 @@ pub trait GqlBackend: Send + Sync + 'static {
         _if_exists: bool,
     ) -> Result<bool, GqlError> {
         Err(GqlError::Protocol("catalog not supported".into()))
+    }
+
+    // =========================================================================
+    // Catalog operations with a request context
+    // =========================================================================
+    //
+    // The `CatalogService` calls these. Each default ignores the context and
+    // calls the method above, so a backend with one catalog for every session
+    // implements only those; a backend with a catalog per session overrides
+    // these instead.
+
+    /// List all schemas, in the catalog of `ctx`.
+    async fn list_schemas_in(&self, _ctx: &CatalogContext) -> Result<Vec<SchemaInfo>, GqlError> {
+        self.list_schemas().await
+    }
+
+    /// Create a schema, in the catalog of `ctx`.
+    async fn create_schema_in(
+        &self,
+        _ctx: &CatalogContext,
+        name: &str,
+        if_not_exists: bool,
+    ) -> Result<(), GqlError> {
+        self.create_schema(name, if_not_exists).await
+    }
+
+    /// Drop a schema, in the catalog of `ctx`. Returns whether it existed.
+    async fn drop_schema_in(
+        &self,
+        _ctx: &CatalogContext,
+        name: &str,
+        if_exists: bool,
+    ) -> Result<bool, GqlError> {
+        self.drop_schema(name, if_exists).await
+    }
+
+    /// List all graphs in a schema, in the catalog of `ctx`.
+    async fn list_graphs_in(
+        &self,
+        _ctx: &CatalogContext,
+        schema: &str,
+    ) -> Result<Vec<GraphInfo>, GqlError> {
+        self.list_graphs(schema).await
+    }
+
+    /// Create a graph, in the catalog of `ctx`. Returns the new graph info.
+    async fn create_graph_in(
+        &self,
+        _ctx: &CatalogContext,
+        config: CreateGraphConfig,
+    ) -> Result<GraphInfo, GqlError> {
+        self.create_graph(config).await
+    }
+
+    /// Drop a graph, in the catalog of `ctx`. Returns whether it existed.
+    async fn drop_graph_in(
+        &self,
+        _ctx: &CatalogContext,
+        schema: &str,
+        name: &str,
+        if_exists: bool,
+    ) -> Result<bool, GqlError> {
+        self.drop_graph(schema, name, if_exists).await
+    }
+
+    /// Get detailed information about a graph, in the catalog of `ctx`.
+    async fn get_graph_info_in(
+        &self,
+        _ctx: &CatalogContext,
+        schema: &str,
+        name: &str,
+    ) -> Result<GraphInfo, GqlError> {
+        self.get_graph_info(schema, name).await
+    }
+
+    /// List graph types in a schema, in the catalog of `ctx`.
+    async fn list_graph_types_in(
+        &self,
+        _ctx: &CatalogContext,
+        schema: &str,
+    ) -> Result<Vec<GraphTypeInfo>, GqlError> {
+        self.list_graph_types(schema).await
+    }
+
+    /// Create a graph type, in the catalog of `ctx`.
+    async fn create_graph_type_in(
+        &self,
+        _ctx: &CatalogContext,
+        schema: &str,
+        name: &str,
+        if_not_exists: bool,
+        or_replace: bool,
+    ) -> Result<(), GqlError> {
+        self.create_graph_type(schema, name, if_not_exists, or_replace)
+            .await
+    }
+
+    /// Drop a graph type, in the catalog of `ctx`. Returns whether it
+    /// existed.
+    async fn drop_graph_type_in(
+        &self,
+        _ctx: &CatalogContext,
+        schema: &str,
+        name: &str,
+        if_exists: bool,
+    ) -> Result<bool, GqlError> {
+        self.drop_graph_type(schema, name, if_exists).await
     }
 
     // =========================================================================

@@ -14,7 +14,7 @@ jobs:
     name: Rust
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: arduino/setup-protoc@v3
 
@@ -37,25 +37,44 @@ jobs:
         run: cargo build --bin gwp-test-server --release
 
       - name: Upload test server
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: gwp-test-server
           path: target/release/gwp-test-server
           retention-days: 1
 
-  python:
-    name: Python
+  msrv:
+    name: Rust MSRV (1.88)
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: arduino/setup-protoc@v3
+
+      - uses: dtolnay/rust-toolchain@1.88.0
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Check
+        run: cargo check --all-features --all-targets
+
+  python:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13", "3.14", "3.15"]
     needs: rust
     defaults:
       run:
         working-directory: python
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
           cache: pip
           cache-dependency-path: python/pyproject.toml
 
@@ -69,7 +88,7 @@ jobs:
         run: ruff format --check .
 
       - name: Download test server
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: gwp-test-server
           path: target/release
@@ -81,18 +100,22 @@ jobs:
         run: pytest tests/ -v
 
   js:
-    name: JS/TS
+    name: JS/TS (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [22, 24]
     needs: rust
     defaults:
       run:
         working-directory: js
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: ${{ matrix.node-version }}
           cache: npm
           cache-dependency-path: js/package.json
 
@@ -100,7 +123,7 @@ jobs:
         run: npm install
 
       - name: Download test server
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: gwp-test-server
           path: target/release
@@ -119,14 +142,14 @@ jobs:
       run:
         working-directory: go
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go/go.mod
 
       - name: Download test server
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: gwp-test-server
           path: target/release
@@ -141,9 +164,9 @@ jobs:
     name: Java
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 17

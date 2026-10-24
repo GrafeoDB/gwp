@@ -184,7 +184,7 @@ All bindings include `GqlConnection`, `GqlSession`, `Transaction`, `ResultCursor
 
 ## Requirements
 
-- Rust 1.85.0+ (edition 2024)
+- Rust 1.88.0+ (edition 2024)
 - `protoc` (Protocol Buffers compiler) - required at build time
 
 ## License

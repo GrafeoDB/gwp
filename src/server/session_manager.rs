@@ -71,12 +71,12 @@ impl SessionManager {
     /// Returns an error if the session limit has been reached.
     pub async fn register(&self, session_id: &str) -> Result<(), crate::error::GqlError> {
         let mut sessions = self.sessions.write().await;
-        if let Some(max) = self.max_sessions {
-            if sessions.len() >= max {
-                return Err(crate::error::GqlError::Session(
-                    "session limit reached".to_owned(),
-                ));
-            }
+        if let Some(max) = self.max_sessions
+            && sessions.len() >= max
+        {
+            return Err(crate::error::GqlError::Session(
+                "session limit reached".to_owned(),
+            ));
         }
         sessions.insert(session_id.to_owned(), SessionState::default());
         tracing::info!(session_id, "session registered");

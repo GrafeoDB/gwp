@@ -272,7 +272,10 @@ async fn create_graph_if_not_exists_statement_is_idempotent() {
         .execute_simple("CREATE GRAPH IF NOT EXISTS reports")
         .await
         .unwrap();
-    assert!(cursor.collect_rows().await.unwrap().is_empty());
+    assert_eq!(
+        cursor.collect_rows().await.unwrap(),
+        Vec::<Vec<gwp::types::Value>>::new()
+    );
     assert!(cursor.is_success().await.unwrap());
     let summary = cursor.summary().await.unwrap().unwrap().clone();
     assert_eq!(summary.status.unwrap().code, status::OMITTED_RESULT);

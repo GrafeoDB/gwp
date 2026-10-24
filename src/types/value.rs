@@ -751,12 +751,12 @@ fn write_edge(f: &mut fmt::Formatter<'_>, e: &super::Edge) -> fmt::Result {
 
 fn write_path(f: &mut fmt::Formatter<'_>, p: &super::Path) -> fmt::Result {
     for (i, node) in p.nodes.iter().enumerate() {
-        if i > 0 {
-            if let Some(edge) = p.edges.get(i - 1) {
-                write!(f, "-")?;
-                write_edge(f, edge)?;
-                write!(f, "-")?;
-            }
+        if i > 0
+            && let Some(edge) = p.edges.get(i - 1)
+        {
+            write!(f, "-")?;
+            write_edge(f, edge)?;
+            write!(f, "-")?;
         }
         write_node(f, node)?;
     }

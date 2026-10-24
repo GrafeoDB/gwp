@@ -380,10 +380,11 @@ impl GqlBackend for TestBackend {
         session: &SessionHandle,
         property: SessionProperty,
     ) -> Result<(), GqlError> {
-        if let SessionProperty::Graph(name) = &property {
-            if !self.has_graph(DEFAULT_SCHEMA, name) && name != DEFAULT_SCHEMA {
-                return Err(GqlError::Session(format!("graph '{name}' not found")));
-            }
+        if let SessionProperty::Graph(name) = &property
+            && !self.has_graph(DEFAULT_SCHEMA, name)
+            && name != DEFAULT_SCHEMA
+        {
+            return Err(GqlError::Session(format!("graph '{name}' not found")));
         }
         self.record(format!("configure {} {property:?}", session.0));
         Ok(())

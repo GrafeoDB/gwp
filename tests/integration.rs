@@ -79,7 +79,7 @@ async fn handshake(client: &mut SessionServiceClient<tonic::transport::Channel>)
         .into_inner();
 
     assert_eq!(resp.protocol_version, 1);
-    assert!(!resp.session_id.is_empty());
+    assert_ne!(resp.session_id, "");
     assert!(resp.server_info.is_some());
 
     let info = resp.server_info.unwrap();
@@ -293,7 +293,7 @@ async fn transaction_lifecycle() {
         .unwrap()
         .into_inner();
 
-    assert!(!begin_resp.transaction_id.is_empty());
+    assert_ne!(begin_resp.transaction_id, "");
     assert!(status::is_success(
         &begin_resp.status.as_ref().unwrap().code
     ));
@@ -390,7 +390,7 @@ async fn double_begin_returns_gqlstatus_error() {
         .unwrap()
         .into_inner();
 
-    assert!(begin2.transaction_id.is_empty());
+    assert_eq!(begin2.transaction_id, "");
     assert!(status::is_exception(&begin2.status.as_ref().unwrap().code));
 }
 

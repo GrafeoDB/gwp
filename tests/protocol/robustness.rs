@@ -73,7 +73,7 @@ async fn deeply_nested_parameter_is_rejected_without_crashing() {
     // without bound.
     let err = gql.execute(request).await.unwrap_err();
     assert_ne!(err.code(), tonic::Code::Ok);
-    assert!(server.backend.events_with("execute").is_empty());
+    assert_eq!(server.backend.events_with("execute"), Vec::<String>::new());
 
     assert_alive(&server).await;
 }
@@ -90,7 +90,7 @@ async fn oversized_request_is_rejected() {
         .await
         .unwrap_err();
     assert_ne!(err.code(), tonic::Code::Ok);
-    assert!(server.backend.events_with("execute").is_empty());
+    assert_eq!(server.backend.events_with("execute"), Vec::<String>::new());
 
     assert_alive(&server).await;
 }
@@ -172,7 +172,7 @@ async fn unknown_session_is_rejected_by_every_rpc() {
         "{codes:?}"
     );
     // None of it reached the backend.
-    assert!(server.backend.events().is_empty());
+    assert_eq!(server.backend.events(), Vec::<String>::new());
 }
 
 #[tokio::test]

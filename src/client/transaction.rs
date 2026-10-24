@@ -40,12 +40,12 @@ impl Transaction {
             .into_inner();
 
         // Check for GQLSTATUS error
-        if let Some(ref s) = resp.status {
-            if status::is_exception(&s.code) {
-                return Err(GqlError::Status {
-                    status: Box::new(s.clone()),
-                });
-            }
+        if let Some(ref s) = resp.status
+            && status::is_exception(&s.code)
+        {
+            return Err(GqlError::Status {
+                status: Box::new(s.clone()),
+            });
         }
 
         if resp.transaction_id.is_empty() {
@@ -126,12 +126,12 @@ impl Transaction {
 
         self.committed = true;
 
-        if let Some(ref s) = resp.status {
-            if status::is_exception(&s.code) {
-                return Err(GqlError::Status {
-                    status: Box::new(s.clone()),
-                });
-            }
+        if let Some(ref s) = resp.status
+            && status::is_exception(&s.code)
+        {
+            return Err(GqlError::Status {
+                status: Box::new(s.clone()),
+            });
         }
 
         Ok(())
@@ -163,12 +163,12 @@ impl Transaction {
 
         self.rolled_back = true;
 
-        if let Some(ref s) = resp.status {
-            if status::is_exception(&s.code) {
-                return Err(GqlError::Status {
-                    status: Box::new(s.clone()),
-                });
-            }
+        if let Some(ref s) = resp.status
+            && status::is_exception(&s.code)
+        {
+            return Err(GqlError::Status {
+                status: Box::new(s.clone()),
+            });
         }
 
         Ok(())

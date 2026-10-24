@@ -319,7 +319,7 @@ async fn credentials_are_checked_and_passed_to_the_backend() {
         .err()
         .unwrap();
     assert_eq!(grpc_code(empty), tonic::Code::Unauthenticated);
-    assert!(backend.events_with("create").is_empty());
+    assert_eq!(backend.events_with("create"), Vec::<String>::new());
 
     let mut alix = conn
         .create_session_with_credentials(proto::AuthCredentials {

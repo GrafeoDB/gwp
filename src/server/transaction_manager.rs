@@ -312,7 +312,7 @@ mod tests {
         tm.begin_termination("tx2", "sess2").await.unwrap();
 
         assert_eq!(tm.take_for_session("sess1").await, vec!["tx1"]);
-        assert!(tm.take_for_session("sess2").await.is_empty());
+        assert_eq!(tm.take_for_session("sess2").await, Vec::<String>::new());
         assert!(!tm.has_transaction("sess1").await);
         assert!(!tm.has_transaction("sess2").await);
     }

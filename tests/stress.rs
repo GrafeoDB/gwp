@@ -278,7 +278,7 @@ async fn stress_transaction_parallel_sessions() {
                 .await
                 .unwrap();
             let rows = cursor.collect_rows().await.unwrap();
-            assert!(!rows.is_empty());
+            assert_ne!(rows, Vec::<Vec<gwp::types::Value>>::new());
 
             tx.commit().await.unwrap();
             session.close().await.unwrap();

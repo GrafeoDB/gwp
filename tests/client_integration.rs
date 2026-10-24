@@ -58,7 +58,7 @@ async fn client_session_lifecycle() {
         .unwrap();
 
     let mut session = conn.create_session().await.unwrap();
-    assert!(!session.session_id().is_empty());
+    assert_ne!(session.session_id(), "");
 
     // Ping
     let ts = session.ping().await.unwrap();
@@ -148,7 +148,7 @@ async fn client_transaction() {
 
     // Begin transaction
     let mut tx = session.begin_transaction().await.unwrap();
-    assert!(!tx.transaction_id().is_empty());
+    assert_ne!(tx.transaction_id(), "");
 
     // Execute within transaction
     let mut cursor = tx

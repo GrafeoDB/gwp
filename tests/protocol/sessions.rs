@@ -95,7 +95,10 @@ async fn configure_without_property_is_rejected() {
         .await
         .unwrap_err();
     assert_eq!(status.code(), tonic::Code::InvalidArgument);
-    assert!(server.backend.events_with("configure").is_empty());
+    assert_eq!(
+        server.backend.events_with("configure"),
+        Vec::<String>::new()
+    );
 }
 
 #[tokio::test]
@@ -148,7 +151,7 @@ async fn reset_with_unknown_target_is_rejected() {
             .unwrap_err();
         assert_eq!(status.code(), tonic::Code::InvalidArgument, "{target}");
     }
-    assert!(server.backend.events_with("reset").is_empty());
+    assert_eq!(server.backend.events_with("reset"), Vec::<String>::new());
 }
 
 #[tokio::test]
@@ -180,7 +183,7 @@ async fn handshake_reports_server_identity() {
         .into_inner();
 
     assert_eq!(response.protocol_version, 1);
-    assert!(!response.session_id.is_empty());
+    assert_ne!(response.session_id, "");
     let info = response.server_info.unwrap();
     assert_eq!(info.name, "gql-wire-protocol");
     assert_eq!(info.version, env!("CARGO_PKG_VERSION"));

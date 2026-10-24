@@ -103,7 +103,7 @@ async fn unknown_transaction_mode_is_rejected() {
         assert_eq!(err.code(), tonic::Code::InvalidArgument, "mode {mode}");
     }
     // Regression: an unknown mode used to start a READ WRITE transaction.
-    assert!(server.backend.events_with("begin").is_empty());
+    assert_eq!(server.backend.events_with("begin"), Vec::<String>::new());
     assert!(!server.transactions.has_transaction(&id).await);
 }
 
@@ -116,7 +116,10 @@ async fn failure_inside_a_transaction_keeps_it_usable() {
     let mut tx = session.begin_transaction().await.unwrap();
 
     let mut cursor = tx.execute_simple("FAIL").await.unwrap();
-    assert!(cursor.collect_rows().await.unwrap().is_empty());
+    assert_eq!(
+        cursor.collect_rows().await.unwrap(),
+        Vec::<Vec<gwp::types::Value>>::new()
+    );
     assert!(!cursor.is_success().await.unwrap());
     let summary = cursor.summary().await.unwrap().unwrap().clone();
     assert_eq!(summary.status.unwrap().code, status::INVALID_SYNTAX);
@@ -196,13 +199,13 @@ async fn double_begin_never_reaches_the_backend() {
         .unwrap()
         .into_inner();
     assert_eq!(second.status.unwrap().code, status::ACTIVE_TRANSACTION);
-    assert!(second.transaction_id.is_empty());
+    assert_eq!(second.transaction_id, "");
 
     // The backend saw one begin and no rollback: the first transaction is
     // untouched (a backend that nests or replaces transactions on a second
     // begin would otherwise be affected).
     assert_eq!(server.backend.events_with("begin").len(), 1);
-    assert!(server.backend.events_with("rollback").is_empty());
+    assert_eq!(server.backend.events_with("rollback"), Vec::<String>::new());
     assert_eq!(server.backend.transaction_of(&id), Some(tx.clone()));
     assert_eq!(commit(&mut gql, &id, &tx).await, status::SUCCESS);
 }
@@ -338,7 +341,7 @@ async fn commit_in_flight_claims_the_transaction() {
 
     // Only the in-flight commit reached the backend.
     assert_eq!(server.backend.events_with("commit").len(), 1);
-    assert!(server.backend.events_with("rollback").is_empty());
+    assert_eq!(server.backend.events_with("rollback"), Vec::<String>::new());
     begin(&mut gql, &id).await;
 }
 

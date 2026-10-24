@@ -226,10 +226,10 @@ impl<B: GqlBackend> GqlService for GqlServiceImpl<B> {
                     // the transaction. Unless the close already took it over,
                     // forget the transaction and roll it back here, so that
                     // it does not outlive its session.
-                    if self.transactions.remove(&tx_id).await.is_ok() {
-                        if let Err(err) = self.backend.rollback(&session, &handle).await {
-                            tracing::warn!(error = %err, "rollback after concurrent close failed");
-                        }
+                    if self.transactions.remove(&tx_id).await.is_ok()
+                        && let Err(err) = self.backend.rollback(&session, &handle).await
+                    {
+                        tracing::warn!(error = %err, "rollback after concurrent close failed");
                     }
                     return Err(Status::not_found(format!(
                         "session {} not found",
@@ -307,10 +307,10 @@ impl<B: GqlBackend> GqlService for GqlServiceImpl<B> {
                 tracing::warn!(error = %err, "commit failed");
                 // Make sure the backend does not keep the failed transaction
                 // open (unless a concurrent close already took it over).
-                if still_owned {
-                    if let Err(rollback_err) = self.backend.rollback(&session, &transaction).await {
-                        tracing::debug!(error = %rollback_err, "rollback after failed commit");
-                    }
+                if still_owned
+                    && let Err(rollback_err) = self.backend.rollback(&session, &transaction).await
+                {
+                    tracing::debug!(error = %rollback_err, "rollback after failed commit");
                 }
                 let status = match err.gql_status() {
                     Some(s) => s.clone(),

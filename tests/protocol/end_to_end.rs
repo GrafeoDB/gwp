@@ -139,6 +139,54 @@ async fn full_client_flow() {
 }
 
 #[tokio::test]
+async fn handshake_reports_the_configured_server_info() {
+    let addr = serve(GqlServer::builder(TestBackend::new()).server_info("GrafeoDB", "0.6.0")).await;
+    let channel = tonic::transport::Channel::from_shared(format!("http://{addr}"))
+        .unwrap()
+        .connect()
+        .await
+        .unwrap();
+    let mut client = proto::session_service_client::SessionServiceClient::new(channel);
+    let info = client
+        .handshake(proto::HandshakeRequest {
+            protocol_version: 1,
+            credentials: None,
+            client_info: HashMap::new(),
+        })
+        .await
+        .unwrap()
+        .into_inner()
+        .server_info
+        .unwrap();
+    assert_eq!(info.name, "GrafeoDB");
+    assert_eq!(info.version, "0.6.0");
+    assert_eq!(info.features, Vec::<String>::new());
+}
+
+#[tokio::test]
+async fn backend_gql_status_on_reset_reaches_the_client() {
+    let backend = TestBackend::new();
+    backend.refuse_reset_in_transaction();
+    let addr = serve(GqlServer::builder(backend)).await;
+    let conn = GqlConnection::connect(&format!("http://{addr}"))
+        .await
+        .unwrap();
+    let mut session = conn.create_session().await.unwrap();
+    let transaction = session.begin_transaction().await.unwrap();
+
+    match session.reset().await.unwrap_err() {
+        GqlError::Status { status: gql } => {
+            assert_eq!(gql.code, status::ACTIVE_TRANSACTION);
+            assert_eq!(gql.message, "reset with an open transaction");
+        }
+        other => panic!("expected a GQLSTATUS error, got {other:?}"),
+    }
+
+    transaction.commit().await.unwrap();
+    session.reset().await.unwrap();
+}
+
+#[tokio::test]
 async fn health_service_reports_serving() {
     let addr = serve(GqlServer::builder(TestBackend::new())).await;
     let channel = tonic::transport::Channel::from_shared(format!("http://{addr}"))

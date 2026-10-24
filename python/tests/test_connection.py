@@ -16,15 +16,19 @@ async def test_connect_and_create_session(test_server):
 
 @pytest.mark.asyncio
 async def test_connection_context_manager(test_server):
-    async with await GqlConnection.connect(test_server) as conn:
-        async with await conn.create_session() as session:
-            assert session.session_id
+    async with (
+        await GqlConnection.connect(test_server) as conn,
+        await conn.create_session() as session,
+    ):
+        assert session.session_id
 
 
 @pytest.mark.asyncio
 async def test_ping(test_server):
-    async with await GqlConnection.connect(test_server) as conn:
-        async with await conn.create_session() as session:
-            ts = await session.ping()
-            assert isinstance(ts, int)
-            assert ts > 0
+    async with (
+        await GqlConnection.connect(test_server) as conn,
+        await conn.create_session() as session,
+    ):
+        ts = await session.ping()
+        assert isinstance(ts, int)
+        assert ts > 0

@@ -1,6 +1,8 @@
 //! `SessionService` gRPC implementation.
 //!
-//! All errors are returned as gRPC status codes - no GQLSTATUS here.
+//! All errors are returned as gRPC status codes. A backend error that
+//! carries a GQLSTATUS also sends its code in the `gql-status` metadata
+//! entry (see [`GqlError::to_grpc_status`]).
 
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -47,10 +49,15 @@ pub struct SessionServiceImpl<B: GqlBackend> {
     sessions: SessionManager,
     transactions: TransactionManager,
     auth: Option<Arc<dyn AuthValidator>>,
+    server_name: String,
+    server_version: String,
 }
 
 impl<B: GqlBackend> SessionServiceImpl<B> {
     /// Create a new session service.
+    ///
+    /// The handshake reports the server as `gql-wire-protocol` with gwp's
+    /// version until [`with_server_info`](Self::with_server_info) sets it.
     pub fn new(
         backend: Arc<B>,
         sessions: SessionManager,
@@ -62,9 +69,26 @@ impl<B: GqlBackend> SessionServiceImpl<B> {
             sessions,
             transactions,
             auth,
+            server_name: DEFAULT_SERVER_NAME.to_owned(),
+            server_version: DEFAULT_SERVER_VERSION.to_owned(),
         }
     }
+
+    /// Set the server name and version the handshake reports in
+    /// `ServerInfo`.
+    #[must_use]
+    pub fn with_server_info(mut self, name: impl Into<String>, version: impl Into<String>) -> Self {
+        self.server_name = name.into();
+        self.server_version = version.into();
+        self
+    }
 }
+
+/// Server name the handshake reports when none is set.
+pub(crate) const DEFAULT_SERVER_NAME: &str = "gql-wire-protocol";
+
+/// Server version the handshake reports when none is set: gwp's own.
+pub(crate) const DEFAULT_SERVER_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[tonic::async_trait]
 impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
@@ -114,8 +138,8 @@ impl<B: GqlBackend> SessionService for SessionServiceImpl<B> {
             protocol_version: 1,
             session_id: handle.0,
             server_info: Some(proto::ServerInfo {
-                name: "gql-wire-protocol".to_owned(),
-                version: env!("CARGO_PKG_VERSION").to_owned(),
+                name: self.server_name.clone(),
+                version: self.server_version.clone(),
                 features: Vec::new(),
             }),
             limits: std::collections::HashMap::new(),

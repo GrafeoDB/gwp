@@ -94,6 +94,7 @@ struct Inner {
     state: Mutex<State>,
     fail_next_commit: AtomicBool,
     fail_rollback: AtomicBool,
+    refuse_reset_in_transaction: AtomicBool,
     begin_gate: Mutex<Option<Gate>>,
     commit_gate: Mutex<Option<Gate>>,
     frames_polled: Arc<AtomicUsize>,
@@ -166,6 +167,14 @@ impl TestBackend {
     /// Make every rollback fail.
     pub fn fail_rollbacks(&self) {
         self.inner.fail_rollback.store(true, Ordering::SeqCst);
+    }
+
+    /// Refuse a reset with 25G01 while the session has an open
+    /// transaction, as grafeo-server does.
+    pub fn refuse_reset_in_transaction(&self) {
+        self.inner
+            .refuse_reset_in_transaction
+            .store(true, Ordering::SeqCst);
     }
 
     /// Make the next `begin_transaction` wait at a gate.
@@ -395,6 +404,17 @@ impl GqlBackend for TestBackend {
         session: &SessionHandle,
         target: ResetTarget,
     ) -> Result<(), GqlError> {
+        if self
+            .inner
+            .refuse_reset_in_transaction
+            .load(Ordering::SeqCst)
+            && self.state().transactions.contains_key(&session.0)
+        {
+            return Err(GqlError::status(
+                status::ACTIVE_TRANSACTION,
+                "reset with an open transaction",
+            ));
+        }
         self.record(format!("reset {} {target:?}", session.0));
         Ok(())
     }

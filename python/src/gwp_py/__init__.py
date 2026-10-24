@@ -1,7 +1,5 @@
 """GWP - Python client for the GQL Wire Protocol."""
 
-from gwp_py.connection import GqlConnection
-from gwp_py.counters import COUNTER_KEYS, Counters
 from gwp_py.catalog import (
     CatalogClient,
     CreateGraphConfig,
@@ -9,8 +7,12 @@ from gwp_py.catalog import (
     GraphTypeInfo,
     SchemaInfo,
 )
+from gwp_py.connection import GqlConnection
+from gwp_py.counters import COUNTER_KEYS, Counters
 from gwp_py.errors import (
     ConnectionError as GqlConnectionError,
+)
+from gwp_py.errors import (
     GqlError,
     GqlStatusError,
     SessionError,
@@ -36,32 +38,32 @@ from gwp_py.types import (
 __version__ = "0.3.0"
 
 __all__ = [
-    "GqlConnection",
-    "GqlSession",
+    "COUNTER_KEYS",
     "CatalogClient",
-    "SchemaInfo",
+    "Counters",
+    "CreateGraphConfig",
+    "Edge",
+    "Field",
+    "GqlConnection",
+    "GqlConnectionError",
+    "GqlDate",
+    "GqlDuration",
+    "GqlError",
+    "GqlLocalDateTime",
+    "GqlLocalTime",
+    "GqlSession",
+    "GqlStatusError",
+    "GqlZonedDateTime",
+    "GqlZonedTime",
     "GraphInfo",
     "GraphTypeInfo",
-    "CreateGraphConfig",
+    "Node",
+    "Path",
+    "Record",
     "ResultCursor",
     "ResultSummary",
-    "Counters",
-    "COUNTER_KEYS",
-    "Transaction",
-    "GqlError",
-    "GqlStatusError",
-    "GqlConnectionError",
+    "SchemaInfo",
     "SessionError",
+    "Transaction",
     "TransactionError",
-    "Node",
-    "Edge",
-    "Path",
-    "GqlDate",
-    "GqlLocalTime",
-    "GqlZonedTime",
-    "GqlLocalDateTime",
-    "GqlZonedDateTime",
-    "GqlDuration",
-    "Record",
-    "Field",
 ]

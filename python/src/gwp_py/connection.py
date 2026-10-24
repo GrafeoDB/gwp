@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Self
+
 import grpc
 
 from gwp_py.catalog import CatalogClient
@@ -55,7 +57,7 @@ class GqlConnection:
         """Close the underlying gRPC channel."""
         await self._channel.close()
 
-    async def __aenter__(self) -> GqlConnection:
+    async def __aenter__(self) -> Self:
         return self
 
     async def __aexit__(self, *args: object) -> None:

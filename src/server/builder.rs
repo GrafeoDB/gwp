@@ -70,6 +70,7 @@ pub struct GqlServer<B: GqlBackend> {
     auth_validator: Option<Arc<dyn AuthValidator>>,
     idle_timeout: Option<Duration>,
     max_sessions: Option<usize>,
+    server_info: Option<(String, String)>,
     shutdown: Option<Pin<Box<dyn Future<Output = ()> + Send>>>,
 }
 
@@ -106,6 +107,7 @@ impl<B: GqlBackend> GqlServer<B> {
             auth_validator: None,
             idle_timeout: None,
             max_sessions: None,
+            server_info: None,
             shutdown: None,
         }
     }
@@ -148,6 +150,25 @@ impl<B: GqlBackend> GqlServer<B> {
     #[must_use]
     pub fn max_sessions(mut self, limit: usize) -> Self {
         self.max_sessions = Some(limit);
+        self
+    }
+
+    /// Set the server name and version the handshake reports.
+    ///
+    /// Clients read them from `HandshakeResponse.server_info`. When not
+    /// set, the server reports itself as `gql-wire-protocol` with gwp's
+    /// version.
+    ///
+    /// ```rust,no_run
+    /// use gwp::server::{GqlServer, GqlBackend};
+    ///
+    /// # fn example(backend: impl GqlBackend) {
+    /// let server = GqlServer::builder(backend).server_info("GrafeoDB", "0.6.0");
+    /// # }
+    /// ```
+    #[must_use]
+    pub fn server_info(mut self, name: impl Into<String>, version: impl Into<String>) -> Self {
+        self.server_info = Some((name.into(), version.into()));
         self
     }
 
@@ -243,12 +264,15 @@ impl<B: GqlBackend> GqlServer<B> {
         };
         let transactions = TransactionManager::new();
 
-        let session_service = SessionServiceImpl::new(
+        let mut session_service = SessionServiceImpl::new(
             Arc::clone(&backend),
             sessions.clone(),
             transactions.clone(),
             self.auth_validator,
         );
+        if let Some((name, version)) = self.server_info {
+            session_service = session_service.with_server_info(name, version);
+        }
 
         let gql_service =
             GqlServiceImpl::new(Arc::clone(&backend), sessions.clone(), transactions.clone());

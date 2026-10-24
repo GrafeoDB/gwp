@@ -3,6 +3,11 @@
 //! Every GQL operation produces a GQLSTATUS code. This module provides
 //! well-known code constants and helper methods for constructing and
 //! inspecting status values.
+//!
+//! The constants cover every condition in ISO/IEC 39075 Table 8,
+//! "GQLSTATUS class and subclass codes". Conditions that gwp names but the
+//! standard does not define use implementation-defined subclasses (ISO
+//! 23.1): their subclass starts with `I`, as in `42I01`.
 
 use crate::proto;
 
@@ -75,7 +80,7 @@ pub const NUMERIC_OUT_OF_RANGE: &str = "22003";
 /// Null value not allowed.
 pub const NULL_NOT_ALLOWED: &str = "22004";
 
-/// Invalid datetime format.
+/// Invalid date, time, or datetime format.
 pub const INVALID_DATETIME_FORMAT: &str = "22007";
 
 /// Datetime field overflow.
@@ -93,50 +98,132 @@ pub const INTERVAL_FIELD_OVERFLOW: &str = "22015";
 /// Invalid character value for cast.
 pub const INVALID_CHARACTER_VALUE_FOR_CAST: &str = "22018";
 
+/// Invalid argument for natural logarithm.
+pub const INVALID_LOGARITHM_ARGUMENT: &str = "2201E";
+
+/// Invalid argument for power function.
+pub const INVALID_POWER_ARGUMENT: &str = "2201F";
+
+/// Trim error.
+pub const TRIM_ERROR: &str = "22027";
+
+/// Array data, right truncation.
+pub const ARRAY_DATA_RIGHT_TRUNCATION: &str = "2202F";
+
+/// Negative limit value.
+pub const NEGATIVE_LIMIT: &str = "22G02";
+
 /// Invalid value type.
 pub const INVALID_VALUE_TYPE: &str = "22G03";
 
 /// Values not comparable.
 pub const NOT_COMPARABLE: &str = "22G04";
 
-/// Negative limit value.
-pub const NEGATIVE_LIMIT: &str = "22G05";
+/// Invalid date, time, or datetime function field name.
+pub const INVALID_DATETIME_FUNCTION_FIELD_NAME: &str = "22G05";
 
-/// Invalid element ID.
-pub const INVALID_ELEMENT_ID: &str = "22G06";
+/// Invalid datetime function value.
+pub const INVALID_DATETIME_FUNCTION_VALUE: &str = "22G06";
 
-/// Duplicate node in path.
-pub const DUPLICATE_NODE_IN_PATH: &str = "22G07";
-
-/// Duplicate edge in path.
-pub const DUPLICATE_EDGE_IN_PATH: &str = "22G08";
+/// Invalid duration function field name.
+pub const INVALID_DURATION_FUNCTION_FIELD_NAME: &str = "22G07";
 
 /// List data, right truncation.
-pub const LIST_DATA_RIGHT_TRUNCATION: &str = "22G09";
+pub const LIST_DATA_RIGHT_TRUNCATION: &str = "22G0B";
 
-/// Incompatible list element types.
-pub const INCOMPATIBLE_LIST_ELEMENT_TYPES: &str = "22G0A";
+/// List element error.
+pub const LIST_ELEMENT_ERROR: &str = "22G0C";
 
-/// Invalid property reference.
-pub const INVALID_PROPERTY_REFERENCE: &str = "22G0B";
+/// Invalid number of paths or groups.
+pub const INVALID_NUMBER_OF_PATHS_OR_GROUPS: &str = "22G0F";
 
-/// Property not found.
-pub const PROPERTY_NOT_FOUND: &str = "22G0C";
+/// Invalid duration format.
+pub const INVALID_DURATION_FORMAT: &str = "22G0H";
 
-/// Invalid label value.
-pub const INVALID_LABEL_VALUE: &str = "22G0D";
+/// Multiple assignments to a graph element property.
+pub const MULTIPLE_PROPERTY_ASSIGNMENTS: &str = "22G0M";
 
-/// Invalid element type.
-pub const INVALID_ELEMENT_TYPE: &str = "22G0E";
+/// Number of node labels below supported minimum.
+pub const NODE_LABELS_BELOW_MINIMUM: &str = "22G0N";
 
-/// Incompatible record field types.
-pub const INCOMPATIBLE_RECORD_FIELD_TYPES: &str = "22G0F";
+/// Number of node labels exceeds supported maximum.
+pub const NODE_LABELS_ABOVE_MAXIMUM: &str = "22G0P";
+
+/// Number of edge labels below supported minimum.
+pub const EDGE_LABELS_BELOW_MINIMUM: &str = "22G0Q";
+
+/// Number of edge labels exceeds supported maximum.
+pub const EDGE_LABELS_ABOVE_MAXIMUM: &str = "22G0R";
+
+/// Number of node properties exceeds supported maximum.
+pub const NODE_PROPERTIES_ABOVE_MAXIMUM: &str = "22G0S";
+
+/// Number of edge properties exceeds supported maximum.
+pub const EDGE_PROPERTIES_ABOVE_MAXIMUM: &str = "22G0T";
 
 /// Record fields do not match.
 pub const RECORD_MISMATCH: &str = "22G0U";
 
+/// Reference value, invalid base type.
+pub const REFERENCE_INVALID_BASE_TYPE: &str = "22G0V";
+
+/// Reference value, invalid constrained type.
+pub const REFERENCE_INVALID_CONSTRAINED_TYPE: &str = "22G0W";
+
+/// Record data, field unassignable.
+pub const RECORD_FIELD_UNASSIGNABLE: &str = "22G0X";
+
+/// Record data, field missing.
+pub const RECORD_FIELD_MISSING: &str = "22G0Y";
+
 /// Malformed path.
 pub const MALFORMED_PATH: &str = "22G0Z";
+
+/// Path data, right truncation.
+pub const PATH_DATA_RIGHT_TRUNCATION: &str = "22G10";
+
+/// Reference value, referent deleted.
+pub const REFERENT_DELETED: &str = "22G11";
+
+/// Invalid value type of a property or field reference.
+///
+/// ISO names this condition "invalid value type", like
+/// [`INVALID_VALUE_TYPE`] (22G03); the standard raises it when a property
+/// or field reference yields a value outside its declared type.
+pub const INVALID_DYNAMIC_VALUE_TYPE: &str = "22G12";
+
+/// Invalid group variable value.
+pub const INVALID_GROUP_VARIABLE_VALUE: &str = "22G13";
+
+/// Incompatible temporal instant unit groups.
+pub const INCOMPATIBLE_TEMPORAL_UNIT_GROUPS: &str = "22G14";
+
+/// Invalid element ID (implementation-defined).
+pub const INVALID_ELEMENT_ID: &str = "22I01";
+
+/// Duplicate node in path (implementation-defined).
+pub const DUPLICATE_NODE_IN_PATH: &str = "22I02";
+
+/// Duplicate edge in path (implementation-defined).
+pub const DUPLICATE_EDGE_IN_PATH: &str = "22I03";
+
+/// Incompatible list element types (implementation-defined).
+pub const INCOMPATIBLE_LIST_ELEMENT_TYPES: &str = "22I04";
+
+/// Invalid property reference (implementation-defined).
+pub const INVALID_PROPERTY_REFERENCE: &str = "22I05";
+
+/// Property not found (implementation-defined).
+pub const PROPERTY_NOT_FOUND: &str = "22I06";
+
+/// Invalid label value (implementation-defined).
+pub const INVALID_LABEL_VALUE: &str = "22I07";
+
+/// Invalid element type (implementation-defined).
+pub const INVALID_ELEMENT_TYPE: &str = "22I08";
+
+/// Incompatible record field types (implementation-defined).
+pub const INCOMPATIBLE_RECORD_FIELD_TYPES: &str = "22I09";
 
 // ============================================================================
 // Transaction state (class 25)
@@ -145,17 +232,23 @@ pub const MALFORMED_PATH: &str = "22G0Z";
 /// Invalid transaction state (no subclass).
 pub const INVALID_TRANSACTION_STATE: &str = "25000";
 
-/// Active GQL-transaction already exists.
+/// Active GQL-transaction.
 pub const ACTIVE_TRANSACTION: &str = "25G01";
 
-/// No active GQL-transaction.
-pub const NO_ACTIVE_TRANSACTION: &str = "25G02";
+/// Catalog and data statement mixing not supported.
+pub const CATALOG_AND_DATA_STATEMENT_MIXING: &str = "25G02";
 
 /// Read-only GQL-transaction.
 pub const READ_ONLY_TRANSACTION: &str = "25G03";
 
-/// GQL-transaction in failed state.
-pub const TRANSACTION_FAILED_STATE: &str = "25G04";
+/// Accessing multiple graphs not supported.
+pub const MULTIPLE_GRAPHS_NOT_SUPPORTED: &str = "25G04";
+
+/// No active GQL-transaction (implementation-defined).
+pub const NO_ACTIVE_TRANSACTION: &str = "25I01";
+
+/// GQL-transaction in failed state (implementation-defined).
+pub const TRANSACTION_FAILED_STATE: &str = "25I02";
 
 // ============================================================================
 // Transaction termination (class 2D)
@@ -187,57 +280,99 @@ pub const INVALID_SYNTAX: &str = "42001";
 /// Invalid reference.
 pub const INVALID_REFERENCE: &str = "42002";
 
-/// Duplicate definition.
-pub const DUPLICATE_DEFINITION: &str = "42004";
+/// Use of visually confusable identifiers.
+pub const VISUALLY_CONFUSABLE_IDENTIFIERS: &str = "42004";
 
-/// Ambiguous reference.
-pub const AMBIGUOUS_REFERENCE: &str = "42005";
+/// Graph type: number of edge labels below supported minimum.
+pub const GRAPH_TYPE_EDGE_LABELS_BELOW_MINIMUM: &str = "42006";
 
-/// Unsupported feature.
-pub const UNSUPPORTED_FEATURE: &str = "42006";
+/// Graph type: number of edge labels exceeds supported maximum.
+pub const GRAPH_TYPE_EDGE_LABELS_ABOVE_MAXIMUM: &str = "42007";
 
-/// Duplicate label.
-pub const DUPLICATE_LABEL: &str = "42007";
+/// Graph type: number of edge properties exceeds supported maximum.
+pub const GRAPH_TYPE_EDGE_PROPERTIES_ABOVE_MAXIMUM: &str = "42008";
 
-/// Invalid number of arguments.
-pub const INVALID_ARGUMENT_COUNT: &str = "42008";
+/// Graph type: number of node labels below supported minimum.
+pub const GRAPH_TYPE_NODE_LABELS_BELOW_MINIMUM: &str = "42009";
 
-/// Incompatible types.
-pub const INCOMPATIBLE_TYPES: &str = "42009";
+/// Graph type: number of node labels exceeds supported maximum.
+pub const GRAPH_TYPE_NODE_LABELS_ABOVE_MAXIMUM: &str = "42010";
 
-/// Invalid pattern.
-pub const INVALID_PATTERN: &str = "42010";
+/// Graph type: number of node properties exceeds supported maximum.
+pub const GRAPH_TYPE_NODE_PROPERTIES_ABOVE_MAXIMUM: &str = "42011";
 
-/// Invalid operand for aggregation.
-pub const INVALID_AGGREGATION_OPERAND: &str = "42011";
+/// Graph type: number of node type key labels below supported minimum.
+pub const GRAPH_TYPE_NODE_KEY_LABELS_BELOW_MINIMUM: &str = "42012";
 
-/// Invalid ordering specification.
-pub const INVALID_ORDERING: &str = "42012";
+/// Graph type: number of node type key labels exceeds supported maximum.
+pub const GRAPH_TYPE_NODE_KEY_LABELS_ABOVE_MAXIMUM: &str = "42013";
 
-/// Missing mandatory property.
-pub const MISSING_MANDATORY_PROPERTY: &str = "42013";
+/// Graph type: number of edge type key labels below supported minimum.
+pub const GRAPH_TYPE_EDGE_KEY_LABELS_BELOW_MINIMUM: &str = "42014";
 
-/// Invalid graph modification.
-pub const INVALID_GRAPH_MODIFICATION: &str = "42014";
+/// Graph type: number of edge type key labels exceeds supported maximum.
+pub const GRAPH_TYPE_EDGE_KEY_LABELS_ABOVE_MAXIMUM: &str = "42015";
 
-/// Procedure not found.
-pub const PROCEDURE_NOT_FOUND: &str = "42015";
+/// Duplicate definition (implementation-defined).
+pub const DUPLICATE_DEFINITION: &str = "42I01";
+
+/// Ambiguous reference (implementation-defined).
+pub const AMBIGUOUS_REFERENCE: &str = "42I02";
+
+/// Unsupported feature (implementation-defined).
+pub const UNSUPPORTED_FEATURE: &str = "42I03";
+
+/// Duplicate label (implementation-defined).
+pub const DUPLICATE_LABEL: &str = "42I04";
+
+/// Invalid number of arguments (implementation-defined).
+pub const INVALID_ARGUMENT_COUNT: &str = "42I05";
+
+/// Incompatible types (implementation-defined).
+pub const INCOMPATIBLE_TYPES: &str = "42I06";
+
+/// Invalid pattern (implementation-defined).
+pub const INVALID_PATTERN: &str = "42I07";
+
+/// Invalid operand for aggregation (implementation-defined).
+pub const INVALID_AGGREGATION_OPERAND: &str = "42I08";
+
+/// Invalid ordering specification (implementation-defined).
+pub const INVALID_ORDERING: &str = "42I09";
+
+/// Missing mandatory property (implementation-defined).
+pub const MISSING_MANDATORY_PROPERTY: &str = "42I10";
+
+/// Invalid graph modification (implementation-defined).
+pub const INVALID_GRAPH_MODIFICATION: &str = "42I11";
+
+/// Procedure not found (implementation-defined).
+pub const PROCEDURE_NOT_FOUND: &str = "42I12";
 
 // ============================================================================
 // Dependent object errors (class G1)
 // ============================================================================
 
-/// Dependent objects still exist (no subclass).
+/// Dependent object error (no subclass).
 pub const DEPENDENT_OBJECTS_EXIST: &str = "G1000";
 
-/// Graph depends on schema.
-pub const GRAPH_DEPENDS_ON_SCHEMA: &str = "G1001";
+/// Edges still exist.
+pub const EDGES_STILL_EXIST: &str = "G1001";
 
-/// Graph type depends on schema.
-pub const GRAPH_TYPE_DEPENDS_ON_SCHEMA: &str = "G1002";
+/// Endpoint node is deleted.
+pub const ENDPOINT_NODE_DELETED: &str = "G1002";
 
-/// Graph depends on graph type.
-pub const GRAPH_DEPENDS_ON_GRAPH_TYPE: &str = "G1003";
+/// Endpoint node not in current working graph.
+pub const ENDPOINT_NODE_NOT_IN_GRAPH: &str = "G1003";
+
+/// Graph depends on schema (implementation-defined).
+pub const GRAPH_DEPENDS_ON_SCHEMA: &str = "G1I01";
+
+/// Graph type depends on schema (implementation-defined).
+pub const GRAPH_TYPE_DEPENDS_ON_SCHEMA: &str = "G1I02";
+
+/// Graph depends on graph type (implementation-defined).
+pub const GRAPH_DEPENDS_ON_GRAPH_TYPE: &str = "G1I03";
 
 // ============================================================================
 // Graph type violation (class G2)
@@ -396,59 +531,65 @@ pub fn is_exception(code: &str) -> bool {
 // Operation code constants (ISO/IEC 39075 Table 9)
 // ============================================================================
 
-/// Session SET SCHEMA operation.
+/// Unrecognized statement or command.
+pub const OP_UNRECOGNIZED: i32 = 0;
+/// SESSION SET SCHEMA COMMAND.
 pub const OP_SESSION_SET_SCHEMA: i32 = 1;
-/// Session SET GRAPH operation.
+/// SESSION SET PROPERTY GRAPH COMMAND.
 pub const OP_SESSION_SET_GRAPH: i32 = 2;
-/// Session SET TIME ZONE operation.
+/// SESSION SET TIME ZONE COMMAND.
 pub const OP_SESSION_SET_TIME_ZONE: i32 = 3;
-/// Session SET PARAMETER operation.
-pub const OP_SESSION_SET_PARAMETER: i32 = 4;
-/// Session RESET operation.
-pub const OP_SESSION_RESET: i32 = 5;
-/// Session CLOSE operation.
-pub const OP_SESSION_CLOSE: i32 = 6;
-/// START TRANSACTION statement.
-pub const OP_START_TRANSACTION: i32 = 100;
-/// COMMIT statement.
-pub const OP_COMMIT: i32 = 101;
-/// ROLLBACK statement.
-pub const OP_ROLLBACK: i32 = 102;
-/// CREATE SCHEMA statement.
-pub const OP_CREATE_SCHEMA: i32 = 200;
-/// DROP SCHEMA statement.
-pub const OP_DROP_SCHEMA: i32 = 201;
-/// CREATE GRAPH statement.
-pub const OP_CREATE_GRAPH: i32 = 300;
-/// DROP GRAPH statement.
-pub const OP_DROP_GRAPH: i32 = 301;
-/// CREATE GRAPH TYPE statement.
-pub const OP_CREATE_GRAPH_TYPE: i32 = 400;
-/// DROP GRAPH TYPE statement.
-pub const OP_DROP_GRAPH_TYPE: i32 = 401;
-/// INSERT statement.
+/// SESSION SET PROPERTY GRAPH PARAMETER COMMAND.
+pub const OP_SESSION_SET_GRAPH_PARAMETER: i32 = 4;
+/// SESSION SET BINDING TABLE PARAMETER COMMAND.
+pub const OP_SESSION_SET_BINDING_TABLE_PARAMETER: i32 = 5;
+/// SESSION SET VALUE PARAMETER COMMAND.
+pub const OP_SESSION_SET_VALUE_PARAMETER: i32 = 6;
+/// SESSION RESET COMMAND.
+pub const OP_SESSION_RESET: i32 = 7;
+/// SESSION CLOSE COMMAND.
+pub const OP_SESSION_CLOSE: i32 = 8;
+/// START TRANSACTION COMMAND.
+pub const OP_START_TRANSACTION: i32 = 50;
+/// ROLLBACK COMMAND.
+pub const OP_ROLLBACK: i32 = 51;
+/// COMMIT COMMAND.
+pub const OP_COMMIT: i32 = 52;
+/// CREATE SCHEMA STATEMENT.
+pub const OP_CREATE_SCHEMA: i32 = 100;
+/// DROP SCHEMA STATEMENT.
+pub const OP_DROP_SCHEMA: i32 = 101;
+/// CREATE GRAPH STATEMENT.
+pub const OP_CREATE_GRAPH: i32 = 200;
+/// DROP GRAPH STATEMENT.
+pub const OP_DROP_GRAPH: i32 = 201;
+/// CREATE GRAPH TYPE STATEMENT.
+pub const OP_CREATE_GRAPH_TYPE: i32 = 300;
+/// DROP GRAPH TYPE STATEMENT.
+pub const OP_DROP_GRAPH_TYPE: i32 = 301;
+/// INSERT STATEMENT.
 pub const OP_INSERT_STATEMENT: i32 = 500;
-/// SET statement.
+/// SET STATEMENT.
 pub const OP_SET_STATEMENT: i32 = 501;
-/// REMOVE statement.
+/// REMOVE STATEMENT.
 pub const OP_REMOVE_STATEMENT: i32 = 502;
-/// DELETE statement.
+/// DELETE STATEMENT.
 pub const OP_DELETE_STATEMENT: i32 = 503;
-/// MATCH statement.
+/// MATCH STATEMENT.
 pub const OP_MATCH_STATEMENT: i32 = 600;
-/// OPTIONAL MATCH.
-pub const OP_OPTIONAL_MATCH: i32 = 601;
-/// FILTER statement.
-pub const OP_FILTER_STATEMENT: i32 = 602;
-/// LET statement.
-pub const OP_LET_STATEMENT: i32 = 603;
-/// FOR statement.
-pub const OP_FOR_STATEMENT: i32 = 604;
-/// ORDER BY clause.
-pub const OP_ORDER_BY: i32 = 605;
-/// RETURN statement.
-pub const OP_RETURN_STATEMENT: i32 = 700;
-/// CALL procedure statement.
+/// FILTER STATEMENT.
+pub const OP_FILTER_STATEMENT: i32 = 601;
+/// LET STATEMENT.
+pub const OP_LET_STATEMENT: i32 = 602;
+/// FOR STATEMENT.
+pub const OP_FOR_STATEMENT: i32 = 603;
+/// ORDER BY AND PAGE STATEMENT.
+pub const OP_ORDER_BY: i32 = 604;
+/// RETURN STATEMENT.
+pub const OP_RETURN_STATEMENT: i32 = 605;
+/// SELECT STATEMENT.
+pub const OP_SELECT_STATEMENT: i32 = 606;
+/// CALL PROCEDURE STATEMENT.
 pub const OP_CALL_PROCEDURE: i32 = 800;
 
 #[cfg(test)]
@@ -572,5 +713,66 @@ mod tests {
     fn dependent_objects_is_exception() {
         assert!(is_exception(DEPENDENT_OBJECTS_EXIST));
         assert!(is_exception(GRAPH_DEPENDS_ON_SCHEMA));
+    }
+
+    #[test]
+    fn codes_follow_iso_table_8() {
+        // Regression: these used codes ISO gives other conditions.
+        assert_eq!(NEGATIVE_LIMIT, "22G02");
+        assert_eq!(LIST_DATA_RIGHT_TRUNCATION, "22G0B");
+        assert_eq!(CATALOG_AND_DATA_STATEMENT_MIXING, "25G02");
+        assert_eq!(MULTIPLE_GRAPHS_NOT_SUPPORTED, "25G04");
+        assert_eq!(VISUALLY_CONFUSABLE_IDENTIFIERS, "42004");
+        assert_eq!(EDGES_STILL_EXIST, "G1001");
+    }
+
+    #[test]
+    fn non_iso_conditions_use_implementation_defined_subclasses() {
+        // ISO 23.1: an implementation-defined subclass starts with 5 to 9
+        // or I to Z.
+        for code in [
+            INVALID_ELEMENT_ID,
+            DUPLICATE_NODE_IN_PATH,
+            DUPLICATE_EDGE_IN_PATH,
+            INCOMPATIBLE_LIST_ELEMENT_TYPES,
+            INVALID_PROPERTY_REFERENCE,
+            PROPERTY_NOT_FOUND,
+            INVALID_LABEL_VALUE,
+            INVALID_ELEMENT_TYPE,
+            INCOMPATIBLE_RECORD_FIELD_TYPES,
+            NO_ACTIVE_TRANSACTION,
+            TRANSACTION_FAILED_STATE,
+            DUPLICATE_DEFINITION,
+            AMBIGUOUS_REFERENCE,
+            UNSUPPORTED_FEATURE,
+            DUPLICATE_LABEL,
+            INVALID_ARGUMENT_COUNT,
+            INCOMPATIBLE_TYPES,
+            INVALID_PATTERN,
+            INVALID_AGGREGATION_OPERAND,
+            INVALID_ORDERING,
+            MISSING_MANDATORY_PROPERTY,
+            INVALID_GRAPH_MODIFICATION,
+            PROCEDURE_NOT_FOUND,
+            GRAPH_DEPENDS_ON_SCHEMA,
+            GRAPH_TYPE_DEPENDS_ON_SCHEMA,
+            GRAPH_DEPENDS_ON_GRAPH_TYPE,
+        ] {
+            assert_eq!(code.len(), 5, "{code}");
+            assert_eq!(&code[2..3], "I", "{code}");
+        }
+    }
+
+    #[test]
+    fn operation_codes_follow_iso_table_9() {
+        assert_eq!(OP_SESSION_RESET, 7);
+        assert_eq!(OP_SESSION_CLOSE, 8);
+        assert_eq!(OP_START_TRANSACTION, 50);
+        assert_eq!(OP_ROLLBACK, 51);
+        assert_eq!(OP_COMMIT, 52);
+        assert_eq!(OP_CREATE_GRAPH, 200);
+        assert_eq!(OP_DROP_GRAPH_TYPE, 301);
+        assert_eq!(OP_RETURN_STATEMENT, 605);
+        assert_eq!(OP_SELECT_STATEMENT, 606);
     }
 }

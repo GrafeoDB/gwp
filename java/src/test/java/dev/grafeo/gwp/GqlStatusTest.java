@@ -188,4 +188,32 @@ class GqlStatusTest {
         assertTrue(GqlStatus.isException(GqlStatus.INVALID_SYNTAX));
         assertTrue(GqlStatus.isException(GqlStatus.INVALID_REFERENCE));
     }
+
+    // ========================================================================
+    // ISO/IEC 39075 Table 8
+    // ========================================================================
+
+    @Test
+    void codesFollowIsoTable8() {
+        assertEquals("22G02", GqlStatus.NEGATIVE_LIMIT);
+        assertEquals("22G0B", GqlStatus.LIST_DATA_RIGHT_TRUNCATION);
+        assertEquals("25G02", GqlStatus.CATALOG_AND_DATA_STATEMENT_MIXING);
+        assertEquals("25G04", GqlStatus.MULTIPLE_GRAPHS_NOT_SUPPORTED);
+        assertEquals("42004", GqlStatus.VISUALLY_CONFUSABLE_IDENTIFIERS);
+        assertEquals("G1001", GqlStatus.EDGES_STILL_EXIST);
+    }
+
+    @Test
+    void nonIsoConditionsUseImplementationDefinedSubclasses() {
+        for (String code : new String[] {
+                GqlStatus.INVALID_ELEMENT_ID,
+                GqlStatus.NO_ACTIVE_TRANSACTION,
+                GqlStatus.TRANSACTION_FAILED_STATE,
+                GqlStatus.DUPLICATE_DEFINITION,
+                GqlStatus.PROCEDURE_NOT_FOUND,
+                GqlStatus.GRAPH_DEPENDS_ON_SCHEMA,
+        }) {
+            assertEquals('I', code.charAt(2), code);
+        }
+    }
 }

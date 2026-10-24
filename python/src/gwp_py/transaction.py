@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Self
 
 from gwp_py._convert import value_to_proto
 from gwp_py._generated import gql_service_pb2 as gql_pb2
@@ -103,10 +103,12 @@ class Transaction:
         if resp.status and is_exception(resp.status.code):
             raise GqlStatusError(resp.status.code, resp.status.message)
 
-    async def __aenter__(self) -> Transaction:
+    async def __aenter__(self) -> Self:
         return self
 
-    async def __aexit__(self, exc_type: type | None, *args: object) -> None:
+    async def __aexit__(
+        self, exc_type: type[BaseException] | None, *args: object
+    ) -> None:
         if exc_type is not None:
             await self.rollback()
         elif not self._committed:

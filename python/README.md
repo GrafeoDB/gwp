@@ -14,12 +14,14 @@ uv add gwp-py
 import asyncio
 from gwp_py import GqlConnection
 
+
 async def main():
     conn = await GqlConnection.connect("localhost:50051")
     async with conn.create_session() as session:
         cursor = await session.execute("MATCH (n:Person) RETURN n.name")
         async for row in cursor:
             print(row)
+
 
 asyncio.run(main())
 ```

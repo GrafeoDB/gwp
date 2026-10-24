@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 Unreleased
+## 0.3.0 2026-10-24
 
 - **Breaking**: `GqlError::Status` holds its status boxed (`status: Box<proto::GqlStatus>`), which keeps `GqlError` and every `Result` carrying it small (clippy `result_large_err` on Rust 1.98). Code that builds the variant wraps the status in `Box::new(...)`; code that matches it and reads fields is unchanged through auto-deref
 - **Breaking**: The GQLSTATUS constants follow ISO/IEC 39075 Table 8. Codes that ISO gives to another condition move: `NEGATIVE_LIMIT` is `22G02` (was `22G05`) and `LIST_DATA_RIGHT_TRUNCATION` is `22G0B` (was `22G09`). Conditions ISO does not define keep their names and move to implementation-defined subclasses (ISO 23.1): `22I01` to `22I09` (`INVALID_ELEMENT_ID` to `INCOMPATIBLE_RECORD_FIELD_TYPES`, were `22G06` to `22G0F`), `NO_ACTIVE_TRANSACTION` `25I01` (was `25G02`), `TRANSACTION_FAILED_STATE` `25I02` (was `25G04`), `42I01` to `42I12` (`DUPLICATE_DEFINITION` to `PROCEDURE_NOT_FOUND`, were `42004` to `42015`) and `G1I01` to `G1I03` (`GRAPH_DEPENDS_ON_SCHEMA` to `GRAPH_DEPENDS_ON_GRAPH_TYPE`, were `G1001` to `G1003`). The rest of Table 8 is new, for example `CATALOG_AND_DATA_STATEMENT_MIXING` (`25G02`), `MULTIPLE_GRAPHS_NOT_SUPPORTED` (`25G04`), `VISUALLY_CONFUSABLE_IDENTIFIERS` (`42004`), the graph type limits `42006` to `42015` and `EDGES_STILL_EXIST` (`G1001`). Python `gwp_py.status` and Java `GqlStatus` have the same constants; Go and JS keep their few constants, which already matched

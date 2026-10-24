@@ -2,7 +2,7 @@
 
 ## 0.3.1 2026-10-24
 
-The 0.3.0 release reached crates.io and PyPI but not npm or Maven Central. 0.3.1 publishes the same code everywhere; nothing changes for Rust or Python users.
+The 0.3.0 release reached crates.io and PyPI but not npm or Maven Central (oops). 0.3.1 publishes the same code everywhere; nothing changes for Rust or Python users.
 
 - **Infra**: npm publishes through trusted publishing (OIDC) instead of the `NPM_TOKEN` secret, which npm no longer accepts; the job runs on Node 24 with the latest npm (trusted publishing needs npm 11.5.1 or newer). `package.json` gains a `repository` field (`GrafeoDB/gwp`), which npm provenance checks
 - **Infra**: Java publishes with `central-publishing-maven-plugin` 0.12.0 (was 0.6.0); Maven Central rejected the 0.3.0 bundle with "Bundle has content that does NOT have a .pom file"

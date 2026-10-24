@@ -66,7 +66,7 @@ class ResultCursor:
                 if response is grpc.aio.EOF:
                     self._done = True
                     return
-            except Exception:
+            except grpc.RpcError:
                 self._done = True
                 return
 

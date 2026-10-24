@@ -31,6 +31,12 @@ jobs:
   publish-npm:
     name: Publish to npm
     runs-on: ubuntu-latest
+    # Trusted publishing (OIDC): npm trusts this repo, workflow and
+    # environment, no token.
+    environment: npm
+    permissions:
+      id-token: write
+      contents: read
     defaults:
       run:
         working-directory: js
@@ -39,8 +45,12 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           registry-url: https://registry.npmjs.org/
+
+      # Trusted publishing needs npm 11.5.1 or newer.
+      - name: Update npm
+        run: npm install -g npm@latest
 
       - name: Install
         run: npm install
@@ -50,8 +60,6 @@ jobs:
 
       - name: Publish
         run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-maven:
     name: Publish to Maven Central

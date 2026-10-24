@@ -18,10 +18,10 @@ mod transaction_manager;
 pub use admin_service::AdminServiceImpl;
 pub use auth::{AuthInfo, AuthValidator};
 pub use backend::{
-    AdminStats, AdminValidationResult, AdminWalStatus, CreateGraphConfig, GqlBackend, GraphInfo,
-    GraphTypeInfo, GraphTypeSpec, HybridSearchParams, IndexDefinition, ResetTarget, ResultFrame,
-    ResultStream, SchemaInfo, SearchHit, SessionConfig, SessionHandle, SessionProperty,
-    TextSearchParams, TransactionHandle, ValidationDiagnostic, VectorSearchParams,
+    AdminStats, AdminValidationResult, AdminWalStatus, CatalogContext, CreateGraphConfig,
+    GqlBackend, GraphInfo, GraphTypeInfo, GraphTypeSpec, HybridSearchParams, IndexDefinition,
+    ResetTarget, ResultFrame, ResultStream, SchemaInfo, SearchHit, SessionConfig, SessionHandle,
+    SessionProperty, TextSearchParams, TransactionHandle, ValidationDiagnostic, VectorSearchParams,
 };
 pub use builder::GqlServer;
 pub use catalog_service::CatalogServiceImpl;

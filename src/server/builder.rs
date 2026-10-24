@@ -277,7 +277,8 @@ impl<B: GqlBackend> GqlServer<B> {
         let gql_service =
             GqlServiceImpl::new(Arc::clone(&backend), sessions.clone(), transactions.clone());
 
-        let catalog_service = CatalogServiceImpl::new(Arc::clone(&backend));
+        let catalog_service =
+            CatalogServiceImpl::new(Arc::clone(&backend)).with_sessions(sessions.clone());
         let admin_service = AdminServiceImpl::new(Arc::clone(&backend));
         let search_service = SearchServiceImpl::new(Arc::clone(&backend));
 

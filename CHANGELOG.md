@@ -3,6 +3,9 @@
 ## 0.3.0 Unreleased
 
 - **Breaking**: `GqlError::Status` holds its status boxed (`status: Box<proto::GqlStatus>`), which keeps `GqlError` and every `Result` carrying it small (clippy `result_large_err` on Rust 1.98). Code that builds the variant wraps the status in `Box::new(...)`; code that matches it and reads fields is unchanged through auto-deref
+- **Breaking**: The Rust MSRV is 1.88 (was 1.85), so `tonic` can move to 0.14.6; CI gains a job that checks the crate on Rust 1.88. Code uses let chains (stable since 1.88) where clippy now asks for collapsed `if`s
+- **Breaking**: The Python client requires Python 3.12 or newer (was 3.10; Python 3.10 reaches end of life in October 2026). Python 3.15 is supported: the package has classifiers for 3.12 to 3.15 and CI tests 3.12, 3.13, 3.14 and 3.15
+- **Breaking**: The JS client requires Node 22 or newer (`engines.node` was `>=18`; Node 18 and 20 are end of life); CI tests Node 22 and 24
 - **Bug fix**: A failed `Commit` now ends the transaction (ISO/IEC 39075 sec 8.4) and asks the backend to roll it back. Before, the transaction stayed registered and every later `BeginTransaction` on the session failed with `25G01`. A failed `Rollback` also ends the transaction
 - **Bug fix**: An `Execute` whose statement has a multi-byte character across byte 100 no longer panics the handler (the statement was cut at a fixed byte offset for the tracing span)
 - **Bug fix**: `BeginTransaction` with an unknown `TransactionMode` is rejected with `INVALID_ARGUMENT` instead of starting a READ WRITE transaction
@@ -26,6 +29,8 @@
 - **Infra**: Go and JS stubs regenerated from the current proto (only the `ResultSummary.counters` comment changed; Python stubs carry no comments and are unchanged); `js/scripts/generate-proto.sh` no longer calls `npm bin`, which npm 9 removed
 - **Bug fix**: Python `gwp_py.__version__` matches the package version
 - **Tests**: Protocol tests over real sockets against a stateful backend: value round-trips for every GQL type and their boundaries, the catalog flow with `IF NOT EXISTS` / `IF EXISTS`, session properties, transaction failures and races, untrusted input, disconnects and backpressure
+- **Dependencies**: Rust: minimums `tokio` 1.44.2 (RUSTSEC-2025-0023) and `tracing` 0.1.40 (RUSTSEC-2023-0078); lockfile refreshed (`h2` 0.4.20, `rustls` 0.23.46, `rustls-webpki` 0.103.16 clear RUSTSEC-2026-0258 and the 2026 rustls and webpki advisories); `tonic`, `tonic-build`, `tonic-health`, `tonic-prost` and `tonic-prost-build` 0.14.6 (needs Rust 1.88, see the MSRV raise above). Go: `google.golang.org/grpc` 1.84.0 (fixes GO-2026-6061 and GO-2026-6348) and `golang.org/x/net` 0.58.0, which raises the `go` directive from 1.24.0 to 1.25.0. Python: minimums `grpcio>=1.78.0` and `protobuf>=6.31.1` (`grpcio-tools>=1.78.0` for development), the versions the generated stubs check on import; with older versions `import gwp_py` failed. JS and Java: no range or version changes
+- **Infra**: GitHub Actions updated (`actions/checkout` v7, `setup-go`, `setup-node` and `setup-python` v7, `setup-java` v6, `upload-artifact` v7, `download-artifact` v8); Rust test assertions use `assert_eq!` / `assert_ne!` for the clippy `assert_is_empty` lint (Rust 1.99)
 
 ## 0.2.1 2026-04-11
 

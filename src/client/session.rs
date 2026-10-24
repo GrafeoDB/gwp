@@ -10,6 +10,7 @@ use crate::proto::gql_service_client::GqlServiceClient;
 use crate::proto::session_service_client::SessionServiceClient;
 use crate::types::Value;
 
+use super::catalog::CatalogClient;
 use super::result::ResultCursor;
 use super::transaction::Transaction;
 
@@ -42,6 +43,7 @@ use super::transaction::Transaction;
 /// ```
 pub struct GqlSession {
     session_id: String,
+    channel: Channel,
     session_client: SessionServiceClient<Channel>,
     gql_client: GqlServiceClient<Channel>,
 }
@@ -53,7 +55,7 @@ impl GqlSession {
         credentials: Option<proto::AuthCredentials>,
     ) -> Result<Self, GqlError> {
         let mut session_client = SessionServiceClient::new(channel.clone());
-        let gql_client = GqlServiceClient::new(channel);
+        let gql_client = GqlServiceClient::new(channel.clone());
 
         let resp = session_client
             .handshake(proto::HandshakeRequest {
@@ -66,6 +68,7 @@ impl GqlSession {
 
         Ok(Self {
             session_id: resp.session_id,
+            channel,
             session_client,
             gql_client,
         })
@@ -75,6 +78,19 @@ impl GqlSession {
     #[must_use]
     pub fn session_id(&self) -> &str {
         &self.session_id
+    }
+
+    /// A catalog client that works in this session's catalog.
+    ///
+    /// Its requests name this session, so a server that keeps one catalog
+    /// per session (one per database, say) shows this session's schemas
+    /// and graphs. [`GqlConnection::create_catalog_client`] gives one that
+    /// names no session.
+    ///
+    /// [`GqlConnection::create_catalog_client`]: super::GqlConnection::create_catalog_client
+    #[must_use]
+    pub fn catalog(&self) -> CatalogClient {
+        CatalogClient::for_session(self.channel.clone(), self.session_id.clone())
     }
 
     /// Execute a GQL statement and return a cursor over the results.

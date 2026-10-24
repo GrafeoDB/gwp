@@ -11,17 +11,37 @@ use crate::server::{CreateGraphConfig, GraphInfo, GraphTypeInfo, GraphTypeSpec, 
 ///
 /// Wraps the raw `CatalogServiceClient` gRPC stub with ergonomic
 /// methods that return domain types instead of proto messages.
+///
+/// A client from [`GqlSession::catalog`](crate::client::GqlSession::catalog)
+/// names its session on every request, so the server works in that
+/// session's catalog; one from [`new`](Self::new) names no session.
 pub struct CatalogClient {
     client: CatalogServiceClient<Channel>,
+    /// Session named on every request; empty for none.
+    session_id: String,
 }
 
 impl CatalogClient {
     /// Create a new catalog client from an existing tonic channel.
+    ///
+    /// Its requests name no session.
     #[must_use]
     pub fn new(channel: Channel) -> Self {
+        Self::for_session(channel, String::new())
+    }
+
+    /// A catalog client whose requests name `session_id`.
+    pub(crate) fn for_session(channel: Channel, session_id: String) -> Self {
         Self {
             client: CatalogServiceClient::new(channel),
+            session_id,
         }
+    }
+
+    /// The session this client's requests name, if any.
+    #[must_use]
+    pub fn session_id(&self) -> Option<&str> {
+        (!self.session_id.is_empty()).then_some(self.session_id.as_str())
     }
 
     // =========================================================================
@@ -37,7 +57,9 @@ impl CatalogClient {
     pub async fn list_schemas(&mut self) -> Result<Vec<SchemaInfo>, GqlError> {
         let resp = self
             .client
-            .list_schemas(proto::ListSchemasRequest {})
+            .list_schemas(proto::ListSchemasRequest {
+                session_id: self.session_id.clone(),
+            })
             .await?
             .into_inner();
 
@@ -61,6 +83,7 @@ impl CatalogClient {
     pub async fn create_schema(&mut self, name: &str, if_not_exists: bool) -> Result<(), GqlError> {
         self.client
             .create_schema(proto::CreateSchemaRequest {
+                session_id: self.session_id.clone(),
                 name: name.to_owned(),
                 if_not_exists,
             })
@@ -78,6 +101,7 @@ impl CatalogClient {
         let resp = self
             .client
             .drop_schema(proto::DropSchemaRequest {
+                session_id: self.session_id.clone(),
                 name: name.to_owned(),
                 if_exists,
             })
@@ -99,6 +123,7 @@ impl CatalogClient {
         let resp = self
             .client
             .list_graphs(proto::ListGraphsRequest {
+                session_id: self.session_id.clone(),
                 schema: schema.to_owned(),
             })
             .await?
@@ -135,6 +160,7 @@ impl CatalogClient {
         let resp = self
             .client
             .create_graph(proto::CreateGraphRequest {
+                session_id: self.session_id.clone(),
                 schema: config.schema,
                 name: config.name,
                 if_not_exists: config.if_not_exists,
@@ -183,6 +209,7 @@ impl CatalogClient {
         let resp = self
             .client
             .drop_graph(proto::DropGraphRequest {
+                session_id: self.session_id.clone(),
                 schema: schema.to_owned(),
                 name: name.to_owned(),
                 if_exists,
@@ -205,6 +232,7 @@ impl CatalogClient {
         let resp = self
             .client
             .get_graph_info(proto::GetGraphInfoRequest {
+                session_id: self.session_id.clone(),
                 schema: schema.to_owned(),
                 name: name.to_owned(),
             })
@@ -245,6 +273,7 @@ impl CatalogClient {
         let resp = self
             .client
             .list_graph_types(proto::ListGraphTypesRequest {
+                session_id: self.session_id.clone(),
                 schema: schema.to_owned(),
             })
             .await?
@@ -274,6 +303,7 @@ impl CatalogClient {
     ) -> Result<(), GqlError> {
         self.client
             .create_graph_type(proto::CreateGraphTypeRequest {
+                session_id: self.session_id.clone(),
                 schema: schema.to_owned(),
                 name: name.to_owned(),
                 if_not_exists,
@@ -298,6 +328,7 @@ impl CatalogClient {
         let resp = self
             .client
             .drop_graph_type(proto::DropGraphTypeRequest {
+                session_id: self.session_id.clone(),
                 schema: schema.to_owned(),
                 name: name.to_owned(),
                 if_exists,

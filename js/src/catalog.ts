@@ -1,6 +1,6 @@
 /** Catalog management client (schemas, graphs, graph types). */
 
-import type { ChannelCredentials } from "@grpc/grpc-js";
+import type { ChannelCredentials, Client } from "@grpc/grpc-js";
 import { CatalogServiceClient } from "./generated/gql_service";
 import { promisifyUnary } from "./util";
 
@@ -44,13 +44,45 @@ export interface CreateGraphConfig {
   readonly walDurability?: string;
 }
 
-/** A client for managing schemas, graphs, and graph types on a GWP server. */
+/**
+ * A client for managing schemas, graphs, and graph types on a GWP server.
+ *
+ * A client from `GqlSession.catalog()` names its session on every request,
+ * so the server works in that session's catalog; a server with
+ * authentication refuses catalog requests without a live session. A client
+ * from `GqlConnection.createCatalogClient()` names no session.
+ */
 export class CatalogClient {
   private readonly client: CatalogServiceClient;
+  /** Session named on every request; empty for none. */
+  private readonly _sessionId: string;
+  /** Whether `close()` closes the channel (false when it is shared). */
+  private readonly ownsChannel: boolean;
 
-  /** @internal */
-  constructor(endpoint: string, creds: ChannelCredentials) {
-    this.client = new CatalogServiceClient(endpoint, creds);
+  /**
+   * @internal
+   * With `channel`, the client runs on that channel (a session's) and
+   * `close()` leaves it open; without, it opens a channel of its own.
+   */
+  constructor(
+    endpoint: string,
+    creds: ChannelCredentials,
+    sessionId = "",
+    channel?: ReturnType<Client["getChannel"]>,
+  ) {
+    this.client =
+      channel === undefined
+        ? new CatalogServiceClient(endpoint, creds)
+        : new CatalogServiceClient(endpoint, creds, {
+            channelOverride: channel,
+          });
+    this._sessionId = sessionId;
+    this.ownsChannel = channel === undefined;
+  }
+
+  /** The session this client's requests name, or null if none. */
+  get sessionId(): string | null {
+    return this._sessionId || null;
   }
 
   // ========================================================================
@@ -59,7 +91,9 @@ export class CatalogClient {
 
   /** List all schemas on the server. */
   async listSchemas(): Promise<SchemaInfo[]> {
-    const resp = await promisifyUnary(this.client, "listSchemas", {});
+    const resp = await promisifyUnary(this.client, "listSchemas", {
+      sessionId: this._sessionId,
+    });
     return resp.schemas.map(
       (s: any): SchemaInfo => ({
         name: s.name,
@@ -71,12 +105,17 @@ export class CatalogClient {
 
   /** Create a new schema. */
   async createSchema(name: string, ifNotExists = false): Promise<void> {
-    await promisifyUnary(this.client, "createSchema", { name, ifNotExists });
+    await promisifyUnary(this.client, "createSchema", {
+      sessionId: this._sessionId,
+      name,
+      ifNotExists,
+    });
   }
 
   /** Drop a schema. Returns true if it existed. */
   async dropSchema(name: string, ifExists = false): Promise<boolean> {
     const resp = await promisifyUnary(this.client, "dropSchema", {
+      sessionId: this._sessionId,
       name,
       ifExists,
     });
@@ -89,7 +128,10 @@ export class CatalogClient {
 
   /** List all graphs in a schema. */
   async listGraphs(schema: string): Promise<GraphInfo[]> {
-    const resp = await promisifyUnary(this.client, "listGraphs", { schema });
+    const resp = await promisifyUnary(this.client, "listGraphs", {
+      sessionId: this._sessionId,
+      schema,
+    });
     return resp.graphs.map(
       (g: any): GraphInfo => ({
         schema: g.schema,
@@ -104,6 +146,7 @@ export class CatalogClient {
   /** Create a new graph. */
   async createGraph(config: CreateGraphConfig): Promise<GraphInfo> {
     const resp = await promisifyUnary(this.client, "createGraph", {
+      sessionId: this._sessionId,
       schema: config.schema,
       name: config.name,
       ifNotExists: config.ifNotExists ?? false,
@@ -137,6 +180,7 @@ export class CatalogClient {
     ifExists = false,
   ): Promise<boolean> {
     const resp = await promisifyUnary(this.client, "dropGraph", {
+      sessionId: this._sessionId,
       schema,
       name,
       ifExists,
@@ -147,6 +191,7 @@ export class CatalogClient {
   /** Get detailed information about a graph. */
   async getGraphInfo(schema: string, name: string): Promise<GraphInfo> {
     const resp = await promisifyUnary(this.client, "getGraphInfo", {
+      sessionId: this._sessionId,
       schema,
       name,
     });
@@ -172,6 +217,7 @@ export class CatalogClient {
   /** List all graph types in a schema. */
   async listGraphTypes(schema: string): Promise<GraphTypeDetails[]> {
     const resp = await promisifyUnary(this.client, "listGraphTypes", {
+      sessionId: this._sessionId,
       schema,
     });
     return resp.graphTypes.map(
@@ -190,6 +236,7 @@ export class CatalogClient {
     orReplace = false,
   ): Promise<void> {
     await promisifyUnary(this.client, "createGraphType", {
+      sessionId: this._sessionId,
       schema,
       name,
       ifNotExists,
@@ -204,6 +251,7 @@ export class CatalogClient {
     ifExists = false,
   ): Promise<boolean> {
     const resp = await promisifyUnary(this.client, "dropGraphType", {
+      sessionId: this._sessionId,
       schema,
       name,
       ifExists,
@@ -211,8 +259,14 @@ export class CatalogClient {
     return resp.existed;
   }
 
-  /** Close the underlying gRPC channel. */
+  /**
+   * Close the client's gRPC channel. A client from `GqlSession.catalog()`
+   * shares the session's channel, which closes with the connection, so this
+   * leaves it open.
+   */
   close(): void {
-    this.client.close();
+    if (this.ownsChannel) {
+      this.client.close();
+    }
   }
 }

@@ -12,7 +12,7 @@ Any GQL-compatible database engine can plug in via the `GqlBackend` trait. GWP h
 - **Fast:** Streaming results via server-side gRPC streaming
 - **Embeddable:** Library-first design, usable by any Rust project
 - **TLS:** Optional TLS via `tls` feature flag (rustls)
-- **Auth:** Pluggable authentication via `AuthValidator` trait
+- **Auth:** Pluggable authentication via `AuthValidator` trait; with it, every call needs an authenticated session (`session.catalog()`, `session.admin()`, `session.search()`)
 - **Health checks:** Standard `grpc.health.v1.Health` service
 - **Observability:** Structured tracing on all gRPC methods via `tracing` crate
 - **Graceful shutdown:** Drain connections on signal with `.shutdown()`
@@ -184,7 +184,7 @@ All bindings include `GqlConnection`, `GqlSession`, `Transaction`, `ResultCursor
 
 ## Requirements
 
-- Rust 1.88.0+ (edition 2024)
+- Rust 1.99.0+ (edition 2024)
 - `protoc` (Protocol Buffers compiler) - required at build time
 
 ## License

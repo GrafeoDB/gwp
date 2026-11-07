@@ -1,6 +1,7 @@
 //! gRPC server implementation.
 //!
-//! Provides the `SessionService`, `GqlService`, and `CatalogService` implementations,
+//! Provides the `SessionService`, `GqlService`, `CatalogService`, `AdminService` and
+//! `SearchService` implementations,
 //! session/transaction state management, and the pluggable `GqlBackend` trait.
 
 mod admin_service;
@@ -18,11 +19,16 @@ mod transaction_manager;
 pub use admin_service::AdminServiceImpl;
 pub use auth::{AuthInfo, AuthValidator};
 pub use backend::{
-    AdminStats, AdminValidationResult, AdminWalStatus, CatalogContext, CreateGraphConfig,
-    GqlBackend, GraphInfo, GraphTypeInfo, GraphTypeSpec, HybridSearchParams, IndexDefinition,
-    ResetTarget, ResultFrame, ResultStream, SchemaInfo, SearchHit, SessionConfig, SessionHandle,
+    AdminStats, AdminValidationResult, AdminWalStatus, CreateGraphConfig, GqlBackend, GraphInfo,
+    GraphTypeInfo, GraphTypeSpec, HybridSearchParams, IndexDefinition, RequestContext, ResetTarget,
+    ResultFrame, ResultStream, SchemaInfo, SearchHit, SessionConfig, SessionHandle,
     SessionProperty, TextSearchParams, TransactionHandle, ValidationDiagnostic, VectorSearchParams,
 };
+/// The context of a catalog request: the name [`RequestContext`] had in
+/// gwp 0.3.2, when only the catalog took one.
+#[deprecated(since = "0.4.0", note = "use `RequestContext`")]
+pub type CatalogContext = RequestContext;
+
 pub use builder::GqlServer;
 pub use catalog_service::CatalogServiceImpl;
 pub use gql_service::GqlServiceImpl;

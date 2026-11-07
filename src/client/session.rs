@@ -10,8 +10,10 @@ use crate::proto::gql_service_client::GqlServiceClient;
 use crate::proto::session_service_client::SessionServiceClient;
 use crate::types::Value;
 
+use super::admin::AdminClient;
 use super::catalog::CatalogClient;
 use super::result::ResultCursor;
+use super::search::SearchClient;
 use super::transaction::Transaction;
 
 /// An active session with a GQL server.
@@ -91,6 +93,22 @@ impl GqlSession {
     #[must_use]
     pub fn catalog(&self) -> CatalogClient {
         CatalogClient::for_session(self.channel.clone(), self.session_id.clone())
+    }
+
+    /// An admin client (stats, WAL, validation, indexes) whose requests
+    /// name this session, so the server can check that this session may
+    /// make them. A server that requires authentication serves only these.
+    #[must_use]
+    pub fn admin(&self) -> AdminClient {
+        AdminClient::for_session(self.channel.clone(), self.session_id.clone())
+    }
+
+    /// A search client (vector, text, hybrid) whose requests name this
+    /// session, so the server can check that this session may search. A
+    /// server that requires authentication serves only these.
+    #[must_use]
+    pub fn search(&self) -> SearchClient {
+        SearchClient::for_session(self.channel.clone(), self.session_id.clone())
     }
 
     /// Execute a GQL statement and return a cursor over the results.

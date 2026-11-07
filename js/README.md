@@ -25,6 +25,32 @@ await session.close();
 await conn.close();
 ```
 
+## Catalog
+
+`session.catalog()` returns a catalog client for schemas, graphs and graph
+types whose every request names the session; a server that keeps a catalog
+per session then uses that session's catalog. The client shares the session's
+channel, so `close()` on it leaves the session open:
+
+```typescript
+const catalog = session.catalog();
+console.log(catalog.sessionId); // the session's id
+
+const schemas = await catalog.listSchemas();
+const graphs = await catalog.listGraphs("default");
+
+catalog.close();
+```
+
+A named session the server does not know gets gRPC `NOT_FOUND`.
+`conn.createCatalogClient()` gives a client that names no session (its
+`sessionId` is `null`).
+
+This client does not send credentials in the handshake yet, so it cannot open
+a session on a server with authentication (such a server refuses the handshake,
+and catalog requests without a session, with `UNAUTHENTICATED`). Use the Rust
+client against such a server for now.
+
 ## Features
 
 - Full TypeScript type safety

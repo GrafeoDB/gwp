@@ -14,6 +14,7 @@ type GqlConnection struct {
 	conn          *grpc.ClientConn
 	sessionClient pb.SessionServiceClient
 	gqlClient     pb.GqlServiceClient
+	catalogClient pb.CatalogServiceClient
 }
 
 // Connect creates a new connection to a GWP server.
@@ -31,6 +32,7 @@ func Connect(ctx context.Context, target string, opts ...grpc.DialOption) (*GqlC
 		conn:          conn,
 		sessionClient: pb.NewSessionServiceClient(conn),
 		gqlClient:     pb.NewGqlServiceClient(conn),
+		catalogClient: pb.NewCatalogServiceClient(conn),
 	}, nil
 }
 
@@ -51,12 +53,15 @@ func (c *GqlConnection) CreateSession(ctx context.Context) (*GqlSession, error) 
 		sessionID:     resp.SessionId,
 		sessionClient: c.sessionClient,
 		gqlClient:     c.gqlClient,
+		catalogClient: c.catalogClient,
 	}, nil
 }
 
-// CreateCatalogClient creates a new catalog management client for schemas, graphs, and graph types.
+// CreateCatalogClient creates a new catalog management client for schemas,
+// graphs, and graph types. Its requests name no session, which a server with
+// authentication refuses; GqlSession.Catalog gives one bound to a session.
 func (c *GqlConnection) CreateCatalogClient() *CatalogClient {
-	return NewCatalogClient(c.conn)
+	return newSessionCatalogClient(c.catalogClient, "")
 }
 
 // Close closes the underlying gRPC connection.

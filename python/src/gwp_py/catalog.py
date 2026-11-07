@@ -59,10 +59,23 @@ class CreateGraphConfig:
 
 
 class CatalogClient:
-    """A client for managing schemas, graphs, and graph types on a GWP server."""
+    """A client for managing schemas, graphs, and graph types on a GWP server.
 
-    def __init__(self, channel: grpc.aio.Channel):
+    A client from `GqlSession.catalog()` names its session on every request,
+    so the server works in that session's catalog. A server with
+    authentication refuses catalog requests that name no live session. A
+    client from `GqlConnection.create_catalog_client()` names no session.
+    """
+
+    def __init__(self, channel: grpc.aio.Channel, *, session_id: str | None = None):
         self._stub = gql_grpc.CatalogServiceStub(channel)
+        # Session named on every request; empty for none.
+        self._session_id = session_id or ""
+
+    @property
+    def session_id(self) -> str | None:
+        """The session this client's requests name, or None for none."""
+        return self._session_id or None
 
     # ========================================================================
     # Schema operations
@@ -70,7 +83,9 @@ class CatalogClient:
 
     async def list_schemas(self) -> list[SchemaInfo]:
         """List all schemas on the server."""
-        resp = await self._stub.ListSchemas(gql_pb2.ListSchemasRequest())
+        resp = await self._stub.ListSchemas(
+            gql_pb2.ListSchemasRequest(session_id=self._session_id)
+        )
         return [
             SchemaInfo(
                 name=s.name,
@@ -83,13 +98,19 @@ class CatalogClient:
     async def create_schema(self, name: str, *, if_not_exists: bool = False) -> None:
         """Create a new schema."""
         await self._stub.CreateSchema(
-            gql_pb2.CreateSchemaRequest(name=name, if_not_exists=if_not_exists)
+            gql_pb2.CreateSchemaRequest(
+                session_id=self._session_id,
+                name=name,
+                if_not_exists=if_not_exists,
+            )
         )
 
     async def drop_schema(self, name: str, *, if_exists: bool = False) -> bool:
         """Drop a schema. Returns True if it existed."""
         resp = await self._stub.DropSchema(
-            gql_pb2.DropSchemaRequest(name=name, if_exists=if_exists)
+            gql_pb2.DropSchemaRequest(
+                session_id=self._session_id, name=name, if_exists=if_exists
+            )
         )
         return resp.existed
 
@@ -99,7 +120,9 @@ class CatalogClient:
 
     async def list_graphs(self, schema: str) -> list[GraphInfo]:
         """List all graphs in a schema."""
-        resp = await self._stub.ListGraphs(gql_pb2.ListGraphsRequest(schema=schema))
+        resp = await self._stub.ListGraphs(
+            gql_pb2.ListGraphsRequest(session_id=self._session_id, schema=schema)
+        )
         return [
             GraphInfo(
                 schema=g.schema,
@@ -127,6 +150,7 @@ class CatalogClient:
 
         resp = await self._stub.CreateGraph(
             gql_pb2.CreateGraphRequest(
+                session_id=self._session_id,
                 schema=config.schema,
                 name=config.name,
                 if_not_exists=config.if_not_exists,
@@ -149,14 +173,21 @@ class CatalogClient:
     ) -> bool:
         """Drop a graph. Returns True if it existed."""
         resp = await self._stub.DropGraph(
-            gql_pb2.DropGraphRequest(schema=schema, name=name, if_exists=if_exists)
+            gql_pb2.DropGraphRequest(
+                session_id=self._session_id,
+                schema=schema,
+                name=name,
+                if_exists=if_exists,
+            )
         )
         return resp.existed
 
     async def get_graph_info(self, schema: str, name: str) -> GraphInfo:
         """Get detailed information about a graph."""
         resp = await self._stub.GetGraphInfo(
-            gql_pb2.GetGraphInfoRequest(schema=schema, name=name)
+            gql_pb2.GetGraphInfoRequest(
+                session_id=self._session_id, schema=schema, name=name
+            )
         )
         return GraphInfo(
             schema=resp.schema,
@@ -177,7 +208,7 @@ class CatalogClient:
     async def list_graph_types(self, schema: str) -> list[GraphTypeInfo]:
         """List all graph types in a schema."""
         resp = await self._stub.ListGraphTypes(
-            gql_pb2.ListGraphTypesRequest(schema=schema)
+            gql_pb2.ListGraphTypesRequest(session_id=self._session_id, schema=schema)
         )
         return [GraphTypeInfo(schema=t.schema, name=t.name) for t in resp.graph_types]
 
@@ -192,6 +223,7 @@ class CatalogClient:
         """Create a new graph type."""
         await self._stub.CreateGraphType(
             gql_pb2.CreateGraphTypeRequest(
+                session_id=self._session_id,
                 schema=schema,
                 name=name,
                 if_not_exists=if_not_exists,
@@ -204,6 +236,11 @@ class CatalogClient:
     ) -> bool:
         """Drop a graph type. Returns True if it existed."""
         resp = await self._stub.DropGraphType(
-            gql_pb2.DropGraphTypeRequest(schema=schema, name=name, if_exists=if_exists)
+            gql_pb2.DropGraphTypeRequest(
+                session_id=self._session_id,
+                schema=schema,
+                name=name,
+                if_exists=if_exists,
+            )
         )
         return resp.existed

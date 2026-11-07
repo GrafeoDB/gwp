@@ -6,22 +6,45 @@ import gql.GqlServiceOuterClass.GraphSummary;
 import gql.GqlServiceOuterClass.GetGraphInfoResponse;
 import gql.GqlServiceOuterClass.SchemaInfo;
 import gql.GqlServiceOuterClass.GraphTypeInfo;
-import io.grpc.ManagedChannel;
+import io.grpc.Channel;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * A client for managing schemas, graphs, and graph types on a GWP server.
  *
  * <p>Replaces {@code DatabaseClient} from 0.1.5. Uses the CatalogService
  * which follows the GQL spec catalog &gt; schema &gt; graph hierarchy.</p>
+ *
+ * <p>A client from {@link GqlSession#catalog()} names its session on every
+ * request, so the server works in that session's catalog. A server with
+ * authentication refuses catalog requests that name no live session, so
+ * use the session-bound client there. A client from
+ * {@link GqlConnection#createCatalogClient()} names no session.</p>
  */
 public class CatalogClient implements AutoCloseable {
 
     private final gql.CatalogServiceGrpc.CatalogServiceBlockingStub stub;
+    /** Session named on every request; empty for none. */
+    private final String sessionId;
 
-    CatalogClient(ManagedChannel channel) {
+    CatalogClient(Channel channel) {
+        this(channel, "");
+    }
+
+    CatalogClient(Channel channel, String sessionId) {
         this.stub = gql.CatalogServiceGrpc.newBlockingStub(channel);
+        this.sessionId = sessionId == null ? "" : sessionId;
+    }
+
+    /**
+     * The session this client's requests name, if any.
+     *
+     * @return the session ID, or empty when this client names no session
+     */
+    public Optional<String> sessionId() {
+        return sessionId.isEmpty() ? Optional.empty() : Optional.of(sessionId);
     }
 
     // ========================================================================
@@ -132,7 +155,9 @@ public class CatalogClient implements AutoCloseable {
      * List all schemas on the server.
      */
     public List<SchemaDetails> listSchemas() {
-        var resp = stub.listSchemas(GqlServiceOuterClass.ListSchemasRequest.getDefaultInstance());
+        var resp = stub.listSchemas(GqlServiceOuterClass.ListSchemasRequest.newBuilder()
+                .setSessionId(sessionId)
+                .build());
         return resp.getSchemasList().stream()
                 .map(SchemaDetails::fromProto)
                 .toList();
@@ -143,6 +168,7 @@ public class CatalogClient implements AutoCloseable {
      */
     public void createSchema(String name, boolean ifNotExists) {
         stub.createSchema(GqlServiceOuterClass.CreateSchemaRequest.newBuilder()
+                .setSessionId(sessionId)
                 .setName(name)
                 .setIfNotExists(ifNotExists)
                 .build());
@@ -155,6 +181,7 @@ public class CatalogClient implements AutoCloseable {
      */
     public boolean dropSchema(String name, boolean ifExists) {
         var resp = stub.dropSchema(GqlServiceOuterClass.DropSchemaRequest.newBuilder()
+                .setSessionId(sessionId)
                 .setName(name)
                 .setIfExists(ifExists)
                 .build());
@@ -170,6 +197,7 @@ public class CatalogClient implements AutoCloseable {
      */
     public List<GraphInfo> listGraphs(String schema) {
         var resp = stub.listGraphs(GqlServiceOuterClass.ListGraphsRequest.newBuilder()
+                .setSessionId(sessionId)
                 .setSchema(schema)
                 .build());
         return resp.getGraphsList().stream()
@@ -199,6 +227,7 @@ public class CatalogClient implements AutoCloseable {
         }
 
         var resp = stub.createGraph(GqlServiceOuterClass.CreateGraphRequest.newBuilder()
+                .setSessionId(sessionId)
                 .setSchema(config.schema())
                 .setName(config.name())
                 .setIfNotExists(config.ifNotExists())
@@ -217,6 +246,7 @@ public class CatalogClient implements AutoCloseable {
      */
     public boolean dropGraph(String schema, String name, boolean ifExists) {
         var resp = stub.dropGraph(GqlServiceOuterClass.DropGraphRequest.newBuilder()
+                .setSessionId(sessionId)
                 .setSchema(schema)
                 .setName(name)
                 .setIfExists(ifExists)
@@ -229,6 +259,7 @@ public class CatalogClient implements AutoCloseable {
      */
     public GraphInfo getGraphInfo(String schema, String name) {
         var resp = stub.getGraphInfo(GqlServiceOuterClass.GetGraphInfoRequest.newBuilder()
+                .setSessionId(sessionId)
                 .setSchema(schema)
                 .setName(name)
                 .build());
@@ -244,6 +275,7 @@ public class CatalogClient implements AutoCloseable {
      */
     public List<GraphTypeDetails> listGraphTypes(String schema) {
         var resp = stub.listGraphTypes(GqlServiceOuterClass.ListGraphTypesRequest.newBuilder()
+                .setSessionId(sessionId)
                 .setSchema(schema)
                 .build());
         return resp.getGraphTypesList().stream()
@@ -256,6 +288,7 @@ public class CatalogClient implements AutoCloseable {
      */
     public void createGraphType(String schema, String name, boolean ifNotExists, boolean orReplace) {
         stub.createGraphType(GqlServiceOuterClass.CreateGraphTypeRequest.newBuilder()
+                .setSessionId(sessionId)
                 .setSchema(schema)
                 .setName(name)
                 .setIfNotExists(ifNotExists)
@@ -270,6 +303,7 @@ public class CatalogClient implements AutoCloseable {
      */
     public boolean dropGraphType(String schema, String name, boolean ifExists) {
         var resp = stub.dropGraphType(GqlServiceOuterClass.DropGraphTypeRequest.newBuilder()
+                .setSessionId(sessionId)
                 .setSchema(schema)
                 .setName(name)
                 .setIfExists(ifExists)

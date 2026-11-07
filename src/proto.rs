@@ -12,3 +12,8 @@
 )]
 
 tonic::include_proto!("gql");
+
+/// The encoded `FileDescriptorSet` of gwp's protocol (`gql_types.proto` and
+/// `gql_service.proto`), for gRPC server reflection or for tools that walk
+/// the services and messages.
+pub const FILE_DESCRIPTOR_SET: &[u8] = tonic::include_file_descriptor_set!("gql_descriptor");

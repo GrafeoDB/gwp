@@ -44,14 +44,14 @@ jobs:
           retention-days: 1
 
   msrv:
-    name: Rust MSRV (1.88)
+    name: Rust MSRV (1.99)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
 
       - uses: arduino/setup-protoc@v3
 
-      - uses: dtolnay/rust-toolchain@1.88.0
+      - uses: dtolnay/rust-toolchain@1.99.0
 
       - uses: Swatinem/rust-cache@v2
 
@@ -163,6 +163,7 @@ jobs:
   java:
     name: Java
     runs-on: ubuntu-latest
+    needs: rust
     steps:
       - uses: actions/checkout@v7
 
@@ -172,6 +173,15 @@ jobs:
           java-version: 17
           cache: maven
           cache-dependency-path: java/pom.xml
+
+      - name: Download test server
+        uses: actions/download-artifact@v8
+        with:
+          name: gwp-test-server
+          path: target/release
+
+      - name: Make test server executable
+        run: chmod +x target/release/gwp-test-server
 
       - name: Test
         run: mvn -B test

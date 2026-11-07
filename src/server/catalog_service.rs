@@ -5,8 +5,9 @@
 //! All errors are returned as gRPC status codes.
 //!
 //! A request may name the session it runs in (`session_id`); the backend
-//! then gets that session in the [`CatalogContext`] of the `*_in` catalog
-//! methods.
+//! then gets that session in the [`RequestContext`] of the `*_in` catalog
+//! methods. When the server requires authentication, a request must name a
+//! live session.
 
 use std::sync::Arc;
 
@@ -17,51 +18,25 @@ use crate::proto;
 use crate::proto::catalog_service_server::CatalogService;
 
 use super::SessionManager;
-use super::backend::{CatalogContext, CreateGraphConfig, GqlBackend, GraphTypeSpec, SessionHandle};
+use super::backend::{CreateGraphConfig, GqlBackend, GraphTypeSpec, RequestContext};
 
 /// Implementation of the `CatalogService` gRPC service.
 pub struct CatalogServiceImpl<B: GqlBackend> {
     backend: Arc<B>,
-    sessions: Option<SessionManager>,
+    sessions: SessionManager,
 }
 
 impl<B: GqlBackend> CatalogServiceImpl<B> {
-    /// Create a new catalog service.
-    ///
-    /// Without a session manager (see [`with_sessions`](Self::with_sessions))
-    /// a request that names a session is rejected with `NOT_FOUND`, since
-    /// the session cannot be checked.
-    pub fn new(backend: Arc<B>) -> Self {
-        Self {
-            backend,
-            sessions: None,
-        }
-    }
-
-    /// Check the sessions that catalog requests name against `sessions`.
-    #[must_use]
-    pub fn with_sessions(mut self, sessions: SessionManager) -> Self {
-        self.sessions = Some(sessions);
-        self
+    /// Create a new catalog service that checks the sessions requests name
+    /// against `sessions`, the manager the session service registers them
+    /// in.
+    pub fn new(backend: Arc<B>, sessions: SessionManager) -> Self {
+        Self { backend, sessions }
     }
 
     /// The context of a request that names `session_id` (empty for none).
-    ///
-    /// A named session must exist; using it counts as activity.
-    async fn context(&self, session_id: &str) -> Result<CatalogContext, Status> {
-        tracing::Span::current().record("session_id", session_id);
-        if session_id.is_empty() {
-            return Ok(CatalogContext::default());
-        }
-        match &self.sessions {
-            Some(sessions) if sessions.exists(session_id).await => {
-                sessions.touch(session_id).await;
-                Ok(CatalogContext::for_session(SessionHandle(
-                    session_id.to_owned(),
-                )))
-            }
-            _ => Err(Status::not_found(format!("session {session_id} not found"))),
-        }
+    async fn context(&self, session_id: &str) -> Result<RequestContext, Status> {
+        self.sessions.request_context(session_id).await
     }
 }
 
@@ -390,6 +365,7 @@ impl<B: GqlBackend> CatalogService for CatalogServiceImpl<B> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::server::SessionHandle;
     use crate::server::mock_backend::MockBackend;
 
     fn list_schemas(session_id: &str) -> Request<proto::ListSchemasRequest> {
@@ -399,20 +375,10 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn without_a_session_manager_a_named_session_is_not_found() {
-        let service = CatalogServiceImpl::new(Arc::new(MockBackend::new()));
-        let status = service.list_schemas(list_schemas("s1")).await.unwrap_err();
-        assert_eq!(status.code(), tonic::Code::NotFound);
-        // A request that names no session still works.
-        service.list_schemas(list_schemas("")).await.unwrap();
-    }
-
-    #[tokio::test]
     async fn a_live_session_is_passed_on() {
         let sessions = SessionManager::new();
         sessions.register("s1").await.unwrap();
-        let service =
-            CatalogServiceImpl::new(Arc::new(MockBackend::new())).with_sessions(sessions.clone());
+        let service = CatalogServiceImpl::new(Arc::new(MockBackend::new()), sessions);
 
         service.list_schemas(list_schemas("s1")).await.unwrap();
         assert_eq!(
@@ -424,5 +390,17 @@ mod tests {
             service.context("s2").await.unwrap_err().code(),
             tonic::Code::NotFound
         );
+    }
+
+    #[tokio::test]
+    async fn when_sessions_are_required_a_request_without_one_is_unauthenticated() {
+        let sessions = SessionManager::new();
+        sessions.register("s1").await.unwrap();
+        sessions.require_sessions();
+        let service = CatalogServiceImpl::new(Arc::new(MockBackend::new()), sessions);
+
+        let status = service.list_schemas(list_schemas("")).await.unwrap_err();
+        assert_eq!(status.code(), tonic::Code::Unauthenticated);
+        service.list_schemas(list_schemas("s1")).await.unwrap();
     }
 }

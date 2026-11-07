@@ -324,6 +324,7 @@ async fn missing_index_definition_and_empty_search_are_rejected() {
             .create_index(proto::CreateIndexRequest {
                 graph: "g".to_owned(),
                 index: None,
+                ..Default::default()
             })
             .await
             .unwrap_err()
@@ -332,6 +333,7 @@ async fn missing_index_definition_and_empty_search_are_rejected() {
             .drop_index(proto::DropIndexRequest {
                 graph: "g".to_owned(),
                 index: None,
+                ..Default::default()
             })
             .await
             .unwrap_err()
@@ -339,6 +341,7 @@ async fn missing_index_definition_and_empty_search_are_rejected() {
         admin
             .get_graph_stats(proto::GetGraphStatsRequest {
                 graph: String::new(),
+                ..Default::default()
             })
             .await
             .unwrap_err()
@@ -380,6 +383,7 @@ async fn missing_index_definition_and_empty_search_are_rejected() {
     let unsupported = admin
         .wal_status(proto::WalStatusRequest {
             graph: "g".to_owned(),
+            ..Default::default()
         })
         .await
         .unwrap_err();

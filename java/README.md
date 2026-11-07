@@ -86,6 +86,27 @@ session.reset();
 long timestamp = session.ping();
 ```
 
+### Catalog
+
+`CatalogClient` manages schemas, graphs and graph types. Get one from the session, so every request names that session. A server that keeps a catalog per session then uses that session's catalog:
+
+```java
+try (GqlSession session = conn.createSession();
+     CatalogClient catalog = session.catalog()) {
+    catalog.createSchema("analytics", true);
+    for (CatalogClient.SchemaDetails schema : catalog.listSchemas()) {
+        System.out.println(schema.name());
+    }
+    catalog.createGraph(new CatalogClient.CreateGraphConfig("analytics", "events"));
+
+    catalog.sessionId(); // Optional[<the session's ID>]
+}
+```
+
+A session the server does not know gets gRPC `NOT_FOUND`. `conn.createCatalogClient()` gives a client that names no session (`sessionId()` is empty).
+
+This client does not send credentials in the handshake yet, so it cannot open a session on a server with authentication (such a server refuses the handshake, and catalog requests without a session, with `UNAUTHENTICATED`). Use the Rust client against such a server for now.
+
 ### ResultCursor
 
 `ResultCursor` provides streaming access to query results. It implements `Iterator<List<Object>>` and `AutoCloseable`.
@@ -208,6 +229,7 @@ java/
     main/java/dev/grafeo/gwp/
       GqlConnection.java          - Connection management
       GqlSession.java             - Session lifecycle and configuration
+      CatalogClient.java          - Schema, graph and graph type management
       ResultCursor.java           - Streaming result cursor
       Transaction.java            - Explicit transaction control
       GqlStatus.java              - GQLSTATUS constants and helpers
@@ -233,6 +255,8 @@ java/
     test/java/dev/grafeo/gwp/
       GqlStatusTest.java          - Status helper unit tests
       GqlConnectionTest.java      - Integration tests with mock server
+      CatalogClientTest.java      - Catalog session binding with mock server
+      CatalogIntegrationTest.java - Catalog tests against gwp-test-server (skipped if not built)
 ```
 
 ## Dependencies

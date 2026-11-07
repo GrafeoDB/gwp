@@ -1567,7 +1567,10 @@ func (x *RollbackResponse) GetStatus() *GqlStatus {
 }
 
 type ListSchemasRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Session whose catalog to use; empty for none. A server with
+	// authentication refuses a request without a live session.
+	SessionId     string `protobuf:"bytes,15,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1600,6 +1603,13 @@ func (x *ListSchemasRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use ListSchemasRequest.ProtoReflect.Descriptor instead.
 func (*ListSchemasRequest) Descriptor() ([]byte, []int) {
 	return file_gql_service_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *ListSchemasRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
 }
 
 type SchemaInfo struct {
@@ -1707,9 +1717,12 @@ func (x *ListSchemasResponse) GetSchemas() []*SchemaInfo {
 }
 
 type CreateSchemaRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	IfNotExists   bool                   `protobuf:"varint,2,opt,name=if_not_exists,json=ifNotExists,proto3" json:"if_not_exists,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	Name        string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	IfNotExists bool                   `protobuf:"varint,2,opt,name=if_not_exists,json=ifNotExists,proto3" json:"if_not_exists,omitempty"`
+	// Session whose catalog to use; empty for none. A server with
+	// authentication refuses a request without a live session.
+	SessionId     string `protobuf:"bytes,15,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1758,6 +1771,13 @@ func (x *CreateSchemaRequest) GetIfNotExists() bool {
 	return false
 }
 
+func (x *CreateSchemaRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
 type CreateSchemaResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -1795,9 +1815,12 @@ func (*CreateSchemaResponse) Descriptor() ([]byte, []int) {
 }
 
 type DropSchemaRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	IfExists      bool                   `protobuf:"varint,2,opt,name=if_exists,json=ifExists,proto3" json:"if_exists,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Name     string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	IfExists bool                   `protobuf:"varint,2,opt,name=if_exists,json=ifExists,proto3" json:"if_exists,omitempty"`
+	// Session whose catalog to use; empty for none. A server with
+	// authentication refuses a request without a live session.
+	SessionId     string `protobuf:"bytes,15,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1846,6 +1869,13 @@ func (x *DropSchemaRequest) GetIfExists() bool {
 	return false
 }
 
+func (x *DropSchemaRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
 type DropSchemaResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Existed       bool                   `protobuf:"varint,1,opt,name=existed,proto3" json:"existed,omitempty"`
@@ -1891,8 +1921,11 @@ func (x *DropSchemaResponse) GetExisted() bool {
 }
 
 type ListGraphsRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Schema        string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"` // Schema to list graphs from
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	Schema string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"` // Schema to list graphs from
+	// Session whose catalog to use; empty for none. A server with
+	// authentication refuses a request without a live session.
+	SessionId     string `protobuf:"bytes,15,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1930,6 +1963,13 @@ func (*ListGraphsRequest) Descriptor() ([]byte, []int) {
 func (x *ListGraphsRequest) GetSchema() string {
 	if x != nil {
 		return x.Schema
+	}
+	return ""
+}
+
+func (x *ListGraphsRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
 	}
 	return ""
 }
@@ -2070,8 +2110,11 @@ type CreateGraphRequest struct {
 	// Optional: copy contents from source graph
 	CopyOf *string `protobuf:"bytes,7,opt,name=copy_of,json=copyOf,proto3,oneof" json:"copy_of,omitempty"` // "schema.graph" qualified name
 	// Engine-specific options (GrafeoDB extensions)
-	StorageMode   string        `protobuf:"bytes,10,opt,name=storage_mode,json=storageMode,proto3" json:"storage_mode,omitempty"` // "InMemory" or "Persistent"
-	Options       *GraphOptions `protobuf:"bytes,11,opt,name=options,proto3" json:"options,omitempty"`
+	StorageMode string        `protobuf:"bytes,10,opt,name=storage_mode,json=storageMode,proto3" json:"storage_mode,omitempty"` // "InMemory" or "Persistent"
+	Options     *GraphOptions `protobuf:"bytes,11,opt,name=options,proto3" json:"options,omitempty"`
+	// Session whose catalog to use; empty for none. A server with
+	// authentication refuses a request without a live session.
+	SessionId     string `protobuf:"bytes,15,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2178,6 +2221,13 @@ func (x *CreateGraphRequest) GetOptions() *GraphOptions {
 		return x.Options
 	}
 	return nil
+}
+
+func (x *CreateGraphRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
 }
 
 type isCreateGraphRequest_TypeSpec interface {
@@ -2317,10 +2367,13 @@ func (x *CreateGraphResponse) GetGraph() *GraphSummary {
 }
 
 type DropGraphRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Schema        string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	IfExists      bool                   `protobuf:"varint,3,opt,name=if_exists,json=ifExists,proto3" json:"if_exists,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Schema   string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"`
+	Name     string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	IfExists bool                   `protobuf:"varint,3,opt,name=if_exists,json=ifExists,proto3" json:"if_exists,omitempty"`
+	// Session whose catalog to use; empty for none. A server with
+	// authentication refuses a request without a live session.
+	SessionId     string `protobuf:"bytes,15,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2376,6 +2429,13 @@ func (x *DropGraphRequest) GetIfExists() bool {
 	return false
 }
 
+func (x *DropGraphRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
 type DropGraphResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Existed       bool                   `protobuf:"varint,1,opt,name=existed,proto3" json:"existed,omitempty"`
@@ -2421,9 +2481,12 @@ func (x *DropGraphResponse) GetExisted() bool {
 }
 
 type GetGraphInfoRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Schema        string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	Schema string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"`
+	Name   string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	// Session whose catalog to use; empty for none. A server with
+	// authentication refuses a request without a live session.
+	SessionId     string `protobuf:"bytes,15,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2468,6 +2531,13 @@ func (x *GetGraphInfoRequest) GetSchema() string {
 func (x *GetGraphInfoRequest) GetName() string {
 	if x != nil {
 		return x.Name
+	}
+	return ""
+}
+
+func (x *GetGraphInfoRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
 	}
 	return ""
 }
@@ -2581,8 +2651,11 @@ func (x *GetGraphInfoResponse) GetThreads() uint32 {
 }
 
 type ListGraphTypesRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Schema        string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"`
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	Schema string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"`
+	// Session whose catalog to use; empty for none. A server with
+	// authentication refuses a request without a live session.
+	SessionId     string `protobuf:"bytes,15,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2620,6 +2693,13 @@ func (*ListGraphTypesRequest) Descriptor() ([]byte, []int) {
 func (x *ListGraphTypesRequest) GetSchema() string {
 	if x != nil {
 		return x.Schema
+	}
+	return ""
+}
+
+func (x *ListGraphTypesRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
 	}
 	return ""
 }
@@ -2721,11 +2801,14 @@ func (x *ListGraphTypesResponse) GetGraphTypes() []*GraphTypeInfo {
 }
 
 type CreateGraphTypeRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Schema        string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	IfNotExists   bool                   `protobuf:"varint,3,opt,name=if_not_exists,json=ifNotExists,proto3" json:"if_not_exists,omitempty"`
-	OrReplace     bool                   `protobuf:"varint,4,opt,name=or_replace,json=orReplace,proto3" json:"or_replace,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	Schema      string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"`
+	Name        string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	IfNotExists bool                   `protobuf:"varint,3,opt,name=if_not_exists,json=ifNotExists,proto3" json:"if_not_exists,omitempty"`
+	OrReplace   bool                   `protobuf:"varint,4,opt,name=or_replace,json=orReplace,proto3" json:"or_replace,omitempty"`
+	// Session whose catalog to use; empty for none. A server with
+	// authentication refuses a request without a live session.
+	SessionId     string `protobuf:"bytes,15,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2788,6 +2871,13 @@ func (x *CreateGraphTypeRequest) GetOrReplace() bool {
 	return false
 }
 
+func (x *CreateGraphTypeRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
 type CreateGraphTypeResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -2825,10 +2915,13 @@ func (*CreateGraphTypeResponse) Descriptor() ([]byte, []int) {
 }
 
 type DropGraphTypeRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Schema        string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	IfExists      bool                   `protobuf:"varint,3,opt,name=if_exists,json=ifExists,proto3" json:"if_exists,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Schema   string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"`
+	Name     string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	IfExists bool                   `protobuf:"varint,3,opt,name=if_exists,json=ifExists,proto3" json:"if_exists,omitempty"`
+	// Session whose catalog to use; empty for none. A server with
+	// authentication refuses a request without a live session.
+	SessionId     string `protobuf:"bytes,15,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2884,6 +2977,13 @@ func (x *DropGraphTypeRequest) GetIfExists() bool {
 	return false
 }
 
+func (x *DropGraphTypeRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
 type DropGraphTypeResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Existed       bool                   `protobuf:"varint,1,opt,name=existed,proto3" json:"existed,omitempty"`
@@ -2929,8 +3029,11 @@ func (x *DropGraphTypeResponse) GetExisted() bool {
 }
 
 type GetGraphStatsRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Graph         string                 `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Graph string                 `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
+	// Session the call runs in; empty for none. A server with
+	// authentication refuses a request without a live session.
+	SessionId     string `protobuf:"bytes,15,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2968,6 +3071,13 @@ func (*GetGraphStatsRequest) Descriptor() ([]byte, []int) {
 func (x *GetGraphStatsRequest) GetGraph() string {
 	if x != nil {
 		return x.Graph
+	}
+	return ""
+}
+
+func (x *GetGraphStatsRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
 	}
 	return ""
 }
@@ -3073,8 +3183,11 @@ func (x *GetGraphStatsResponse) GetDiskBytes() uint64 {
 }
 
 type WalStatusRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Graph         string                 `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Graph string                 `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
+	// Session the call runs in; empty for none. A server with
+	// authentication refuses a request without a live session.
+	SessionId     string `protobuf:"bytes,15,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3112,6 +3225,13 @@ func (*WalStatusRequest) Descriptor() ([]byte, []int) {
 func (x *WalStatusRequest) GetGraph() string {
 	if x != nil {
 		return x.Graph
+	}
+	return ""
+}
+
+func (x *WalStatusRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
 	}
 	return ""
 }
@@ -3201,8 +3321,11 @@ func (x *WalStatusResponse) GetCurrentEpoch() uint64 {
 }
 
 type WalCheckpointRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Graph         string                 `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Graph string                 `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
+	// Session the call runs in; empty for none. A server with
+	// authentication refuses a request without a live session.
+	SessionId     string `protobuf:"bytes,15,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3244,6 +3367,13 @@ func (x *WalCheckpointRequest) GetGraph() string {
 	return ""
 }
 
+func (x *WalCheckpointRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
 type WalCheckpointResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -3281,8 +3411,11 @@ func (*WalCheckpointResponse) Descriptor() ([]byte, []int) {
 }
 
 type ValidateRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Graph         string                 `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Graph string                 `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
+	// Session the call runs in; empty for none. A server with
+	// authentication refuses a request without a live session.
+	SessionId     string `protobuf:"bytes,15,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3320,6 +3453,13 @@ func (*ValidateRequest) Descriptor() ([]byte, []int) {
 func (x *ValidateRequest) GetGraph() string {
 	if x != nil {
 		return x.Graph
+	}
+	return ""
+}
+
+func (x *ValidateRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
 	}
 	return ""
 }
@@ -3512,7 +3652,10 @@ type CreateIndexRequest struct {
 	//	*CreateIndexRequest_PropertyIndex
 	//	*CreateIndexRequest_VectorIndex
 	//	*CreateIndexRequest_TextIndex
-	Index         isCreateIndexRequest_Index `protobuf_oneof:"index"`
+	Index isCreateIndexRequest_Index `protobuf_oneof:"index"`
+	// Session the call runs in; empty for none. A server with
+	// authentication refuses a request without a live session.
+	SessionId     string `protobuf:"bytes,15,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3586,6 +3729,13 @@ func (x *CreateIndexRequest) GetTextIndex() *TextIndexDef {
 		}
 	}
 	return nil
+}
+
+func (x *CreateIndexRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
 }
 
 type isCreateIndexRequest_Index interface {
@@ -3834,7 +3984,10 @@ type DropIndexRequest struct {
 	//	*DropIndexRequest_PropertyIndex
 	//	*DropIndexRequest_VectorIndex
 	//	*DropIndexRequest_TextIndex
-	Index         isDropIndexRequest_Index `protobuf_oneof:"index"`
+	Index isDropIndexRequest_Index `protobuf_oneof:"index"`
+	// Session the call runs in; empty for none. A server with
+	// authentication refuses a request without a live session.
+	SessionId     string `protobuf:"bytes,15,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3910,6 +4063,13 @@ func (x *DropIndexRequest) GetTextIndex() *TextIndexDef {
 	return nil
 }
 
+func (x *DropIndexRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
 type isDropIndexRequest_Index interface {
 	isDropIndexRequest_Index()
 }
@@ -3977,14 +4137,17 @@ func (x *DropIndexResponse) GetExisted() bool {
 }
 
 type VectorSearchRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Graph         string                 `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
-	Label         string                 `protobuf:"bytes,2,opt,name=label,proto3" json:"label,omitempty"`
-	Property      string                 `protobuf:"bytes,3,opt,name=property,proto3" json:"property,omitempty"`
-	QueryVector   []float32              `protobuf:"fixed32,4,rep,packed,name=query_vector,json=queryVector,proto3" json:"query_vector,omitempty"`
-	K             uint32                 `protobuf:"varint,5,opt,name=k,proto3" json:"k,omitempty"`
-	Ef            *uint32                `protobuf:"varint,6,opt,name=ef,proto3,oneof" json:"ef,omitempty"`
-	Filters       map[string]*Value      `protobuf:"bytes,7,rep,name=filters,proto3" json:"filters,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	Graph       string                 `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
+	Label       string                 `protobuf:"bytes,2,opt,name=label,proto3" json:"label,omitempty"`
+	Property    string                 `protobuf:"bytes,3,opt,name=property,proto3" json:"property,omitempty"`
+	QueryVector []float32              `protobuf:"fixed32,4,rep,packed,name=query_vector,json=queryVector,proto3" json:"query_vector,omitempty"`
+	K           uint32                 `protobuf:"varint,5,opt,name=k,proto3" json:"k,omitempty"`
+	Ef          *uint32                `protobuf:"varint,6,opt,name=ef,proto3,oneof" json:"ef,omitempty"`
+	Filters     map[string]*Value      `protobuf:"bytes,7,rep,name=filters,proto3" json:"filters,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Session the call runs in; empty for none. A server with
+	// authentication refuses a request without a live session.
+	SessionId     string `protobuf:"bytes,15,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4068,13 +4231,23 @@ func (x *VectorSearchRequest) GetFilters() map[string]*Value {
 	return nil
 }
 
+func (x *VectorSearchRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
 type TextSearchRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Graph         string                 `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
-	Label         string                 `protobuf:"bytes,2,opt,name=label,proto3" json:"label,omitempty"`
-	Property      string                 `protobuf:"bytes,3,opt,name=property,proto3" json:"property,omitempty"`
-	Query         string                 `protobuf:"bytes,4,opt,name=query,proto3" json:"query,omitempty"`
-	K             uint32                 `protobuf:"varint,5,opt,name=k,proto3" json:"k,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Graph    string                 `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
+	Label    string                 `protobuf:"bytes,2,opt,name=label,proto3" json:"label,omitempty"`
+	Property string                 `protobuf:"bytes,3,opt,name=property,proto3" json:"property,omitempty"`
+	Query    string                 `protobuf:"bytes,4,opt,name=query,proto3" json:"query,omitempty"`
+	K        uint32                 `protobuf:"varint,5,opt,name=k,proto3" json:"k,omitempty"`
+	// Session the call runs in; empty for none. A server with
+	// authentication refuses a request without a live session.
+	SessionId     string `protobuf:"bytes,15,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4144,6 +4317,13 @@ func (x *TextSearchRequest) GetK() uint32 {
 	return 0
 }
 
+func (x *TextSearchRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
 type HybridSearchRequest struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	Graph          string                 `protobuf:"bytes,1,opt,name=graph,proto3" json:"graph,omitempty"`
@@ -4153,8 +4333,11 @@ type HybridSearchRequest struct {
 	QueryText      string                 `protobuf:"bytes,5,opt,name=query_text,json=queryText,proto3" json:"query_text,omitempty"`
 	QueryVector    []float32              `protobuf:"fixed32,6,rep,packed,name=query_vector,json=queryVector,proto3" json:"query_vector,omitempty"`
 	K              uint32                 `protobuf:"varint,7,opt,name=k,proto3" json:"k,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// Session the call runs in; empty for none. A server with
+	// authentication refuses a request without a live session.
+	SessionId     string `protobuf:"bytes,15,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *HybridSearchRequest) Reset() {
@@ -4234,6 +4417,13 @@ func (x *HybridSearchRequest) GetK() uint32 {
 		return x.K
 	}
 	return 0
+}
+
+func (x *HybridSearchRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
 }
 
 // A single search result. node_id is an internal numeric identifier
@@ -4543,8 +4733,10 @@ const file_gql_service_proto_rawDesc = "" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12%\n" +
 	"\x0etransaction_id\x18\x02 \x01(\tR\rtransactionId\":\n" +
 	"\x10RollbackResponse\x12&\n" +
-	"\x06status\x18\x01 \x01(\v2\x0e.gql.GqlStatusR\x06status\"\x14\n" +
-	"\x12ListSchemasRequest\"k\n" +
+	"\x06status\x18\x01 \x01(\v2\x0e.gql.GqlStatusR\x06status\"3\n" +
+	"\x12ListSchemasRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x0f \x01(\tR\tsessionId\"k\n" +
 	"\n" +
 	"SchemaInfo\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1f\n" +
@@ -4552,18 +4744,24 @@ const file_gql_service_proto_rawDesc = "" +
 	"graphCount\x12(\n" +
 	"\x10graph_type_count\x18\x03 \x01(\rR\x0egraphTypeCount\"@\n" +
 	"\x13ListSchemasResponse\x12)\n" +
-	"\aschemas\x18\x01 \x03(\v2\x0f.gql.SchemaInfoR\aschemas\"M\n" +
+	"\aschemas\x18\x01 \x03(\v2\x0f.gql.SchemaInfoR\aschemas\"l\n" +
 	"\x13CreateSchemaRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\"\n" +
-	"\rif_not_exists\x18\x02 \x01(\bR\vifNotExists\"\x16\n" +
-	"\x14CreateSchemaResponse\"D\n" +
+	"\rif_not_exists\x18\x02 \x01(\bR\vifNotExists\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x0f \x01(\tR\tsessionId\"\x16\n" +
+	"\x14CreateSchemaResponse\"c\n" +
 	"\x11DropSchemaRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1b\n" +
-	"\tif_exists\x18\x02 \x01(\bR\bifExists\".\n" +
+	"\tif_exists\x18\x02 \x01(\bR\bifExists\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x0f \x01(\tR\tsessionId\".\n" +
 	"\x12DropSchemaResponse\x12\x18\n" +
-	"\aexisted\x18\x01 \x01(\bR\aexisted\"+\n" +
+	"\aexisted\x18\x01 \x01(\bR\aexisted\"J\n" +
 	"\x11ListGraphsRequest\x12\x16\n" +
-	"\x06schema\x18\x01 \x01(\tR\x06schema\"\x97\x01\n" +
+	"\x06schema\x18\x01 \x01(\tR\x06schema\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x0f \x01(\tR\tsessionId\"\x97\x01\n" +
 	"\fGraphSummary\x12\x16\n" +
 	"\x06schema\x18\x01 \x01(\tR\x06schema\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1d\n" +
@@ -4574,7 +4772,7 @@ const file_gql_service_proto_rawDesc = "" +
 	"\n" +
 	"graph_type\x18\x05 \x01(\tR\tgraphType\"?\n" +
 	"\x12ListGraphsResponse\x12)\n" +
-	"\x06graphs\x18\x01 \x03(\v2\x11.gql.GraphSummaryR\x06graphs\"\xd1\x02\n" +
+	"\x06graphs\x18\x01 \x03(\v2\x11.gql.GraphSummaryR\x06graphs\"\xf0\x02\n" +
 	"\x12CreateGraphRequest\x12\x16\n" +
 	"\x06schema\x18\x01 \x01(\tR\x06schema\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\"\n" +
@@ -4586,7 +4784,9 @@ const file_gql_service_proto_rawDesc = "" +
 	"\acopy_of\x18\a \x01(\tH\x01R\x06copyOf\x88\x01\x01\x12!\n" +
 	"\fstorage_mode\x18\n" +
 	" \x01(\tR\vstorageMode\x12+\n" +
-	"\aoptions\x18\v \x01(\v2\x11.gql.GraphOptionsR\aoptionsB\v\n" +
+	"\aoptions\x18\v \x01(\v2\x11.gql.GraphOptionsR\aoptions\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x0f \x01(\tR\tsessionIdB\v\n" +
 	"\ttype_specB\n" +
 	"\n" +
 	"\b_copy_of\"\xb7\x02\n" +
@@ -4604,16 +4804,20 @@ const file_gql_service_proto_rawDesc = "" +
 	"\f_wal_enabledB\x11\n" +
 	"\x0f_wal_durability\">\n" +
 	"\x13CreateGraphResponse\x12'\n" +
-	"\x05graph\x18\x01 \x01(\v2\x11.gql.GraphSummaryR\x05graph\"[\n" +
+	"\x05graph\x18\x01 \x01(\v2\x11.gql.GraphSummaryR\x05graph\"z\n" +
 	"\x10DropGraphRequest\x12\x16\n" +
 	"\x06schema\x18\x01 \x01(\tR\x06schema\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1b\n" +
-	"\tif_exists\x18\x03 \x01(\bR\bifExists\"-\n" +
+	"\tif_exists\x18\x03 \x01(\bR\bifExists\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x0f \x01(\tR\tsessionId\"-\n" +
 	"\x11DropGraphResponse\x12\x18\n" +
-	"\aexisted\x18\x01 \x01(\bR\aexisted\"A\n" +
+	"\aexisted\x18\x01 \x01(\bR\aexisted\"`\n" +
 	"\x13GetGraphInfoRequest\x12\x16\n" +
 	"\x06schema\x18\x01 \x01(\tR\x06schema\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\"\xb1\x02\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x0f \x01(\tR\tsessionId\"\xb1\x02\n" +
 	"\x14GetGraphInfoResponse\x12\x16\n" +
 	"\x06schema\x18\x01 \x01(\tR\x06schema\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1d\n" +
@@ -4626,30 +4830,38 @@ const file_gql_service_proto_rawDesc = "" +
 	"\fstorage_mode\x18\x06 \x01(\tR\vstorageMode\x12,\n" +
 	"\x12memory_limit_bytes\x18\a \x01(\x04R\x10memoryLimitBytes\x12%\n" +
 	"\x0ebackward_edges\x18\b \x01(\bR\rbackwardEdges\x12\x18\n" +
-	"\athreads\x18\t \x01(\rR\athreads\"/\n" +
+	"\athreads\x18\t \x01(\rR\athreads\"N\n" +
 	"\x15ListGraphTypesRequest\x12\x16\n" +
-	"\x06schema\x18\x01 \x01(\tR\x06schema\";\n" +
+	"\x06schema\x18\x01 \x01(\tR\x06schema\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x0f \x01(\tR\tsessionId\";\n" +
 	"\rGraphTypeInfo\x12\x16\n" +
 	"\x06schema\x18\x01 \x01(\tR\x06schema\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\"M\n" +
 	"\x16ListGraphTypesResponse\x123\n" +
 	"\vgraph_types\x18\x01 \x03(\v2\x12.gql.GraphTypeInfoR\n" +
-	"graphTypes\"\x87\x01\n" +
+	"graphTypes\"\xa6\x01\n" +
 	"\x16CreateGraphTypeRequest\x12\x16\n" +
 	"\x06schema\x18\x01 \x01(\tR\x06schema\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\"\n" +
 	"\rif_not_exists\x18\x03 \x01(\bR\vifNotExists\x12\x1d\n" +
 	"\n" +
-	"or_replace\x18\x04 \x01(\bR\torReplace\"\x19\n" +
-	"\x17CreateGraphTypeResponse\"_\n" +
+	"or_replace\x18\x04 \x01(\bR\torReplace\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x0f \x01(\tR\tsessionId\"\x19\n" +
+	"\x17CreateGraphTypeResponse\"~\n" +
 	"\x14DropGraphTypeRequest\x12\x16\n" +
 	"\x06schema\x18\x01 \x01(\tR\x06schema\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1b\n" +
-	"\tif_exists\x18\x03 \x01(\bR\bifExists\"1\n" +
+	"\tif_exists\x18\x03 \x01(\bR\bifExists\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x0f \x01(\tR\tsessionId\"1\n" +
 	"\x15DropGraphTypeResponse\x12\x18\n" +
-	"\aexisted\x18\x01 \x01(\bR\aexisted\",\n" +
+	"\aexisted\x18\x01 \x01(\bR\aexisted\"K\n" +
 	"\x14GetGraphStatsRequest\x12\x14\n" +
-	"\x05graph\x18\x01 \x01(\tR\x05graph\"\xc3\x02\n" +
+	"\x05graph\x18\x01 \x01(\tR\x05graph\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x0f \x01(\tR\tsessionId\"\xc3\x02\n" +
 	"\x15GetGraphStatsResponse\x12\x1d\n" +
 	"\n" +
 	"node_count\x18\x01 \x01(\x04R\tnodeCount\x12\x1d\n" +
@@ -4664,9 +4876,11 @@ const file_gql_service_proto_rawDesc = "" +
 	"\fmemory_bytes\x18\a \x01(\x04R\vmemoryBytes\x12\"\n" +
 	"\n" +
 	"disk_bytes\x18\b \x01(\x04H\x00R\tdiskBytes\x88\x01\x01B\r\n" +
-	"\v_disk_bytes\"(\n" +
+	"\v_disk_bytes\"G\n" +
 	"\x10WalStatusRequest\x12\x14\n" +
-	"\x05graph\x18\x01 \x01(\tR\x05graph\"\xf8\x01\n" +
+	"\x05graph\x18\x01 \x01(\tR\x05graph\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x0f \x01(\tR\tsessionId\"\xf8\x01\n" +
 	"\x11WalStatusResponse\x12\x18\n" +
 	"\aenabled\x18\x01 \x01(\bR\aenabled\x12\x17\n" +
 	"\x04path\x18\x02 \x01(\tH\x00R\x04path\x88\x01\x01\x12\x1d\n" +
@@ -4676,12 +4890,16 @@ const file_gql_service_proto_rawDesc = "" +
 	"\x0flast_checkpoint\x18\x05 \x01(\x04H\x01R\x0elastCheckpoint\x88\x01\x01\x12#\n" +
 	"\rcurrent_epoch\x18\x06 \x01(\x04R\fcurrentEpochB\a\n" +
 	"\x05_pathB\x12\n" +
-	"\x10_last_checkpoint\",\n" +
+	"\x10_last_checkpoint\"K\n" +
 	"\x14WalCheckpointRequest\x12\x14\n" +
-	"\x05graph\x18\x01 \x01(\tR\x05graph\"\x17\n" +
-	"\x15WalCheckpointResponse\"'\n" +
+	"\x05graph\x18\x01 \x01(\tR\x05graph\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x0f \x01(\tR\tsessionId\"\x17\n" +
+	"\x15WalCheckpointResponse\"F\n" +
 	"\x0fValidateRequest\x12\x14\n" +
-	"\x05graph\x18\x01 \x01(\tR\x05graph\"\x8a\x01\n" +
+	"\x05graph\x18\x01 \x01(\tR\x05graph\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x0f \x01(\tR\tsessionId\"\x8a\x01\n" +
 	"\x10ValidateResponse\x12\x14\n" +
 	"\x05valid\x18\x01 \x01(\bR\x05valid\x12,\n" +
 	"\x06errors\x18\x02 \x03(\v2\x14.gql.ValidationErrorR\x06errors\x122\n" +
@@ -4697,13 +4915,15 @@ const file_gql_service_proto_rawDesc = "" +
 	"\amessage\x18\x02 \x01(\tR\amessage\x12\x1d\n" +
 	"\acontext\x18\x03 \x01(\tH\x00R\acontext\x88\x01\x01B\n" +
 	"\n" +
-	"\b_context\"\xe1\x01\n" +
+	"\b_context\"\x80\x02\n" +
 	"\x12CreateIndexRequest\x12\x14\n" +
 	"\x05graph\x18\x01 \x01(\tR\x05graph\x12>\n" +
 	"\x0eproperty_index\x18\x02 \x01(\v2\x15.gql.PropertyIndexDefH\x00R\rpropertyIndex\x128\n" +
 	"\fvector_index\x18\x03 \x01(\v2\x13.gql.VectorIndexDefH\x00R\vvectorIndex\x122\n" +
 	"\n" +
-	"text_index\x18\x04 \x01(\v2\x11.gql.TextIndexDefH\x00R\ttextIndexB\a\n" +
+	"text_index\x18\x04 \x01(\v2\x11.gql.TextIndexDefH\x00R\ttextIndex\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x0f \x01(\tR\tsessionIdB\a\n" +
 	"\x05index\".\n" +
 	"\x10PropertyIndexDef\x12\x1a\n" +
 	"\bproperty\x18\x01 \x01(\tR\bproperty\"\xf9\x01\n" +
@@ -4723,16 +4943,18 @@ const file_gql_service_proto_rawDesc = "" +
 	"\fTextIndexDef\x12\x14\n" +
 	"\x05label\x18\x01 \x01(\tR\x05label\x12\x1a\n" +
 	"\bproperty\x18\x02 \x01(\tR\bproperty\"\x15\n" +
-	"\x13CreateIndexResponse\"\xdf\x01\n" +
+	"\x13CreateIndexResponse\"\xfe\x01\n" +
 	"\x10DropIndexRequest\x12\x14\n" +
 	"\x05graph\x18\x01 \x01(\tR\x05graph\x12>\n" +
 	"\x0eproperty_index\x18\x02 \x01(\v2\x15.gql.PropertyIndexDefH\x00R\rpropertyIndex\x128\n" +
 	"\fvector_index\x18\x03 \x01(\v2\x13.gql.VectorIndexDefH\x00R\vvectorIndex\x122\n" +
 	"\n" +
-	"text_index\x18\x04 \x01(\v2\x11.gql.TextIndexDefH\x00R\ttextIndexB\a\n" +
+	"text_index\x18\x04 \x01(\v2\x11.gql.TextIndexDefH\x00R\ttextIndex\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x0f \x01(\tR\tsessionIdB\a\n" +
 	"\x05index\"-\n" +
 	"\x11DropIndexResponse\x12\x18\n" +
-	"\aexisted\x18\x01 \x01(\bR\aexisted\"\xb3\x02\n" +
+	"\aexisted\x18\x01 \x01(\bR\aexisted\"\xd2\x02\n" +
 	"\x13VectorSearchRequest\x12\x14\n" +
 	"\x05graph\x18\x01 \x01(\tR\x05graph\x12\x14\n" +
 	"\x05label\x18\x02 \x01(\tR\x05label\x12\x1a\n" +
@@ -4740,18 +4962,22 @@ const file_gql_service_proto_rawDesc = "" +
 	"\fquery_vector\x18\x04 \x03(\x02R\vqueryVector\x12\f\n" +
 	"\x01k\x18\x05 \x01(\rR\x01k\x12\x13\n" +
 	"\x02ef\x18\x06 \x01(\rH\x00R\x02ef\x88\x01\x01\x12?\n" +
-	"\afilters\x18\a \x03(\v2%.gql.VectorSearchRequest.FiltersEntryR\afilters\x1aF\n" +
+	"\afilters\x18\a \x03(\v2%.gql.VectorSearchRequest.FiltersEntryR\afilters\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x0f \x01(\tR\tsessionId\x1aF\n" +
 	"\fFiltersEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12 \n" +
 	"\x05value\x18\x02 \x01(\v2\n" +
 	".gql.ValueR\x05value:\x028\x01B\x05\n" +
-	"\x03_ef\"\x7f\n" +
+	"\x03_ef\"\x9e\x01\n" +
 	"\x11TextSearchRequest\x12\x14\n" +
 	"\x05graph\x18\x01 \x01(\tR\x05graph\x12\x14\n" +
 	"\x05label\x18\x02 \x01(\tR\x05label\x12\x1a\n" +
 	"\bproperty\x18\x03 \x01(\tR\bproperty\x12\x14\n" +
 	"\x05query\x18\x04 \x01(\tR\x05query\x12\f\n" +
-	"\x01k\x18\x05 \x01(\rR\x01k\"\xdf\x01\n" +
+	"\x01k\x18\x05 \x01(\rR\x01k\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x0f \x01(\tR\tsessionId\"\xfe\x01\n" +
 	"\x13HybridSearchRequest\x12\x14\n" +
 	"\x05graph\x18\x01 \x01(\tR\x05graph\x12\x14\n" +
 	"\x05label\x18\x02 \x01(\tR\x05label\x12#\n" +
@@ -4760,7 +4986,9 @@ const file_gql_service_proto_rawDesc = "" +
 	"\n" +
 	"query_text\x18\x05 \x01(\tR\tqueryText\x12!\n" +
 	"\fquery_vector\x18\x06 \x03(\x02R\vqueryVector\x12\f\n" +
-	"\x01k\x18\a \x01(\rR\x01k\"\xc5\x01\n" +
+	"\x01k\x18\a \x01(\rR\x01k\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x0f \x01(\tR\tsessionId\"\xc5\x01\n" +
 	"\tSearchHit\x12\x17\n" +
 	"\anode_id\x18\x01 \x01(\x04R\x06nodeId\x12\x14\n" +
 	"\x05score\x18\x02 \x01(\x01R\x05score\x12>\n" +

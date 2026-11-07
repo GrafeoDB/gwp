@@ -2,11 +2,13 @@
 
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use tokio::sync::RwLock;
 use tokio::time::Instant;
 
 use super::SessionProperty;
+use super::backend::{RequestContext, SessionHandle};
 
 /// Tracks the mutable state for a single session.
 #[derive(Debug, Clone)]
@@ -39,10 +41,18 @@ impl Default for SessionState {
 }
 
 /// Manages session state for all active sessions.
+///
+/// Clones share their state, so one manager is handed to every service of a
+/// server. The catalog, admin and search services check the session each
+/// request names against it, and refuse a request that names none once
+/// [`require_sessions`](Self::require_sessions) is set (a
+/// [`SessionServiceImpl`](super::SessionServiceImpl) with an
+/// [`AuthValidator`](super::AuthValidator) sets it).
 #[derive(Debug, Clone)]
 pub struct SessionManager {
     sessions: Arc<RwLock<HashMap<String, SessionState>>>,
     max_sessions: Option<usize>,
+    sessions_required: Arc<AtomicBool>,
 }
 
 impl SessionManager {
@@ -52,6 +62,7 @@ impl SessionManager {
         Self {
             sessions: Arc::new(RwLock::new(HashMap::new())),
             max_sessions: None,
+            sessions_required: Arc::new(AtomicBool::new(false)),
         }
     }
 
@@ -61,7 +72,59 @@ impl SessionManager {
         Self {
             sessions: Arc::new(RwLock::new(HashMap::new())),
             max_sessions: Some(max_sessions),
+            sessions_required: Arc::new(AtomicBool::new(false)),
         }
+    }
+
+    /// Refuse catalog, admin and search requests that name no session, from
+    /// now on and for every clone of this manager.
+    ///
+    /// A [`SessionServiceImpl`](super::SessionServiceImpl) with an
+    /// [`AuthValidator`](super::AuthValidator) calls this, so that only
+    /// callers who authenticated at the handshake are served. Call it
+    /// yourself when the server authenticates callers another way.
+    pub fn require_sessions(&self) {
+        self.sessions_required.store(true, Ordering::SeqCst);
+    }
+
+    /// Whether catalog, admin and search requests must name a session.
+    #[must_use]
+    pub fn sessions_required(&self) -> bool {
+        self.sessions_required.load(Ordering::SeqCst)
+    }
+
+    /// The context of a catalog, admin or search request that names
+    /// `session_id` (empty for none), recorded on the current span.
+    ///
+    /// A named session must exist (`NOT_FOUND` otherwise), and using it
+    /// counts as activity. When sessions are required, a request that names
+    /// none is `UNAUTHENTICATED`.
+    pub(crate) async fn request_context(
+        &self,
+        session_id: &str,
+    ) -> Result<RequestContext, tonic::Status> {
+        tracing::Span::current().record("session_id", session_id);
+        if session_id.is_empty() {
+            if self.sessions_required() {
+                return Err(tonic::Status::unauthenticated(
+                    "this server requires authentication: name the session from the handshake",
+                ));
+            }
+            return Ok(RequestContext::default());
+        }
+        // One lock for the lookup and the touch, so a session removed in
+        // between is not served.
+        match self.sessions.write().await.get_mut(session_id) {
+            Some(state) => state.last_activity = Instant::now(),
+            None => {
+                return Err(tonic::Status::not_found(format!(
+                    "session {session_id} not found"
+                )));
+            }
+        }
+        Ok(RequestContext::for_session(SessionHandle(
+            session_id.to_owned(),
+        )))
     }
 
     /// Register a new session.

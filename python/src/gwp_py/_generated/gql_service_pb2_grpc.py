@@ -527,6 +527,9 @@ class CatalogServiceStub(object):
     Manages the catalog hierarchy: schemas, graphs, and graph types.
     Replaces DatabaseService with spec-aligned catalog model (sec 12).
     Errors are returned as gRPC Status codes.
+    Every request names its session in `session_id` (field 15). When the
+    server requires authentication, a request without one is refused with
+    UNAUTHENTICATED and one naming an unknown session with NOT_FOUND.
     ============================================================================
 
     """
@@ -595,6 +598,9 @@ class CatalogServiceServicer(object):
     Manages the catalog hierarchy: schemas, graphs, and graph types.
     Replaces DatabaseService with spec-aligned catalog model (sec 12).
     Errors are returned as gRPC Status codes.
+    Every request names its session in `session_id` (field 15). When the
+    server requires authentication, a request without one is refused with
+    UNAUTHENTICATED and one naming an unknown session with NOT_FOUND.
     ============================================================================
 
     """
@@ -729,6 +735,9 @@ class CatalogService(object):
     Manages the catalog hierarchy: schemas, graphs, and graph types.
     Replaces DatabaseService with spec-aligned catalog model (sec 12).
     Errors are returned as gRPC Status codes.
+    Every request names its session in `session_id` (field 15). When the
+    server requires authentication, a request without one is refused with
+    UNAUTHENTICATED and one naming an unknown session with NOT_FOUND.
     ============================================================================
 
     """
@@ -1009,6 +1018,9 @@ class AdminServiceStub(object):
     AdminService
     Graph introspection, maintenance, and index management.
     Errors are returned as gRPC Status codes.
+    Every request names its session in `session_id` (field 15). When the
+    server requires authentication, a request without one is refused with
+    UNAUTHENTICATED and one naming an unknown session with NOT_FOUND.
     ============================================================================
 
     """
@@ -1056,6 +1068,9 @@ class AdminServiceServicer(object):
     AdminService
     Graph introspection, maintenance, and index management.
     Errors are returned as gRPC Status codes.
+    Every request names its session in `session_id` (field 15). When the
+    server requires authentication, a request without one is refused with
+    UNAUTHENTICATED and one naming an unknown session with NOT_FOUND.
     ============================================================================
 
     """
@@ -1148,6 +1163,9 @@ class AdminService(object):
     AdminService
     Graph introspection, maintenance, and index management.
     Errors are returned as gRPC Status codes.
+    Every request names its session in `session_id` (field 15). When the
+    server requires authentication, a request without one is refused with
+    UNAUTHENTICATED and one naming an unknown session with NOT_FOUND.
     ============================================================================
 
     """
@@ -1320,6 +1338,9 @@ class SearchServiceStub(object):
     SearchService
     Vector, text, and hybrid search operations.
     Errors are returned as gRPC Status codes.
+    Every request names its session in `session_id` (field 15). When the
+    server requires authentication, a request without one is refused with
+    UNAUTHENTICATED and one naming an unknown session with NOT_FOUND.
     ============================================================================
 
     """
@@ -1352,6 +1373,9 @@ class SearchServiceServicer(object):
     SearchService
     Vector, text, and hybrid search operations.
     Errors are returned as gRPC Status codes.
+    Every request names its session in `session_id` (field 15). When the
+    server requires authentication, a request without one is refused with
+    UNAUTHENTICATED and one naming an unknown session with NOT_FOUND.
     ============================================================================
 
     """
@@ -1408,6 +1432,9 @@ class SearchService(object):
     SearchService
     Vector, text, and hybrid search operations.
     Errors are returned as gRPC Status codes.
+    Every request names its session in `session_id` (field 15). When the
+    server requires authentication, a request without one is refused with
+    UNAUTHENTICATED and one naming an unknown session with NOT_FOUND.
     ============================================================================
 
     """

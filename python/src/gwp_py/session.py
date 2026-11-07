@@ -10,6 +10,7 @@ from gwp_py._convert import value_to_proto
 from gwp_py._generated import gql_service_pb2 as gql_pb2
 from gwp_py._generated import gql_service_pb2_grpc as gql_grpc
 from gwp_py._generated import gql_types_pb2 as types_pb2
+from gwp_py.catalog import CatalogClient
 from gwp_py.errors import SessionError
 from gwp_py.result import ResultCursor
 from gwp_py.transaction import Transaction
@@ -23,10 +24,12 @@ class GqlSession:
         session_id: str,
         session_stub: gql_grpc.SessionServiceStub,
         gql_stub: gql_grpc.GqlServiceStub,
+        channel: grpc.aio.Channel,
     ):
         self._session_id = session_id
         self._session_stub = session_stub
         self._gql_stub = gql_stub
+        self._channel = channel
         self._closed = False
 
     @classmethod
@@ -42,12 +45,23 @@ class GqlSession:
         if not resp.session_id:
             raise SessionError("server returned empty session ID")
 
-        return cls(resp.session_id, session_stub, gql_stub)
+        return cls(resp.session_id, session_stub, gql_stub, channel)
 
     @property
     def session_id(self) -> str:
         """The session identifier."""
         return self._session_id
+
+    def catalog(self) -> CatalogClient:
+        """A catalog client that works in this session's catalog.
+
+        Its requests name this session, so a server that keeps one catalog
+        per session shows this session's schemas and graphs.
+        `GqlConnection.create_catalog_client()` gives one that names no
+        session. This binding sends no handshake credentials yet, so it
+        cannot open a session on a server with authentication.
+        """
+        return CatalogClient(self._channel, session_id=self._session_id)
 
     async def execute(
         self,

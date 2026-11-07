@@ -53,6 +53,33 @@ func main() {
 }
 ```
 
+## Catalog
+
+`session.Catalog()` returns a catalog client for schemas, graphs and graph
+types whose every request names that session:
+
+```go
+catalog := session.Catalog()
+
+schemas, err := catalog.ListSchemas(ctx)
+if err != nil {
+    panic(err)
+}
+for _, s := range schemas {
+    fmt.Println(s.Name, s.GraphCount)
+}
+```
+
+A request that names an unknown session gets `codes.NotFound`.
+`conn.CreateCatalogClient()` gives a client that names no session.
+`catalog.SessionID()` returns the session a client names, or `""` when it
+names none.
+
+This client does not send credentials in the handshake yet, so it cannot open
+a session on a server with authentication (such a server refuses the handshake,
+and catalog requests without a session, with `codes.Unauthenticated`). Use the
+Rust client against such a server for now.
+
 ## Features
 
 - Context-based API following Go conventions

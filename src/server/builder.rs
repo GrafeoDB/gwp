@@ -124,8 +124,11 @@ impl<B: GqlBackend> GqlServer<B> {
 
     /// Set an authentication validator.
     ///
-    /// When set, the server requires valid credentials on every handshake.
-    /// When not set, all connections are accepted.
+    /// When set, the server requires valid credentials on every handshake,
+    /// and serves catalog, admin and search requests only when they name a
+    /// live session (`UNAUTHENTICATED` without one). A named session that
+    /// does not exist is `NOT_FOUND` either way. When not set, all
+    /// connections are accepted.
     #[must_use]
     pub fn auth(mut self, validator: impl AuthValidator) -> Self {
         self.auth_validator = Some(Arc::new(validator));
@@ -277,10 +280,9 @@ impl<B: GqlBackend> GqlServer<B> {
         let gql_service =
             GqlServiceImpl::new(Arc::clone(&backend), sessions.clone(), transactions.clone());
 
-        let catalog_service =
-            CatalogServiceImpl::new(Arc::clone(&backend)).with_sessions(sessions.clone());
-        let admin_service = AdminServiceImpl::new(Arc::clone(&backend));
-        let search_service = SearchServiceImpl::new(Arc::clone(&backend));
+        let catalog_service = CatalogServiceImpl::new(Arc::clone(&backend), sessions.clone());
+        let admin_service = AdminServiceImpl::new(Arc::clone(&backend), sessions.clone());
+        let search_service = SearchServiceImpl::new(Arc::clone(&backend), sessions.clone());
 
         // Health check service
         let (health_reporter, health_service) = tonic_health::server::health_reporter();

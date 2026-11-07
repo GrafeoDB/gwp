@@ -1,6 +1,6 @@
 {
   "name": "gwp-js",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "JavaScript/TypeScript client for the GQL Wire Protocol (GWP)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -20,13 +20,13 @@
   },
   "dependencies": {
     "@bufbuild/protobuf": "^2.0.0",
-    "@grpc/grpc-js": "^1.12.0"
+    "@grpc/grpc-js": "^1.14.7"
   },
   "devDependencies": {
-    "ts-proto": "^2.6.0",
-    "typescript": "^5.7.0",
-    "vitest": "^3.0.0",
-    "@types/node": "^22.0.0"
+    "ts-proto": "2.11.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0",
+    "@types/node": "^22.20.5"
   },
   "engines": {
     "node": ">=22"

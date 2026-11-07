@@ -56,6 +56,11 @@ pub struct SessionServiceImpl<B: GqlBackend> {
 impl<B: GqlBackend> SessionServiceImpl<B> {
     /// Create a new session service.
     ///
+    /// With an `auth` validator the handshake requires credentials, and
+    /// `sessions` is set to [require sessions](SessionManager::require_sessions),
+    /// so the catalog, admin and search services that share it serve only
+    /// requests that name a live, authenticated session.
+    ///
     /// The handshake reports the server as `gql-wire-protocol` with gwp's
     /// version until [`with_server_info`](Self::with_server_info) sets it.
     pub fn new(
@@ -64,6 +69,9 @@ impl<B: GqlBackend> SessionServiceImpl<B> {
         transactions: TransactionManager,
         auth: Option<Arc<dyn AuthValidator>>,
     ) -> Self {
+        if auth.is_some() {
+            sessions.require_sessions();
+        }
         Self {
             backend,
             sessions,

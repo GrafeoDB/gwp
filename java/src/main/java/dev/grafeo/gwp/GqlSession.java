@@ -68,6 +68,21 @@ public class GqlSession implements AutoCloseable {
         return sessionId;
     }
 
+    /**
+     * A catalog client that works in this session's catalog.
+     *
+     * <p>Its requests name this session, so a server that keeps one catalog
+     * per session (one per database, say) shows this session's schemas and
+     * graphs. {@link GqlConnection#createCatalogClient()} gives one that
+     * names no session. This binding sends no handshake credentials yet, so
+     * it cannot open a session on a server with authentication.</p>
+     *
+     * @return a new CatalogClient bound to this session
+     */
+    public CatalogClient catalog() {
+        return new CatalogClient(gqlStub.getChannel(), sessionId);
+    }
+
     // ========================================================================
     // Query execution
     // ========================================================================

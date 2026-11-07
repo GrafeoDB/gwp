@@ -48,20 +48,42 @@ type CreateGraphConfig struct {
 }
 
 // CatalogClient manages schemas, graphs, and graph types on a GWP server.
+//
+// A client from GqlSession.Catalog names that session on every request; a
+// server with authentication refuses catalog requests that name no live
+// session. A client from NewCatalogClient or
+// GqlConnection.CreateCatalogClient names no session.
 type CatalogClient struct {
-	client pb.CatalogServiceClient
+	client    pb.CatalogServiceClient
+	sessionID string
 }
 
-// NewCatalogClient creates a new CatalogClient from an existing gRPC connection.
+// NewCatalogClient creates a new CatalogClient from an existing gRPC
+// connection. Its requests name no session.
 func NewCatalogClient(conn *grpc.ClientConn) *CatalogClient {
+	return newSessionCatalogClient(pb.NewCatalogServiceClient(conn), "")
+}
+
+// newSessionCatalogClient creates a CatalogClient whose requests name
+// sessionID (empty for none).
+func newSessionCatalogClient(client pb.CatalogServiceClient, sessionID string) *CatalogClient {
 	return &CatalogClient{
-		client: pb.NewCatalogServiceClient(conn),
+		client:    client,
+		sessionID: sessionID,
 	}
+}
+
+// SessionID returns the session this client's requests name, or "" when
+// they name none.
+func (c *CatalogClient) SessionID() string {
+	return c.sessionID
 }
 
 // ListSchemas returns all schemas on the server.
 func (c *CatalogClient) ListSchemas(ctx context.Context) ([]SchemaInfo, error) {
-	resp, err := c.client.ListSchemas(ctx, &pb.ListSchemasRequest{})
+	resp, err := c.client.ListSchemas(ctx, &pb.ListSchemasRequest{
+		SessionId: c.sessionID,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -79,6 +101,7 @@ func (c *CatalogClient) ListSchemas(ctx context.Context) ([]SchemaInfo, error) {
 // CreateSchema creates a new schema.
 func (c *CatalogClient) CreateSchema(ctx context.Context, name string, ifNotExists bool) error {
 	_, err := c.client.CreateSchema(ctx, &pb.CreateSchemaRequest{
+		SessionId:   c.sessionID,
 		Name:        name,
 		IfNotExists: ifNotExists,
 	})
@@ -88,8 +111,9 @@ func (c *CatalogClient) CreateSchema(ctx context.Context, name string, ifNotExis
 // DropSchema drops a schema. Returns true if it existed.
 func (c *CatalogClient) DropSchema(ctx context.Context, name string, ifExists bool) (bool, error) {
 	resp, err := c.client.DropSchema(ctx, &pb.DropSchemaRequest{
-		Name:     name,
-		IfExists: ifExists,
+		SessionId: c.sessionID,
+		Name:      name,
+		IfExists:  ifExists,
 	})
 	if err != nil {
 		return false, err
@@ -100,7 +124,8 @@ func (c *CatalogClient) DropSchema(ctx context.Context, name string, ifExists bo
 // ListGraphs returns all graphs in a schema.
 func (c *CatalogClient) ListGraphs(ctx context.Context, schema string) ([]GraphInfo, error) {
 	resp, err := c.client.ListGraphs(ctx, &pb.ListGraphsRequest{
-		Schema: schema,
+		SessionId: c.sessionID,
+		Schema:    schema,
 	})
 	if err != nil {
 		return nil, err
@@ -138,6 +163,7 @@ func (c *CatalogClient) CreateGraph(ctx context.Context, config CreateGraphConfi
 	}
 
 	resp, err := c.client.CreateGraph(ctx, &pb.CreateGraphRequest{
+		SessionId:   c.sessionID,
 		Schema:      config.Schema,
 		Name:        config.Name,
 		IfNotExists: config.IfNotExists,
@@ -161,9 +187,10 @@ func (c *CatalogClient) CreateGraph(ctx context.Context, config CreateGraphConfi
 // DropGraph drops a graph. Returns true if it existed.
 func (c *CatalogClient) DropGraph(ctx context.Context, schema, name string, ifExists bool) (bool, error) {
 	resp, err := c.client.DropGraph(ctx, &pb.DropGraphRequest{
-		Schema:   schema,
-		Name:     name,
-		IfExists: ifExists,
+		SessionId: c.sessionID,
+		Schema:    schema,
+		Name:      name,
+		IfExists:  ifExists,
 	})
 	if err != nil {
 		return false, err
@@ -174,8 +201,9 @@ func (c *CatalogClient) DropGraph(ctx context.Context, schema, name string, ifEx
 // GetGraphInfo returns detailed information about a specific graph.
 func (c *CatalogClient) GetGraphInfo(ctx context.Context, schema, name string) (*GraphInfo, error) {
 	resp, err := c.client.GetGraphInfo(ctx, &pb.GetGraphInfoRequest{
-		Schema: schema,
-		Name:   name,
+		SessionId: c.sessionID,
+		Schema:    schema,
+		Name:      name,
 	})
 	if err != nil {
 		return nil, err
@@ -196,7 +224,8 @@ func (c *CatalogClient) GetGraphInfo(ctx context.Context, schema, name string) (
 // ListGraphTypes returns all graph types in a schema.
 func (c *CatalogClient) ListGraphTypes(ctx context.Context, schema string) ([]GraphTypeInfo, error) {
 	resp, err := c.client.ListGraphTypes(ctx, &pb.ListGraphTypesRequest{
-		Schema: schema,
+		SessionId: c.sessionID,
+		Schema:    schema,
 	})
 	if err != nil {
 		return nil, err
@@ -214,6 +243,7 @@ func (c *CatalogClient) ListGraphTypes(ctx context.Context, schema string) ([]Gr
 // CreateGraphType creates a new graph type.
 func (c *CatalogClient) CreateGraphType(ctx context.Context, schema, name string, ifNotExists, orReplace bool) error {
 	_, err := c.client.CreateGraphType(ctx, &pb.CreateGraphTypeRequest{
+		SessionId:   c.sessionID,
 		Schema:      schema,
 		Name:        name,
 		IfNotExists: ifNotExists,
@@ -225,9 +255,10 @@ func (c *CatalogClient) CreateGraphType(ctx context.Context, schema, name string
 // DropGraphType drops a graph type. Returns true if it existed.
 func (c *CatalogClient) DropGraphType(ctx context.Context, schema, name string, ifExists bool) (bool, error) {
 	resp, err := c.client.DropGraphType(ctx, &pb.DropGraphTypeRequest{
-		Schema:   schema,
-		Name:     name,
-		IfExists: ifExists,
+		SessionId: c.sessionID,
+		Schema:    schema,
+		Name:      name,
+		IfExists:  ifExists,
 	})
 	if err != nil {
 		return false, err

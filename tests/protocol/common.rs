@@ -33,10 +33,11 @@ use gwp::proto;
 use gwp::proto::gql_service_client::GqlServiceClient;
 use gwp::proto::session_service_client::SessionServiceClient;
 use gwp::server::{
-    AdminServiceImpl, CatalogContext, CatalogServiceImpl, CreateGraphConfig, GqlBackend,
-    GqlServiceImpl, GraphInfo, GraphTypeInfo, GraphTypeSpec, ResetTarget, ResultFrame,
-    ResultStream, SchemaInfo, SearchServiceImpl, SessionConfig, SessionHandle, SessionManager,
-    SessionProperty, SessionServiceImpl, TransactionHandle, TransactionManager,
+    AdminServiceImpl, AdminStats, AuthInfo, AuthValidator, CatalogServiceImpl, CreateGraphConfig,
+    GqlBackend, GqlServiceImpl, GraphInfo, GraphTypeInfo, GraphTypeSpec, RequestContext,
+    ResetTarget, ResultFrame, ResultStream, SchemaInfo, SearchHit, SearchServiceImpl,
+    SessionConfig, SessionHandle, SessionManager, SessionProperty, SessionServiceImpl,
+    TransactionHandle, TransactionManager, VectorSearchParams,
 };
 use gwp::status;
 use gwp::types::Value;
@@ -51,8 +52,8 @@ fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
         .unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
-/// The session a catalog request named, or `-` for none.
-fn session_of(ctx: &CatalogContext) -> &str {
+/// The session a catalog, admin or search request named, or `-` for none.
+fn session_of(ctx: &RequestContext) -> &str {
     ctx.session.as_ref().map_or("-", |s| s.0.as_str())
 }
 
@@ -499,14 +500,14 @@ impl GqlBackend for TestBackend {
 
     // Two context methods record the session they get; the rest keep the
     // defaults, which call the methods below.
-    async fn list_schemas_in(&self, ctx: &CatalogContext) -> Result<Vec<SchemaInfo>, GqlError> {
+    async fn list_schemas_in(&self, ctx: &RequestContext) -> Result<Vec<SchemaInfo>, GqlError> {
         self.record(format!("catalog list_schemas session={}", session_of(ctx)));
         self.list_schemas().await
     }
 
     async fn create_graph_in(
         &self,
-        ctx: &CatalogContext,
+        ctx: &RequestContext,
         config: CreateGraphConfig,
     ) -> Result<GraphInfo, GqlError> {
         self.record(format!("catalog create_graph session={}", session_of(ctx)));
@@ -654,6 +655,40 @@ impl GqlBackend for TestBackend {
         } else {
             Err(GqlError::Session(format!("graph type '{name}' not found")))
         }
+    }
+
+    // Admin and search: two calls record the session they ran in. The rest
+    // keep the defaults, so they answer UNIMPLEMENTED.
+
+    async fn get_graph_stats_in(
+        &self,
+        ctx: &RequestContext,
+        graph: &str,
+    ) -> Result<AdminStats, GqlError> {
+        self.record(format!("stats {graph} session={}", session_of(ctx)));
+        Ok(AdminStats {
+            node_count: 0,
+            edge_count: 0,
+            label_count: 0,
+            edge_type_count: 0,
+            property_key_count: 0,
+            index_count: 0,
+            memory_bytes: 0,
+            disk_bytes: None,
+        })
+    }
+
+    async fn vector_search_in(
+        &self,
+        ctx: &RequestContext,
+        params: VectorSearchParams,
+    ) -> Result<Vec<SearchHit>, GqlError> {
+        self.record(format!(
+            "vector_search {} session={}",
+            params.graph,
+            session_of(ctx)
+        ));
+        Ok(Vec::new())
     }
 }
 
@@ -854,6 +889,46 @@ pub async fn start() -> TestServer {
 
 /// Start a server with every service on the given backend.
 pub async fn start_with(backend: TestBackend) -> TestServer {
+    serve(backend, None).await
+}
+
+/// The bearer token [`TokenValidator`] accepts.
+pub const TOKEN: &str = "let-me-in";
+
+/// Accepts the bearer token [`TOKEN`] as principal `tester`.
+pub struct TokenValidator;
+
+#[tonic::async_trait]
+impl AuthValidator for TokenValidator {
+    async fn validate(&self, credentials: &proto::AuthCredentials) -> Result<AuthInfo, GqlError> {
+        match &credentials.method {
+            Some(proto::auth_credentials::Method::BearerToken(token)) if token == TOKEN => {
+                Ok(AuthInfo {
+                    principal: "tester".to_owned(),
+                })
+            }
+            _ => Err(GqlError::Protocol("invalid token".to_owned())),
+        }
+    }
+}
+
+/// Credentials [`TokenValidator`] accepts.
+pub fn credentials() -> proto::AuthCredentials {
+    proto::AuthCredentials {
+        method: Some(proto::auth_credentials::Method::BearerToken(
+            TOKEN.to_owned(),
+        )),
+    }
+}
+
+/// Start a server that requires authentication ([`TokenValidator`]) on a
+/// fresh `TestBackend`.
+pub async fn start_with_auth() -> TestServer {
+    serve(TestBackend::new(), Some(Arc::new(TokenValidator))).await
+}
+
+/// Serve every service on `backend`, wired by hand.
+async fn serve(backend: TestBackend, auth: Option<Arc<dyn AuthValidator>>) -> TestServer {
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
 
@@ -865,14 +940,13 @@ pub async fn start_with(backend: TestBackend) -> TestServer {
         Arc::clone(&shared),
         sessions.clone(),
         transactions.clone(),
-        None,
+        auth,
     );
     let gql_service =
         GqlServiceImpl::new(Arc::clone(&shared), sessions.clone(), transactions.clone());
-    let catalog_service =
-        CatalogServiceImpl::new(Arc::clone(&shared)).with_sessions(sessions.clone());
-    let admin_service = AdminServiceImpl::new(Arc::clone(&shared));
-    let search_service = SearchServiceImpl::new(shared);
+    let catalog_service = CatalogServiceImpl::new(Arc::clone(&shared), sessions.clone());
+    let admin_service = AdminServiceImpl::new(Arc::clone(&shared), sessions.clone());
+    let search_service = SearchServiceImpl::new(shared, sessions.clone());
 
     tokio::spawn(async move {
         tonic::transport::Server::builder()

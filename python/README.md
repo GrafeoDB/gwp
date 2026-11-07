@@ -26,6 +26,25 @@ async def main():
 asyncio.run(main())
 ```
 
+## Catalog
+
+`session.catalog()` returns a `CatalogClient` that names the session on every
+request, so the server works in that session's catalog:
+
+```python
+async with conn.create_session() as session:
+    catalog = session.catalog()
+    for schema in await catalog.list_schemas():
+        print(schema.name, schema.graph_count)
+    graphs = await catalog.list_graphs("default")
+```
+
+A server with authentication needs this session-bound client: it refuses a
+catalog request that names no session (`UNAUTHENTICATED`) and one that names an
+unknown or closed session (`NOT_FOUND`). `conn.create_catalog_client()` gives a
+client that names no session, for servers without authentication.
+`catalog.session_id` is the session a client names, or `None` for none.
+
 ## Features
 
 - Async-first API built on `grpcio.aio`

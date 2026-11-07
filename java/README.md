@@ -86,6 +86,25 @@ session.reset();
 long timestamp = session.ping();
 ```
 
+### Catalog
+
+`CatalogClient` manages schemas, graphs and graph types. Get one from the session, so every request names that session and the server works in that session's catalog:
+
+```java
+try (GqlSession session = conn.createSession();
+     CatalogClient catalog = session.catalog()) {
+    catalog.createSchema("analytics", true);
+    for (CatalogClient.SchemaDetails schema : catalog.listSchemas()) {
+        System.out.println(schema.name());
+    }
+    catalog.createGraph(new CatalogClient.CreateGraphConfig("analytics", "events"));
+
+    catalog.sessionId(); // Optional[<the session's ID>]
+}
+```
+
+A server with authentication refuses catalog requests that name no live session (gRPC `UNAUTHENTICATED`), and answers `NOT_FOUND` for a session it does not know, so use `session.catalog()` there. `conn.createCatalogClient()` still gives a client that names no session (`sessionId()` is empty); it works only against a server without authentication.
+
 ### ResultCursor
 
 `ResultCursor` provides streaming access to query results. It implements `Iterator<List<Object>>` and `AutoCloseable`.
@@ -208,6 +227,7 @@ java/
     main/java/dev/grafeo/gwp/
       GqlConnection.java          - Connection management
       GqlSession.java             - Session lifecycle and configuration
+      CatalogClient.java          - Schema, graph and graph type management
       ResultCursor.java           - Streaming result cursor
       Transaction.java            - Explicit transaction control
       GqlStatus.java              - GQLSTATUS constants and helpers
@@ -233,6 +253,8 @@ java/
     test/java/dev/grafeo/gwp/
       GqlStatusTest.java          - Status helper unit tests
       GqlConnectionTest.java      - Integration tests with mock server
+      CatalogClientTest.java      - Catalog session binding with mock server
+      CatalogIntegrationTest.java - Catalog tests against gwp-test-server (skipped if not built)
 ```
 
 ## Dependencies

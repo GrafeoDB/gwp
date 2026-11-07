@@ -53,6 +53,30 @@ func main() {
 }
 ```
 
+## Catalog
+
+`session.Catalog()` returns a catalog client for schemas, graphs and graph
+types whose every request names that session:
+
+```go
+catalog := session.Catalog()
+
+schemas, err := catalog.ListSchemas(ctx)
+if err != nil {
+    panic(err)
+}
+for _, s := range schemas {
+    fmt.Println(s.Name, s.GraphCount)
+}
+```
+
+A server with authentication refuses catalog requests that name no live
+session (`codes.Unauthenticated`), and one that names an unknown session gets
+`codes.NotFound`. Against such a server, use `session.Catalog()`.
+`conn.CreateCatalogClient()` gives a client that names no session, for servers
+without authentication. `catalog.SessionID()` returns the session a client
+names, or `""` when it names none.
+
 ## Features
 
 - Context-based API following Go conventions

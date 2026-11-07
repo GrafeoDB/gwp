@@ -25,6 +25,28 @@ await session.close();
 await conn.close();
 ```
 
+## Catalog
+
+`session.catalog()` returns a catalog client for schemas, graphs and graph
+types whose every request names the session, so the server works in that
+session's catalog:
+
+```typescript
+const catalog = session.catalog();
+console.log(catalog.sessionId); // the session's id
+
+const schemas = await catalog.listSchemas();
+const graphs = await catalog.listGraphs("default");
+
+catalog.close();
+```
+
+A server with authentication refuses catalog requests without a live session
+(gRPC `UNAUTHENTICATED`) and answers `NOT_FOUND` for an unknown one, so use
+`session.catalog()` there. `conn.createCatalogClient()` gives a client that
+names no session (its `sessionId` is `null`), for servers without
+authentication.
+
 ## Features
 
 - Full TypeScript type safety

@@ -34,7 +34,7 @@ impl AdminClient {
         Self::for_session(channel, String::new())
     }
 
-    /// A admin client whose requests name `session_id`.
+    /// An admin client whose requests name `session_id`.
     pub(crate) fn for_session(channel: Channel, session_id: String) -> Self {
         Self {
             client: AdminServiceClient::new(channel),

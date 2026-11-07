@@ -1,6 +1,6 @@
 /** Catalog management client (schemas, graphs, graph types). */
 
-import type { ChannelCredentials } from "@grpc/grpc-js";
+import type { ChannelCredentials, Client } from "@grpc/grpc-js";
 import { CatalogServiceClient } from "./generated/gql_service";
 import { promisifyUnary } from "./util";
 
@@ -56,11 +56,28 @@ export class CatalogClient {
   private readonly client: CatalogServiceClient;
   /** Session named on every request; empty for none. */
   private readonly _sessionId: string;
+  /** Whether `close()` closes the channel (false when it is shared). */
+  private readonly ownsChannel: boolean;
 
-  /** @internal */
-  constructor(endpoint: string, creds: ChannelCredentials, sessionId = "") {
-    this.client = new CatalogServiceClient(endpoint, creds);
+  /**
+   * @internal
+   * With `channel`, the client runs on that channel (a session's) and
+   * `close()` leaves it open; without, it opens a channel of its own.
+   */
+  constructor(
+    endpoint: string,
+    creds: ChannelCredentials,
+    sessionId = "",
+    channel?: ReturnType<Client["getChannel"]>,
+  ) {
+    this.client =
+      channel === undefined
+        ? new CatalogServiceClient(endpoint, creds)
+        : new CatalogServiceClient(endpoint, creds, {
+            channelOverride: channel,
+          });
     this._sessionId = sessionId;
+    this.ownsChannel = channel === undefined;
   }
 
   /** The session this client's requests name, or null if none. */
@@ -242,8 +259,14 @@ export class CatalogClient {
     return resp.existed;
   }
 
-  /** Close the underlying gRPC channel. */
+  /**
+   * Close the client's gRPC channel. A client from `GqlSession.catalog()`
+   * shares the session's channel, which closes with the connection, so this
+   * leaves it open.
+   */
   close(): void {
-    this.client.close();
+    if (this.ownsChannel) {
+      this.client.close();
+    }
   }
 }

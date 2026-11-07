@@ -73,10 +73,9 @@ public class GqlSession implements AutoCloseable {
      *
      * <p>Its requests name this session, so a server that keeps one catalog
      * per session (one per database, say) shows this session's schemas and
-     * graphs. A server with authentication refuses catalog requests that
-     * name no live session, so use this client there.
-     * {@link GqlConnection#createCatalogClient()} gives one that names no
-     * session.</p>
+     * graphs. {@link GqlConnection#createCatalogClient()} gives one that
+     * names no session. This binding sends no handshake credentials yet, so
+     * it cannot open a session on a server with authentication.</p>
      *
      * @return a new CatalogClient bound to this session
      */

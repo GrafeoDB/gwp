@@ -72,13 +72,19 @@ export class GqlSession {
    * A catalog client that works in this session's catalog.
    *
    * Its requests name this session, so a server that keeps one catalog per
-   * session shows this session's schemas and graphs. A server with
-   * authentication refuses catalog requests without a live session, so use
-   * this client there; `GqlConnection.createCatalogClient()` gives one that
-   * names no session. Close the returned client when done.
+   * session shows this session's schemas and graphs;
+   * `GqlConnection.createCatalogClient()` gives one that names no session.
+   * The client shares this session's channel. This binding sends no
+   * handshake credentials yet, so it cannot open a session on a server with
+   * authentication.
    */
   catalog(): CatalogClient {
-    return new CatalogClient(this.endpoint, this.creds, this._sessionId);
+    return new CatalogClient(
+      this.endpoint,
+      this.creds,
+      this._sessionId,
+      this.sessionClient.getChannel(),
+    );
   }
 
   /** Execute a GQL statement. */

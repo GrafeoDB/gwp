@@ -52,9 +52,8 @@ export class GqlConnection {
   /**
    * Create a catalog management client for schemas, graphs, and graph types.
    *
-   * Its requests name no session. A server with authentication refuses
-   * catalog requests without a live session; use `GqlSession.catalog()`
-   * there.
+   * Its requests name no session, which a server with authentication
+   * refuses; `GqlSession.catalog()` gives one bound to a session.
    */
   createCatalogClient(): CatalogClient {
     return new CatalogClient(this._endpoint, this._creds);

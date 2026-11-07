@@ -48,21 +48,18 @@
         <protoc.version>4.36.2</protoc.version>
         <junit.version>6.1.3</junit.version>
         <mockito.version>5.24.0</mockito.version>
-        <!-- Above what grpc-java 1.85.1 pulls in (33.6.0-android), for GHSA-xxph-c9ww-hj94. -->
+        <!-- Direct, so consumers resolve it over grpc-java 1.85.1's 33.6.0-android (GHSA-xxph-c9ww-hj94). -->
         <guava.version>33.8.0-android</guava.version>
     </properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>${guava.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <dependencies>
+        <!-- Guava, above the version grpc-java brings; see guava.version -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
+        </dependency>
+
         <!-- gRPC -->
         <dependency>
             <groupId>io.grpc</groupId>

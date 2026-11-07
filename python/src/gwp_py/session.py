@@ -56,10 +56,10 @@ class GqlSession:
         """A catalog client that works in this session's catalog.
 
         Its requests name this session, so a server that keeps one catalog
-        per session shows this session's schemas and graphs. A server with
-        authentication needs this client: it refuses catalog requests that
-        name no live session. `GqlConnection.create_catalog_client()` gives
-        one that names no session.
+        per session shows this session's schemas and graphs.
+        `GqlConnection.create_catalog_client()` gives one that names no
+        session. This binding sends no handshake credentials yet, so it
+        cannot open a session on a server with authentication.
         """
         return CatalogClient(self._channel, session_id=self._session_id)
 

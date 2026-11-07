@@ -112,12 +112,16 @@ impl SessionManager {
             }
             return Ok(RequestContext::default());
         }
-        if !self.exists(session_id).await {
-            return Err(tonic::Status::not_found(format!(
-                "session {session_id} not found"
-            )));
+        // One lock for the lookup and the touch, so a session removed in
+        // between is not served.
+        match self.sessions.write().await.get_mut(session_id) {
+            Some(state) => state.last_activity = Instant::now(),
+            None => {
+                return Err(tonic::Status::not_found(format!(
+                    "session {session_id} not found"
+                )));
+            }
         }
-        self.touch(session_id).await;
         Ok(RequestContext::for_session(SessionHandle(
             session_id.to_owned(),
         )))

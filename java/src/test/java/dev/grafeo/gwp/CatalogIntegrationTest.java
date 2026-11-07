@@ -133,13 +133,14 @@ class CatalogIntegrationTest {
 
     @Test
     void closedSessionIsNotFound() {
-        GqlSession session = conn.createSession();
-        CatalogClient catalog = session.catalog();
-        catalog.listSchemas();
-        session.close();
+        try (GqlSession session = conn.createSession()) {
+            CatalogClient catalog = session.catalog();
+            catalog.listSchemas();
+            session.close();
 
-        StatusRuntimeException e =
-                assertThrows(StatusRuntimeException.class, catalog::listSchemas);
-        assertEquals(Status.Code.NOT_FOUND, e.getStatus().getCode());
+            StatusRuntimeException e =
+                    assertThrows(StatusRuntimeException.class, catalog::listSchemas);
+            assertEquals(Status.Code.NOT_FOUND, e.getStatus().getCode());
+        }
     }
 }

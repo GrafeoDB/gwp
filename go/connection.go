@@ -58,8 +58,8 @@ func (c *GqlConnection) CreateSession(ctx context.Context) (*GqlSession, error) 
 }
 
 // CreateCatalogClient creates a new catalog management client for schemas,
-// graphs, and graph types. Its requests name no session; a server with
-// authentication refuses them, so use GqlSession.Catalog there.
+// graphs, and graph types. Its requests name no session, which a server with
+// authentication refuses; GqlSession.Catalog gives one bound to a session.
 func (c *GqlConnection) CreateCatalogClient() *CatalogClient {
 	return newSessionCatalogClient(c.catalogClient, "")
 }

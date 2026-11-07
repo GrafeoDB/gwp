@@ -88,7 +88,7 @@ long timestamp = session.ping();
 
 ### Catalog
 
-`CatalogClient` manages schemas, graphs and graph types. Get one from the session, so every request names that session and the server works in that session's catalog:
+`CatalogClient` manages schemas, graphs and graph types. Get one from the session, so every request names that session. A server that keeps a catalog per session then uses that session's catalog:
 
 ```java
 try (GqlSession session = conn.createSession();
@@ -103,7 +103,9 @@ try (GqlSession session = conn.createSession();
 }
 ```
 
-A server with authentication refuses catalog requests that name no live session (gRPC `UNAUTHENTICATED`), and answers `NOT_FOUND` for a session it does not know, so use `session.catalog()` there. `conn.createCatalogClient()` still gives a client that names no session (`sessionId()` is empty); it works only against a server without authentication.
+A session the server does not know gets gRPC `NOT_FOUND`. `conn.createCatalogClient()` gives a client that names no session (`sessionId()` is empty).
+
+This client does not send credentials in the handshake yet, so it cannot open a session on a server with authentication (such a server refuses the handshake, and catalog requests without a session, with `UNAUTHENTICATED`). Use the Rust client against such a server for now.
 
 ### ResultCursor
 

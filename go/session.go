@@ -24,10 +24,10 @@ func (s *GqlSession) SessionID() string {
 // Catalog returns a catalog client that works in this session's catalog.
 //
 // Its requests name this session, so a server that keeps one catalog per
-// session shows this session's schemas and graphs. A server with
-// authentication refuses catalog requests that name no live session, so use
-// this client there. GqlConnection.CreateCatalogClient gives one that names
-// no session.
+// session shows this session's schemas and graphs.
+// GqlConnection.CreateCatalogClient gives one that names no session. This
+// binding sends no handshake credentials yet, so it cannot open a session on
+// a server with authentication.
 func (s *GqlSession) Catalog() *CatalogClient {
 	return newSessionCatalogClient(s.catalogClient, s.sessionID)
 }

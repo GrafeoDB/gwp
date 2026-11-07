@@ -4,12 +4,12 @@ All notable changes to gwp, a pure Rust gRPC wire protocol for GQL (ISO/IEC 3907
 
 ## [0.4.0] - 2026-11-07
 
-Sessions release: catalog, admin and search requests name the session they run in, a server with authentication requires one, and every binding can send it. Breaking for code that wires the services by hand (the constructors take the `SessionManager`) or builds admin and search requests as struct literals; servers built with `GqlServer` need no change. Clients of a server with authentication use the session-bound clients (`session.catalog()`, and in Rust `session.admin()` and `session.search()`); the minimum Rust is 1.99.
+Sessions release: catalog, admin and search requests name the session they run in, a server with authentication requires one, and every binding can name its session. Breaking for code that wires the services by hand (the constructors take the `SessionManager`) or builds admin and search requests as struct literals, and for builds below Rust 1.99; servers built with `GqlServer` need no change. Against a server with authentication, the Rust client uses `session.catalog()`, `session.admin()` and `session.search()`; the Python, JavaScript, Go and Java clients send no handshake credentials yet, so they cannot authenticate.
 
 ### Added
 
 - **Admin and search calls name their session**: every `AdminService` and `SearchService` request has a `session_id` (field 15, as on the catalog), and the Rust `GqlSession::admin()` and `GqlSession::search()` return clients that send it; `AdminClient::session_id()` and `SearchClient::session_id()` tell which. `GqlBackend` gains a context twin for each admin and search method (`get_graph_stats_in` to `hybrid_search_in`) that gets the session, and the defaults call the existing methods.
-- **Session-bound catalog in every binding**: `session.catalog()` in Python, JavaScript and Java and `session.Catalog()` in Go return a catalog client whose requests name the session; `session_id` (Python), `sessionId` (JavaScript), `SessionID()` (Go) and `sessionId()` (Java) tell which. The connection-level catalog clients still name no session.
+- **Session-bound catalog in every binding**: `session.catalog()` in Python, JavaScript and Java and `session.Catalog()` in Go return a catalog client whose requests name the session; `session_id` (Python), `sessionId` (JavaScript), `SessionID()` (Go) and `sessionId()` (Java) tell which. These clients send no handshake credentials yet, so they cannot open a session on a server with authentication.
 - **`SessionManager::require_sessions()`** makes the catalog, admin and search services refuse requests without a session, for a server that authenticates callers another way; `sessions_required()` tells whether it is set.
 - **`proto::FILE_DESCRIPTOR_SET`**: the encoded descriptors of gwp's protocol, for gRPC server reflection or tools that walk its services.
 
@@ -86,6 +86,7 @@ Breaking release: GQLSTATUS constants and operation codes follow ISO/IEC 39075 T
 - `GqlConnection::create_session_with_credentials()` for servers with an `AuthValidator`.
 - `GqlSession::set_parameter()` sets a named session parameter.
 - `TransactionManager::begin_termination()` and `has_transaction()`; `register()` rejects a transaction id already in use.
+- Protocol tests over real sockets against a stateful backend: value round-trips for every GQL type and their boundaries, the catalog flow with `IF NOT EXISTS` / `IF EXISTS`, session properties, transaction failures and races, untrusted input, disconnects and backpressure.
 
 ### Changed
 
@@ -99,7 +100,6 @@ Breaking release: GQLSTATUS constants and operation codes follow ISO/IEC 39075 T
 - `GqlBackend` documents what the server does after a failed commit or rollback, and that a `ResultStream` is dropped when the client cancels or disconnects.
 - README documents write counters; Python installs with `uv add gwp-py`.
 - Go and JS stubs regenerated from the current proto (only the `ResultSummary.counters` comment changed; Python stubs carry no comments and are unchanged); `js/scripts/generate-proto.sh` no longer calls `npm bin`, which npm 9 removed.
-- Protocol tests over real sockets against a stateful backend: value round-trips for every GQL type and their boundaries, the catalog flow with `IF NOT EXISTS` / `IF EXISTS`, session properties, transaction failures and races, untrusted input, disconnects and backpressure.
 - GitHub Actions updated (`actions/checkout` v7, `setup-go`, `setup-node` and `setup-python` v7, `setup-java` v6, `upload-artifact` v7, `download-artifact` v8); Rust test assertions use `assert_eq!` / `assert_ne!` for the clippy `assert_is_empty` lint (Rust 1.99).
 
 ### Fixed
@@ -206,7 +206,7 @@ Server release: the `GqlServer` builder with TLS, authentication, idle session t
 
 ## [0.1.2] - 2026-02-15
 
-Database client release: a `DatabaseClient` in every binding, extended numeric types that keep their value, and an optional transaction id on `ExecuteRequest`.
+Database client release: a `DatabaseClient` in every binding, extended numeric types that keep their value, and an optional transaction id on `ExecuteRequest`. Breaking for Rust code that sets `ExecuteRequest.transaction_id`, now an `Option<String>`.
 
 ### Added
 

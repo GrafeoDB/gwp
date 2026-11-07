@@ -40,6 +40,25 @@ describe("catalog", () => {
     }
   });
 
+  it("session-bound client shares the session's channel", () => {
+    const catalog = session.catalog();
+    // White-box: the channel is what a leak would leave open.
+    const channelOf = (c: object) =>
+      (c as { client: { getChannel(): unknown } }).client.getChannel();
+    const sessionChannel = (
+      session as unknown as { sessionClient: { getChannel(): unknown } }
+    ).sessionClient.getChannel();
+    expect(channelOf(catalog)).toBe(sessionChannel);
+    catalog.close();
+  });
+
+  it("closing a session-bound client leaves the session usable", async () => {
+    session.catalog().close();
+    const schemas = await session.catalog().listSchemas();
+    expect(schemas.map((s) => s.name)).toContain("default");
+    expect(await session.ping()).toBeGreaterThan(0);
+  });
+
   it("connection-level client names no session", async () => {
     const catalog = conn.createCatalogClient();
     try {

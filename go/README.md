@@ -70,12 +70,15 @@ for _, s := range schemas {
 }
 ```
 
-A server with authentication refuses catalog requests that name no live
-session (`codes.Unauthenticated`), and one that names an unknown session gets
-`codes.NotFound`. Against such a server, use `session.Catalog()`.
-`conn.CreateCatalogClient()` gives a client that names no session, for servers
-without authentication. `catalog.SessionID()` returns the session a client
-names, or `""` when it names none.
+A request that names an unknown session gets `codes.NotFound`.
+`conn.CreateCatalogClient()` gives a client that names no session.
+`catalog.SessionID()` returns the session a client names, or `""` when it
+names none.
+
+This client does not send credentials in the handshake yet, so it cannot open
+a session on a server with authentication (such a server refuses the handshake,
+and catalog requests without a session, with `codes.Unauthenticated`). Use the
+Rust client against such a server for now.
 
 ## Features
 

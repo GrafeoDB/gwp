@@ -126,8 +126,9 @@ impl<B: GqlBackend> GqlServer<B> {
     ///
     /// When set, the server requires valid credentials on every handshake,
     /// and serves catalog, admin and search requests only when they name a
-    /// live session (`UNAUTHENTICATED` without one, `NOT_FOUND` for an
-    /// unknown one). When not set, all connections are accepted.
+    /// live session (`UNAUTHENTICATED` without one). A named session that
+    /// does not exist is `NOT_FOUND` either way. When not set, all
+    /// connections are accepted.
     #[must_use]
     pub fn auth(mut self, validator: impl AuthValidator) -> Self {
         self.auth_validator = Some(Arc::new(validator));

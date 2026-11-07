@@ -13,17 +13,39 @@ use crate::server::{
 ///
 /// Wraps the raw `AdminServiceClient` gRPC stub with ergonomic
 /// methods that return domain types instead of proto messages.
+///
+/// A client from [`GqlSession::admin`](crate::client::GqlSession::admin)
+/// names its session on every request, so the server can check who calls;
+/// one from [`new`](Self::new) names no session.
 pub struct AdminClient {
     client: AdminServiceClient<Channel>,
+    /// Session named on every request; empty for none.
+    session_id: String,
 }
 
 impl AdminClient {
     /// Create a new admin client from an existing tonic channel.
+    ///
+    /// Its requests name no session, which a server that requires
+    /// authentication refuses; use
+    /// [`GqlSession::admin`](crate::client::GqlSession::admin) there.
     #[must_use]
     pub fn new(channel: Channel) -> Self {
+        Self::for_session(channel, String::new())
+    }
+
+    /// A admin client whose requests name `session_id`.
+    pub(crate) fn for_session(channel: Channel, session_id: String) -> Self {
         Self {
             client: AdminServiceClient::new(channel),
+            session_id,
         }
+    }
+
+    /// The session this client's requests name, if any.
+    #[must_use]
+    pub fn session_id(&self) -> Option<&str> {
+        (!self.session_id.is_empty()).then_some(self.session_id.as_str())
     }
 
     /// Get detailed graph statistics.
@@ -36,6 +58,7 @@ impl AdminClient {
             .client
             .get_graph_stats(proto::GetGraphStatsRequest {
                 graph: graph.to_owned(),
+                session_id: self.session_id.clone(),
             })
             .await?
             .into_inner();
@@ -62,6 +85,7 @@ impl AdminClient {
             .client
             .wal_status(proto::WalStatusRequest {
                 graph: graph.to_owned(),
+                session_id: self.session_id.clone(),
             })
             .await?
             .into_inner();
@@ -85,6 +109,7 @@ impl AdminClient {
         self.client
             .wal_checkpoint(proto::WalCheckpointRequest {
                 graph: graph.to_owned(),
+                session_id: self.session_id.clone(),
             })
             .await?;
         Ok(())
@@ -100,6 +125,7 @@ impl AdminClient {
             .client
             .validate(proto::ValidateRequest {
                 graph: graph.to_owned(),
+                session_id: self.session_id.clone(),
             })
             .await?
             .into_inner();
@@ -170,6 +196,7 @@ impl AdminClient {
             .create_index(proto::CreateIndexRequest {
                 graph: graph.to_owned(),
                 index: Some(index_proto),
+                session_id: self.session_id.clone(),
             })
             .await?;
         Ok(())
@@ -211,6 +238,7 @@ impl AdminClient {
             .drop_index(proto::DropIndexRequest {
                 graph: graph.to_owned(),
                 index: Some(index_proto),
+                session_id: self.session_id.clone(),
             })
             .await?
             .into_inner();

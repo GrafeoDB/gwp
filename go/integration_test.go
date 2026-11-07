@@ -10,6 +10,9 @@ import (
 	"runtime"
 	"testing"
 	"time"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var testEndpoint string
@@ -447,5 +450,82 @@ func TestWriteCounters(t *testing.T) {
 	}
 	if counters.ContainsUpdates() {
 		t.Fatalf("a read must not contain updates: %+v", counters)
+	}
+}
+
+func TestSessionCatalog(t *testing.T) {
+	ctx := context.Background()
+	conn, err := Connect(ctx, testEndpoint)
+	if err != nil {
+		t.Fatalf("Connect: %v", err)
+	}
+	defer conn.Close()
+
+	session, err := conn.CreateSession(ctx)
+	if err != nil {
+		t.Fatalf("CreateSession: %v", err)
+	}
+	defer session.Close(ctx)
+
+	catalog := session.Catalog()
+	if catalog.SessionID() != session.SessionID() {
+		t.Fatalf("expected catalog session ID %q, got %q", session.SessionID(), catalog.SessionID())
+	}
+
+	schemas, err := catalog.ListSchemas(ctx)
+	if err != nil {
+		t.Fatalf("ListSchemas: %v", err)
+	}
+	if len(schemas) != 1 || schemas[0].Name != "default" {
+		t.Fatalf("expected [default], got %v", schemas)
+	}
+
+	graphs, err := catalog.ListGraphs(ctx, "default")
+	if err != nil {
+		t.Fatalf("ListGraphs: %v", err)
+	}
+	if len(graphs) == 0 {
+		t.Fatal("expected at least one graph")
+	}
+}
+
+func TestConnectionCatalog(t *testing.T) {
+	ctx := context.Background()
+	conn, err := Connect(ctx, testEndpoint)
+	if err != nil {
+		t.Fatalf("Connect: %v", err)
+	}
+	defer conn.Close()
+
+	catalog := conn.CreateCatalogClient()
+	if catalog.SessionID() != "" {
+		t.Fatalf("expected no catalog session ID, got %q", catalog.SessionID())
+	}
+
+	schemas, err := catalog.ListSchemas(ctx)
+	if err != nil {
+		t.Fatalf("ListSchemas: %v", err)
+	}
+	if len(schemas) != 1 || schemas[0].Name != "default" {
+		t.Fatalf("expected [default], got %v", schemas)
+	}
+}
+
+func TestCatalogUnknownSession(t *testing.T) {
+	ctx := context.Background()
+	conn, err := Connect(ctx, testEndpoint)
+	if err != nil {
+		t.Fatalf("Connect: %v", err)
+	}
+	defer conn.Close()
+
+	catalog := newSessionCatalogClient(conn.catalogClient, "no-such-session")
+	if catalog.SessionID() != "no-such-session" {
+		t.Fatalf("expected catalog session ID %q, got %q", "no-such-session", catalog.SessionID())
+	}
+
+	_, err = catalog.ListSchemas(ctx)
+	if status.Code(err) != codes.NotFound {
+		t.Fatalf("expected NotFound, got %v", err)
 	}
 }

@@ -2,6 +2,11 @@
 //!
 //! Graph introspection, maintenance, and index management.
 //! All errors are returned as gRPC status codes.
+//!
+//! A request may name the session it runs in (`session_id`); the backend
+//! then gets that session in the [`RequestContext`] of the `*_in` admin
+//! methods. When the server requires authentication, a request must name a
+//! live session.
 
 use std::sync::Arc;
 
@@ -10,28 +15,38 @@ use tonic::{Request, Response, Status};
 use crate::proto;
 use crate::proto::admin_service_server::AdminService;
 
-use super::backend::{GqlBackend, IndexDefinition};
+use super::SessionManager;
+use super::backend::{GqlBackend, IndexDefinition, RequestContext};
 
 /// Implementation of the `AdminService` gRPC service.
 pub struct AdminServiceImpl<B: GqlBackend> {
     backend: Arc<B>,
+    sessions: SessionManager,
 }
 
 impl<B: GqlBackend> AdminServiceImpl<B> {
-    /// Create a new admin service.
-    pub fn new(backend: Arc<B>) -> Self {
-        Self { backend }
+    /// Create a new admin service that checks the sessions requests name
+    /// against `sessions`, the manager the session service registers them
+    /// in.
+    pub fn new(backend: Arc<B>, sessions: SessionManager) -> Self {
+        Self { backend, sessions }
+    }
+
+    /// The context of a request that names `session_id` (empty for none).
+    async fn context(&self, session_id: &str) -> Result<RequestContext, Status> {
+        self.sessions.request_context(session_id).await
     }
 }
 
 #[tonic::async_trait]
 impl<B: GqlBackend> AdminService for AdminServiceImpl<B> {
-    #[tracing::instrument(skip(self, request), fields(graph))]
+    #[tracing::instrument(skip(self, request), fields(session_id, graph))]
     async fn get_graph_stats(
         &self,
         request: Request<proto::GetGraphStatsRequest>,
     ) -> Result<Response<proto::GetGraphStatsResponse>, Status> {
         let req = request.into_inner();
+        let ctx = self.context(&req.session_id).await?;
         tracing::Span::current().record("graph", &req.graph);
 
         if req.graph.is_empty() {
@@ -40,7 +55,7 @@ impl<B: GqlBackend> AdminService for AdminServiceImpl<B> {
 
         let stats = self
             .backend
-            .get_graph_stats(&req.graph)
+            .get_graph_stats_in(&ctx, &req.graph)
             .await
             .map_err(|e| e.to_optional_service_status())?;
 
@@ -56,12 +71,13 @@ impl<B: GqlBackend> AdminService for AdminServiceImpl<B> {
         }))
     }
 
-    #[tracing::instrument(skip(self, request), fields(graph))]
+    #[tracing::instrument(skip(self, request), fields(session_id, graph))]
     async fn wal_status(
         &self,
         request: Request<proto::WalStatusRequest>,
     ) -> Result<Response<proto::WalStatusResponse>, Status> {
         let req = request.into_inner();
+        let ctx = self.context(&req.session_id).await?;
         tracing::Span::current().record("graph", &req.graph);
 
         if req.graph.is_empty() {
@@ -70,7 +86,7 @@ impl<B: GqlBackend> AdminService for AdminServiceImpl<B> {
 
         let status = self
             .backend
-            .wal_status(&req.graph)
+            .wal_status_in(&ctx, &req.graph)
             .await
             .map_err(|e| e.to_optional_service_status())?;
 
@@ -84,12 +100,13 @@ impl<B: GqlBackend> AdminService for AdminServiceImpl<B> {
         }))
     }
 
-    #[tracing::instrument(skip(self, request), fields(graph))]
+    #[tracing::instrument(skip(self, request), fields(session_id, graph))]
     async fn wal_checkpoint(
         &self,
         request: Request<proto::WalCheckpointRequest>,
     ) -> Result<Response<proto::WalCheckpointResponse>, Status> {
         let req = request.into_inner();
+        let ctx = self.context(&req.session_id).await?;
         tracing::Span::current().record("graph", &req.graph);
 
         if req.graph.is_empty() {
@@ -97,7 +114,7 @@ impl<B: GqlBackend> AdminService for AdminServiceImpl<B> {
         }
 
         self.backend
-            .wal_checkpoint(&req.graph)
+            .wal_checkpoint_in(&ctx, &req.graph)
             .await
             .map_err(|e| e.to_optional_service_status())?;
 
@@ -106,12 +123,13 @@ impl<B: GqlBackend> AdminService for AdminServiceImpl<B> {
         Ok(Response::new(proto::WalCheckpointResponse {}))
     }
 
-    #[tracing::instrument(skip(self, request), fields(graph))]
+    #[tracing::instrument(skip(self, request), fields(session_id, graph))]
     async fn validate(
         &self,
         request: Request<proto::ValidateRequest>,
     ) -> Result<Response<proto::ValidateResponse>, Status> {
         let req = request.into_inner();
+        let ctx = self.context(&req.session_id).await?;
         tracing::Span::current().record("graph", &req.graph);
 
         if req.graph.is_empty() {
@@ -120,7 +138,7 @@ impl<B: GqlBackend> AdminService for AdminServiceImpl<B> {
 
         let result = self
             .backend
-            .validate(&req.graph)
+            .validate_in(&ctx, &req.graph)
             .await
             .map_err(|e| e.to_optional_service_status())?;
 
@@ -147,12 +165,13 @@ impl<B: GqlBackend> AdminService for AdminServiceImpl<B> {
         }))
     }
 
-    #[tracing::instrument(skip(self, request), fields(graph))]
+    #[tracing::instrument(skip(self, request), fields(session_id, graph))]
     async fn create_index(
         &self,
         request: Request<proto::CreateIndexRequest>,
     ) -> Result<Response<proto::CreateIndexResponse>, Status> {
         let req = request.into_inner();
+        let ctx = self.context(&req.session_id).await?;
         tracing::Span::current().record("graph", &req.graph);
 
         if req.graph.is_empty() {
@@ -183,7 +202,7 @@ impl<B: GqlBackend> AdminService for AdminServiceImpl<B> {
         };
 
         self.backend
-            .create_index(&req.graph, index_def)
+            .create_index_in(&ctx, &req.graph, index_def)
             .await
             .map_err(|e| e.to_optional_service_status())?;
 
@@ -192,12 +211,13 @@ impl<B: GqlBackend> AdminService for AdminServiceImpl<B> {
         Ok(Response::new(proto::CreateIndexResponse {}))
     }
 
-    #[tracing::instrument(skip(self, request), fields(graph))]
+    #[tracing::instrument(skip(self, request), fields(session_id, graph))]
     async fn drop_index(
         &self,
         request: Request<proto::DropIndexRequest>,
     ) -> Result<Response<proto::DropIndexResponse>, Status> {
         let req = request.into_inner();
+        let ctx = self.context(&req.session_id).await?;
         tracing::Span::current().record("graph", &req.graph);
 
         if req.graph.is_empty() {
@@ -229,7 +249,7 @@ impl<B: GqlBackend> AdminService for AdminServiceImpl<B> {
 
         let existed = self
             .backend
-            .drop_index(&req.graph, index_def)
+            .drop_index_in(&ctx, &req.graph, index_def)
             .await
             .map_err(|e| e.to_optional_service_status())?;
 

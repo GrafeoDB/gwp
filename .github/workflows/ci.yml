@@ -163,6 +163,7 @@ jobs:
   java:
     name: Java
     runs-on: ubuntu-latest
+    needs: rust
     steps:
       - uses: actions/checkout@v7
 
@@ -172,6 +173,15 @@ jobs:
           java-version: 17
           cache: maven
           cache-dependency-path: java/pom.xml
+
+      - name: Download test server
+        uses: actions/download-artifact@v8
+        with:
+          name: gwp-test-server
+          path: target/release
+
+      - name: Make test server executable
+        run: chmod +x target/release/gwp-test-server
 
       - name: Test
         run: mvn -B test

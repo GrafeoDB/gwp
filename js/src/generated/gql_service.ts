@@ -313,6 +313,11 @@ export interface RollbackResponse {
 }
 
 export interface ListSchemasRequest {
+  /**
+   * Session whose catalog to use; empty for none. A server with
+   * authentication refuses a request without a live session.
+   */
+  sessionId: string;
 }
 
 export interface SchemaInfo {
@@ -328,6 +333,11 @@ export interface ListSchemasResponse {
 export interface CreateSchemaRequest {
   name: string;
   ifNotExists: boolean;
+  /**
+   * Session whose catalog to use; empty for none. A server with
+   * authentication refuses a request without a live session.
+   */
+  sessionId: string;
 }
 
 export interface CreateSchemaResponse {
@@ -336,6 +346,11 @@ export interface CreateSchemaResponse {
 export interface DropSchemaRequest {
   name: string;
   ifExists: boolean;
+  /**
+   * Session whose catalog to use; empty for none. A server with
+   * authentication refuses a request without a live session.
+   */
+  sessionId: string;
 }
 
 export interface DropSchemaResponse {
@@ -345,6 +360,11 @@ export interface DropSchemaResponse {
 export interface ListGraphsRequest {
   /** Schema to list graphs from */
   schema: string;
+  /**
+   * Session whose catalog to use; empty for none. A server with
+   * authentication refuses a request without a live session.
+   */
+  sessionId: string;
 }
 
 export interface GraphSummary {
@@ -379,7 +399,14 @@ export interface CreateGraphRequest {
     | undefined;
   /** Engine-specific options (GrafeoDB extensions) */
   storageMode: string;
-  options: GraphOptions | undefined;
+  options:
+    | GraphOptions
+    | undefined;
+  /**
+   * Session whose catalog to use; empty for none. A server with
+   * authentication refuses a request without a live session.
+   */
+  sessionId: string;
 }
 
 export interface GraphOptions {
@@ -398,6 +425,11 @@ export interface DropGraphRequest {
   schema: string;
   name: string;
   ifExists: boolean;
+  /**
+   * Session whose catalog to use; empty for none. A server with
+   * authentication refuses a request without a live session.
+   */
+  sessionId: string;
 }
 
 export interface DropGraphResponse {
@@ -407,6 +439,11 @@ export interface DropGraphResponse {
 export interface GetGraphInfoRequest {
   schema: string;
   name: string;
+  /**
+   * Session whose catalog to use; empty for none. A server with
+   * authentication refuses a request without a live session.
+   */
+  sessionId: string;
 }
 
 export interface GetGraphInfoResponse {
@@ -423,6 +460,11 @@ export interface GetGraphInfoResponse {
 
 export interface ListGraphTypesRequest {
   schema: string;
+  /**
+   * Session whose catalog to use; empty for none. A server with
+   * authentication refuses a request without a live session.
+   */
+  sessionId: string;
 }
 
 export interface GraphTypeInfo {
@@ -439,6 +481,11 @@ export interface CreateGraphTypeRequest {
   name: string;
   ifNotExists: boolean;
   orReplace: boolean;
+  /**
+   * Session whose catalog to use; empty for none. A server with
+   * authentication refuses a request without a live session.
+   */
+  sessionId: string;
 }
 
 export interface CreateGraphTypeResponse {
@@ -448,6 +495,11 @@ export interface DropGraphTypeRequest {
   schema: string;
   name: string;
   ifExists: boolean;
+  /**
+   * Session whose catalog to use; empty for none. A server with
+   * authentication refuses a request without a live session.
+   */
+  sessionId: string;
 }
 
 export interface DropGraphTypeResponse {
@@ -456,6 +508,11 @@ export interface DropGraphTypeResponse {
 
 export interface GetGraphStatsRequest {
   graph: string;
+  /**
+   * Session the call runs in; empty for none. A server with
+   * authentication refuses a request without a live session.
+   */
+  sessionId: string;
 }
 
 export interface GetGraphStatsResponse {
@@ -471,6 +528,11 @@ export interface GetGraphStatsResponse {
 
 export interface WalStatusRequest {
   graph: string;
+  /**
+   * Session the call runs in; empty for none. A server with
+   * authentication refuses a request without a live session.
+   */
+  sessionId: string;
 }
 
 export interface WalStatusResponse {
@@ -484,6 +546,11 @@ export interface WalStatusResponse {
 
 export interface WalCheckpointRequest {
   graph: string;
+  /**
+   * Session the call runs in; empty for none. A server with
+   * authentication refuses a request without a live session.
+   */
+  sessionId: string;
 }
 
 export interface WalCheckpointResponse {
@@ -491,6 +558,11 @@ export interface WalCheckpointResponse {
 
 export interface ValidateRequest {
   graph: string;
+  /**
+   * Session the call runs in; empty for none. A server with
+   * authentication refuses a request without a live session.
+   */
+  sessionId: string;
 }
 
 export interface ValidateResponse {
@@ -515,7 +587,14 @@ export interface CreateIndexRequest {
   graph: string;
   propertyIndex?: PropertyIndexDef | undefined;
   vectorIndex?: VectorIndexDef | undefined;
-  textIndex?: TextIndexDef | undefined;
+  textIndex?:
+    | TextIndexDef
+    | undefined;
+  /**
+   * Session the call runs in; empty for none. A server with
+   * authentication refuses a request without a live session.
+   */
+  sessionId: string;
 }
 
 export interface PropertyIndexDef {
@@ -549,7 +628,14 @@ export interface DropIndexRequest {
   graph: string;
   propertyIndex?: PropertyIndexDef | undefined;
   vectorIndex?: VectorIndexDef | undefined;
-  textIndex?: TextIndexDef | undefined;
+  textIndex?:
+    | TextIndexDef
+    | undefined;
+  /**
+   * Session the call runs in; empty for none. A server with
+   * authentication refuses a request without a live session.
+   */
+  sessionId: string;
 }
 
 export interface DropIndexResponse {
@@ -564,6 +650,11 @@ export interface VectorSearchRequest {
   k: number;
   ef?: number | undefined;
   filters: { [key: string]: Value };
+  /**
+   * Session the call runs in; empty for none. A server with
+   * authentication refuses a request without a live session.
+   */
+  sessionId: string;
 }
 
 export interface VectorSearchRequest_FiltersEntry {
@@ -577,6 +668,11 @@ export interface TextSearchRequest {
   property: string;
   query: string;
   k: number;
+  /**
+   * Session the call runs in; empty for none. A server with
+   * authentication refuses a request without a live session.
+   */
+  sessionId: string;
 }
 
 export interface HybridSearchRequest {
@@ -587,6 +683,11 @@ export interface HybridSearchRequest {
   queryText: string;
   queryVector: number[];
   k: number;
+  /**
+   * Session the call runs in; empty for none. A server with
+   * authentication refuses a request without a live session.
+   */
+  sessionId: string;
 }
 
 /**
@@ -3042,11 +3143,14 @@ export const RollbackResponse: MessageFns<RollbackResponse> = {
 };
 
 function createBaseListSchemasRequest(): ListSchemasRequest {
-  return {};
+  return { sessionId: "" };
 }
 
 export const ListSchemasRequest: MessageFns<ListSchemasRequest> = {
-  encode(_: ListSchemasRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(message: ListSchemasRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.sessionId !== "") {
+      writer.uint32(122).string(message.sessionId);
+    }
     return writer;
   },
 
@@ -3057,6 +3161,14 @@ export const ListSchemasRequest: MessageFns<ListSchemasRequest> = {
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.sessionId = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -3066,20 +3178,30 @@ export const ListSchemasRequest: MessageFns<ListSchemasRequest> = {
     return message;
   },
 
-  fromJSON(_: any): ListSchemasRequest {
-    return {};
+  fromJSON(object: any): ListSchemasRequest {
+    return {
+      sessionId: isSet(object.sessionId)
+        ? globalThis.String(object.sessionId)
+        : isSet(object.session_id)
+        ? globalThis.String(object.session_id)
+        : "",
+    };
   },
 
-  toJSON(_: ListSchemasRequest): unknown {
+  toJSON(message: ListSchemasRequest): unknown {
     const obj: any = {};
+    if (message.sessionId !== "") {
+      obj.sessionId = message.sessionId;
+    }
     return obj;
   },
 
   create<I extends Exact<DeepPartial<ListSchemasRequest>, I>>(base?: I): ListSchemasRequest {
     return ListSchemasRequest.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<ListSchemasRequest>, I>>(_: I): ListSchemasRequest {
+  fromPartial<I extends Exact<DeepPartial<ListSchemasRequest>, I>>(object: I): ListSchemasRequest {
     const message = createBaseListSchemasRequest();
+    message.sessionId = object.sessionId ?? "";
     return message;
   },
 };
@@ -3245,7 +3367,7 @@ export const ListSchemasResponse: MessageFns<ListSchemasResponse> = {
 };
 
 function createBaseCreateSchemaRequest(): CreateSchemaRequest {
-  return { name: "", ifNotExists: false };
+  return { name: "", ifNotExists: false, sessionId: "" };
 }
 
 export const CreateSchemaRequest: MessageFns<CreateSchemaRequest> = {
@@ -3255,6 +3377,9 @@ export const CreateSchemaRequest: MessageFns<CreateSchemaRequest> = {
     }
     if (message.ifNotExists !== false) {
       writer.uint32(16).bool(message.ifNotExists);
+    }
+    if (message.sessionId !== "") {
+      writer.uint32(122).string(message.sessionId);
     }
     return writer;
   },
@@ -3282,6 +3407,14 @@ export const CreateSchemaRequest: MessageFns<CreateSchemaRequest> = {
           message.ifNotExists = reader.bool();
           continue;
         }
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.sessionId = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -3299,6 +3432,11 @@ export const CreateSchemaRequest: MessageFns<CreateSchemaRequest> = {
         : isSet(object.if_not_exists)
         ? globalThis.Boolean(object.if_not_exists)
         : false,
+      sessionId: isSet(object.sessionId)
+        ? globalThis.String(object.sessionId)
+        : isSet(object.session_id)
+        ? globalThis.String(object.session_id)
+        : "",
     };
   },
 
@@ -3310,6 +3448,9 @@ export const CreateSchemaRequest: MessageFns<CreateSchemaRequest> = {
     if (message.ifNotExists !== false) {
       obj.ifNotExists = message.ifNotExists;
     }
+    if (message.sessionId !== "") {
+      obj.sessionId = message.sessionId;
+    }
     return obj;
   },
 
@@ -3320,6 +3461,7 @@ export const CreateSchemaRequest: MessageFns<CreateSchemaRequest> = {
     const message = createBaseCreateSchemaRequest();
     message.name = object.name ?? "";
     message.ifNotExists = object.ifNotExists ?? false;
+    message.sessionId = object.sessionId ?? "";
     return message;
   },
 };
@@ -3368,7 +3510,7 @@ export const CreateSchemaResponse: MessageFns<CreateSchemaResponse> = {
 };
 
 function createBaseDropSchemaRequest(): DropSchemaRequest {
-  return { name: "", ifExists: false };
+  return { name: "", ifExists: false, sessionId: "" };
 }
 
 export const DropSchemaRequest: MessageFns<DropSchemaRequest> = {
@@ -3378,6 +3520,9 @@ export const DropSchemaRequest: MessageFns<DropSchemaRequest> = {
     }
     if (message.ifExists !== false) {
       writer.uint32(16).bool(message.ifExists);
+    }
+    if (message.sessionId !== "") {
+      writer.uint32(122).string(message.sessionId);
     }
     return writer;
   },
@@ -3405,6 +3550,14 @@ export const DropSchemaRequest: MessageFns<DropSchemaRequest> = {
           message.ifExists = reader.bool();
           continue;
         }
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.sessionId = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -3422,6 +3575,11 @@ export const DropSchemaRequest: MessageFns<DropSchemaRequest> = {
         : isSet(object.if_exists)
         ? globalThis.Boolean(object.if_exists)
         : false,
+      sessionId: isSet(object.sessionId)
+        ? globalThis.String(object.sessionId)
+        : isSet(object.session_id)
+        ? globalThis.String(object.session_id)
+        : "",
     };
   },
 
@@ -3433,6 +3591,9 @@ export const DropSchemaRequest: MessageFns<DropSchemaRequest> = {
     if (message.ifExists !== false) {
       obj.ifExists = message.ifExists;
     }
+    if (message.sessionId !== "") {
+      obj.sessionId = message.sessionId;
+    }
     return obj;
   },
 
@@ -3443,6 +3604,7 @@ export const DropSchemaRequest: MessageFns<DropSchemaRequest> = {
     const message = createBaseDropSchemaRequest();
     message.name = object.name ?? "";
     message.ifExists = object.ifExists ?? false;
+    message.sessionId = object.sessionId ?? "";
     return message;
   },
 };
@@ -3506,13 +3668,16 @@ export const DropSchemaResponse: MessageFns<DropSchemaResponse> = {
 };
 
 function createBaseListGraphsRequest(): ListGraphsRequest {
-  return { schema: "" };
+  return { schema: "", sessionId: "" };
 }
 
 export const ListGraphsRequest: MessageFns<ListGraphsRequest> = {
   encode(message: ListGraphsRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.schema !== "") {
       writer.uint32(10).string(message.schema);
+    }
+    if (message.sessionId !== "") {
+      writer.uint32(122).string(message.sessionId);
     }
     return writer;
   },
@@ -3532,6 +3697,14 @@ export const ListGraphsRequest: MessageFns<ListGraphsRequest> = {
           message.schema = reader.string();
           continue;
         }
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.sessionId = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -3542,13 +3715,23 @@ export const ListGraphsRequest: MessageFns<ListGraphsRequest> = {
   },
 
   fromJSON(object: any): ListGraphsRequest {
-    return { schema: isSet(object.schema) ? globalThis.String(object.schema) : "" };
+    return {
+      schema: isSet(object.schema) ? globalThis.String(object.schema) : "",
+      sessionId: isSet(object.sessionId)
+        ? globalThis.String(object.sessionId)
+        : isSet(object.session_id)
+        ? globalThis.String(object.session_id)
+        : "",
+    };
   },
 
   toJSON(message: ListGraphsRequest): unknown {
     const obj: any = {};
     if (message.schema !== "") {
       obj.schema = message.schema;
+    }
+    if (message.sessionId !== "") {
+      obj.sessionId = message.sessionId;
     }
     return obj;
   },
@@ -3559,6 +3742,7 @@ export const ListGraphsRequest: MessageFns<ListGraphsRequest> = {
   fromPartial<I extends Exact<DeepPartial<ListGraphsRequest>, I>>(object: I): ListGraphsRequest {
     const message = createBaseListGraphsRequest();
     message.schema = object.schema ?? "";
+    message.sessionId = object.sessionId ?? "";
     return message;
   },
 };
@@ -3776,6 +3960,7 @@ function createBaseCreateGraphRequest(): CreateGraphRequest {
     copyOf: undefined,
     storageMode: "",
     options: undefined,
+    sessionId: "",
   };
 }
 
@@ -3807,6 +3992,9 @@ export const CreateGraphRequest: MessageFns<CreateGraphRequest> = {
     }
     if (message.options !== undefined) {
       GraphOptions.encode(message.options, writer.uint32(90).fork()).join();
+    }
+    if (message.sessionId !== "") {
+      writer.uint32(122).string(message.sessionId);
     }
     return writer;
   },
@@ -3890,6 +4078,14 @@ export const CreateGraphRequest: MessageFns<CreateGraphRequest> = {
           message.options = GraphOptions.decode(reader, reader.uint32());
           continue;
         }
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.sessionId = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -3934,6 +4130,11 @@ export const CreateGraphRequest: MessageFns<CreateGraphRequest> = {
         ? globalThis.String(object.storage_mode)
         : "",
       options: isSet(object.options) ? GraphOptions.fromJSON(object.options) : undefined,
+      sessionId: isSet(object.sessionId)
+        ? globalThis.String(object.sessionId)
+        : isSet(object.session_id)
+        ? globalThis.String(object.session_id)
+        : "",
     };
   },
 
@@ -3966,6 +4167,9 @@ export const CreateGraphRequest: MessageFns<CreateGraphRequest> = {
     if (message.options !== undefined) {
       obj.options = GraphOptions.toJSON(message.options);
     }
+    if (message.sessionId !== "") {
+      obj.sessionId = message.sessionId;
+    }
     return obj;
   },
 
@@ -3985,6 +4189,7 @@ export const CreateGraphRequest: MessageFns<CreateGraphRequest> = {
     message.options = (object.options !== undefined && object.options !== null)
       ? GraphOptions.fromPartial(object.options)
       : undefined;
+    message.sessionId = object.sessionId ?? "";
     return message;
   },
 };
@@ -4199,7 +4404,7 @@ export const CreateGraphResponse: MessageFns<CreateGraphResponse> = {
 };
 
 function createBaseDropGraphRequest(): DropGraphRequest {
-  return { schema: "", name: "", ifExists: false };
+  return { schema: "", name: "", ifExists: false, sessionId: "" };
 }
 
 export const DropGraphRequest: MessageFns<DropGraphRequest> = {
@@ -4212,6 +4417,9 @@ export const DropGraphRequest: MessageFns<DropGraphRequest> = {
     }
     if (message.ifExists !== false) {
       writer.uint32(24).bool(message.ifExists);
+    }
+    if (message.sessionId !== "") {
+      writer.uint32(122).string(message.sessionId);
     }
     return writer;
   },
@@ -4247,6 +4455,14 @@ export const DropGraphRequest: MessageFns<DropGraphRequest> = {
           message.ifExists = reader.bool();
           continue;
         }
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.sessionId = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -4265,6 +4481,11 @@ export const DropGraphRequest: MessageFns<DropGraphRequest> = {
         : isSet(object.if_exists)
         ? globalThis.Boolean(object.if_exists)
         : false,
+      sessionId: isSet(object.sessionId)
+        ? globalThis.String(object.sessionId)
+        : isSet(object.session_id)
+        ? globalThis.String(object.session_id)
+        : "",
     };
   },
 
@@ -4279,6 +4500,9 @@ export const DropGraphRequest: MessageFns<DropGraphRequest> = {
     if (message.ifExists !== false) {
       obj.ifExists = message.ifExists;
     }
+    if (message.sessionId !== "") {
+      obj.sessionId = message.sessionId;
+    }
     return obj;
   },
 
@@ -4290,6 +4514,7 @@ export const DropGraphRequest: MessageFns<DropGraphRequest> = {
     message.schema = object.schema ?? "";
     message.name = object.name ?? "";
     message.ifExists = object.ifExists ?? false;
+    message.sessionId = object.sessionId ?? "";
     return message;
   },
 };
@@ -4353,7 +4578,7 @@ export const DropGraphResponse: MessageFns<DropGraphResponse> = {
 };
 
 function createBaseGetGraphInfoRequest(): GetGraphInfoRequest {
-  return { schema: "", name: "" };
+  return { schema: "", name: "", sessionId: "" };
 }
 
 export const GetGraphInfoRequest: MessageFns<GetGraphInfoRequest> = {
@@ -4363,6 +4588,9 @@ export const GetGraphInfoRequest: MessageFns<GetGraphInfoRequest> = {
     }
     if (message.name !== "") {
       writer.uint32(18).string(message.name);
+    }
+    if (message.sessionId !== "") {
+      writer.uint32(122).string(message.sessionId);
     }
     return writer;
   },
@@ -4390,6 +4618,14 @@ export const GetGraphInfoRequest: MessageFns<GetGraphInfoRequest> = {
           message.name = reader.string();
           continue;
         }
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.sessionId = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -4403,6 +4639,11 @@ export const GetGraphInfoRequest: MessageFns<GetGraphInfoRequest> = {
     return {
       schema: isSet(object.schema) ? globalThis.String(object.schema) : "",
       name: isSet(object.name) ? globalThis.String(object.name) : "",
+      sessionId: isSet(object.sessionId)
+        ? globalThis.String(object.sessionId)
+        : isSet(object.session_id)
+        ? globalThis.String(object.session_id)
+        : "",
     };
   },
 
@@ -4414,6 +4655,9 @@ export const GetGraphInfoRequest: MessageFns<GetGraphInfoRequest> = {
     if (message.name !== "") {
       obj.name = message.name;
     }
+    if (message.sessionId !== "") {
+      obj.sessionId = message.sessionId;
+    }
     return obj;
   },
 
@@ -4424,6 +4668,7 @@ export const GetGraphInfoRequest: MessageFns<GetGraphInfoRequest> = {
     const message = createBaseGetGraphInfoRequest();
     message.schema = object.schema ?? "";
     message.name = object.name ?? "";
+    message.sessionId = object.sessionId ?? "";
     return message;
   },
 };
@@ -4660,13 +4905,16 @@ export const GetGraphInfoResponse: MessageFns<GetGraphInfoResponse> = {
 };
 
 function createBaseListGraphTypesRequest(): ListGraphTypesRequest {
-  return { schema: "" };
+  return { schema: "", sessionId: "" };
 }
 
 export const ListGraphTypesRequest: MessageFns<ListGraphTypesRequest> = {
   encode(message: ListGraphTypesRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.schema !== "") {
       writer.uint32(10).string(message.schema);
+    }
+    if (message.sessionId !== "") {
+      writer.uint32(122).string(message.sessionId);
     }
     return writer;
   },
@@ -4686,6 +4934,14 @@ export const ListGraphTypesRequest: MessageFns<ListGraphTypesRequest> = {
           message.schema = reader.string();
           continue;
         }
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.sessionId = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -4696,13 +4952,23 @@ export const ListGraphTypesRequest: MessageFns<ListGraphTypesRequest> = {
   },
 
   fromJSON(object: any): ListGraphTypesRequest {
-    return { schema: isSet(object.schema) ? globalThis.String(object.schema) : "" };
+    return {
+      schema: isSet(object.schema) ? globalThis.String(object.schema) : "",
+      sessionId: isSet(object.sessionId)
+        ? globalThis.String(object.sessionId)
+        : isSet(object.session_id)
+        ? globalThis.String(object.session_id)
+        : "",
+    };
   },
 
   toJSON(message: ListGraphTypesRequest): unknown {
     const obj: any = {};
     if (message.schema !== "") {
       obj.schema = message.schema;
+    }
+    if (message.sessionId !== "") {
+      obj.sessionId = message.sessionId;
     }
     return obj;
   },
@@ -4713,6 +4979,7 @@ export const ListGraphTypesRequest: MessageFns<ListGraphTypesRequest> = {
   fromPartial<I extends Exact<DeepPartial<ListGraphTypesRequest>, I>>(object: I): ListGraphTypesRequest {
     const message = createBaseListGraphTypesRequest();
     message.schema = object.schema ?? "";
+    message.sessionId = object.sessionId ?? "";
     return message;
   },
 };
@@ -4858,7 +5125,7 @@ export const ListGraphTypesResponse: MessageFns<ListGraphTypesResponse> = {
 };
 
 function createBaseCreateGraphTypeRequest(): CreateGraphTypeRequest {
-  return { schema: "", name: "", ifNotExists: false, orReplace: false };
+  return { schema: "", name: "", ifNotExists: false, orReplace: false, sessionId: "" };
 }
 
 export const CreateGraphTypeRequest: MessageFns<CreateGraphTypeRequest> = {
@@ -4874,6 +5141,9 @@ export const CreateGraphTypeRequest: MessageFns<CreateGraphTypeRequest> = {
     }
     if (message.orReplace !== false) {
       writer.uint32(32).bool(message.orReplace);
+    }
+    if (message.sessionId !== "") {
+      writer.uint32(122).string(message.sessionId);
     }
     return writer;
   },
@@ -4917,6 +5187,14 @@ export const CreateGraphTypeRequest: MessageFns<CreateGraphTypeRequest> = {
           message.orReplace = reader.bool();
           continue;
         }
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.sessionId = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -4940,6 +5218,11 @@ export const CreateGraphTypeRequest: MessageFns<CreateGraphTypeRequest> = {
         : isSet(object.or_replace)
         ? globalThis.Boolean(object.or_replace)
         : false,
+      sessionId: isSet(object.sessionId)
+        ? globalThis.String(object.sessionId)
+        : isSet(object.session_id)
+        ? globalThis.String(object.session_id)
+        : "",
     };
   },
 
@@ -4957,6 +5240,9 @@ export const CreateGraphTypeRequest: MessageFns<CreateGraphTypeRequest> = {
     if (message.orReplace !== false) {
       obj.orReplace = message.orReplace;
     }
+    if (message.sessionId !== "") {
+      obj.sessionId = message.sessionId;
+    }
     return obj;
   },
 
@@ -4969,6 +5255,7 @@ export const CreateGraphTypeRequest: MessageFns<CreateGraphTypeRequest> = {
     message.name = object.name ?? "";
     message.ifNotExists = object.ifNotExists ?? false;
     message.orReplace = object.orReplace ?? false;
+    message.sessionId = object.sessionId ?? "";
     return message;
   },
 };
@@ -5017,7 +5304,7 @@ export const CreateGraphTypeResponse: MessageFns<CreateGraphTypeResponse> = {
 };
 
 function createBaseDropGraphTypeRequest(): DropGraphTypeRequest {
-  return { schema: "", name: "", ifExists: false };
+  return { schema: "", name: "", ifExists: false, sessionId: "" };
 }
 
 export const DropGraphTypeRequest: MessageFns<DropGraphTypeRequest> = {
@@ -5030,6 +5317,9 @@ export const DropGraphTypeRequest: MessageFns<DropGraphTypeRequest> = {
     }
     if (message.ifExists !== false) {
       writer.uint32(24).bool(message.ifExists);
+    }
+    if (message.sessionId !== "") {
+      writer.uint32(122).string(message.sessionId);
     }
     return writer;
   },
@@ -5065,6 +5355,14 @@ export const DropGraphTypeRequest: MessageFns<DropGraphTypeRequest> = {
           message.ifExists = reader.bool();
           continue;
         }
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.sessionId = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -5083,6 +5381,11 @@ export const DropGraphTypeRequest: MessageFns<DropGraphTypeRequest> = {
         : isSet(object.if_exists)
         ? globalThis.Boolean(object.if_exists)
         : false,
+      sessionId: isSet(object.sessionId)
+        ? globalThis.String(object.sessionId)
+        : isSet(object.session_id)
+        ? globalThis.String(object.session_id)
+        : "",
     };
   },
 
@@ -5097,6 +5400,9 @@ export const DropGraphTypeRequest: MessageFns<DropGraphTypeRequest> = {
     if (message.ifExists !== false) {
       obj.ifExists = message.ifExists;
     }
+    if (message.sessionId !== "") {
+      obj.sessionId = message.sessionId;
+    }
     return obj;
   },
 
@@ -5108,6 +5414,7 @@ export const DropGraphTypeRequest: MessageFns<DropGraphTypeRequest> = {
     message.schema = object.schema ?? "";
     message.name = object.name ?? "";
     message.ifExists = object.ifExists ?? false;
+    message.sessionId = object.sessionId ?? "";
     return message;
   },
 };
@@ -5171,13 +5478,16 @@ export const DropGraphTypeResponse: MessageFns<DropGraphTypeResponse> = {
 };
 
 function createBaseGetGraphStatsRequest(): GetGraphStatsRequest {
-  return { graph: "" };
+  return { graph: "", sessionId: "" };
 }
 
 export const GetGraphStatsRequest: MessageFns<GetGraphStatsRequest> = {
   encode(message: GetGraphStatsRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.graph !== "") {
       writer.uint32(10).string(message.graph);
+    }
+    if (message.sessionId !== "") {
+      writer.uint32(122).string(message.sessionId);
     }
     return writer;
   },
@@ -5197,6 +5507,14 @@ export const GetGraphStatsRequest: MessageFns<GetGraphStatsRequest> = {
           message.graph = reader.string();
           continue;
         }
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.sessionId = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -5207,13 +5525,23 @@ export const GetGraphStatsRequest: MessageFns<GetGraphStatsRequest> = {
   },
 
   fromJSON(object: any): GetGraphStatsRequest {
-    return { graph: isSet(object.graph) ? globalThis.String(object.graph) : "" };
+    return {
+      graph: isSet(object.graph) ? globalThis.String(object.graph) : "",
+      sessionId: isSet(object.sessionId)
+        ? globalThis.String(object.sessionId)
+        : isSet(object.session_id)
+        ? globalThis.String(object.session_id)
+        : "",
+    };
   },
 
   toJSON(message: GetGraphStatsRequest): unknown {
     const obj: any = {};
     if (message.graph !== "") {
       obj.graph = message.graph;
+    }
+    if (message.sessionId !== "") {
+      obj.sessionId = message.sessionId;
     }
     return obj;
   },
@@ -5224,6 +5552,7 @@ export const GetGraphStatsRequest: MessageFns<GetGraphStatsRequest> = {
   fromPartial<I extends Exact<DeepPartial<GetGraphStatsRequest>, I>>(object: I): GetGraphStatsRequest {
     const message = createBaseGetGraphStatsRequest();
     message.graph = object.graph ?? "";
+    message.sessionId = object.sessionId ?? "";
     return message;
   },
 };
@@ -5466,13 +5795,16 @@ export const GetGraphStatsResponse: MessageFns<GetGraphStatsResponse> = {
 };
 
 function createBaseWalStatusRequest(): WalStatusRequest {
-  return { graph: "" };
+  return { graph: "", sessionId: "" };
 }
 
 export const WalStatusRequest: MessageFns<WalStatusRequest> = {
   encode(message: WalStatusRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.graph !== "") {
       writer.uint32(10).string(message.graph);
+    }
+    if (message.sessionId !== "") {
+      writer.uint32(122).string(message.sessionId);
     }
     return writer;
   },
@@ -5492,6 +5824,14 @@ export const WalStatusRequest: MessageFns<WalStatusRequest> = {
           message.graph = reader.string();
           continue;
         }
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.sessionId = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -5502,13 +5842,23 @@ export const WalStatusRequest: MessageFns<WalStatusRequest> = {
   },
 
   fromJSON(object: any): WalStatusRequest {
-    return { graph: isSet(object.graph) ? globalThis.String(object.graph) : "" };
+    return {
+      graph: isSet(object.graph) ? globalThis.String(object.graph) : "",
+      sessionId: isSet(object.sessionId)
+        ? globalThis.String(object.sessionId)
+        : isSet(object.session_id)
+        ? globalThis.String(object.session_id)
+        : "",
+    };
   },
 
   toJSON(message: WalStatusRequest): unknown {
     const obj: any = {};
     if (message.graph !== "") {
       obj.graph = message.graph;
+    }
+    if (message.sessionId !== "") {
+      obj.sessionId = message.sessionId;
     }
     return obj;
   },
@@ -5519,6 +5869,7 @@ export const WalStatusRequest: MessageFns<WalStatusRequest> = {
   fromPartial<I extends Exact<DeepPartial<WalStatusRequest>, I>>(object: I): WalStatusRequest {
     const message = createBaseWalStatusRequest();
     message.graph = object.graph ?? "";
+    message.sessionId = object.sessionId ?? "";
     return message;
   },
 };
@@ -5699,13 +6050,16 @@ export const WalStatusResponse: MessageFns<WalStatusResponse> = {
 };
 
 function createBaseWalCheckpointRequest(): WalCheckpointRequest {
-  return { graph: "" };
+  return { graph: "", sessionId: "" };
 }
 
 export const WalCheckpointRequest: MessageFns<WalCheckpointRequest> = {
   encode(message: WalCheckpointRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.graph !== "") {
       writer.uint32(10).string(message.graph);
+    }
+    if (message.sessionId !== "") {
+      writer.uint32(122).string(message.sessionId);
     }
     return writer;
   },
@@ -5725,6 +6079,14 @@ export const WalCheckpointRequest: MessageFns<WalCheckpointRequest> = {
           message.graph = reader.string();
           continue;
         }
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.sessionId = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -5735,13 +6097,23 @@ export const WalCheckpointRequest: MessageFns<WalCheckpointRequest> = {
   },
 
   fromJSON(object: any): WalCheckpointRequest {
-    return { graph: isSet(object.graph) ? globalThis.String(object.graph) : "" };
+    return {
+      graph: isSet(object.graph) ? globalThis.String(object.graph) : "",
+      sessionId: isSet(object.sessionId)
+        ? globalThis.String(object.sessionId)
+        : isSet(object.session_id)
+        ? globalThis.String(object.session_id)
+        : "",
+    };
   },
 
   toJSON(message: WalCheckpointRequest): unknown {
     const obj: any = {};
     if (message.graph !== "") {
       obj.graph = message.graph;
+    }
+    if (message.sessionId !== "") {
+      obj.sessionId = message.sessionId;
     }
     return obj;
   },
@@ -5752,6 +6124,7 @@ export const WalCheckpointRequest: MessageFns<WalCheckpointRequest> = {
   fromPartial<I extends Exact<DeepPartial<WalCheckpointRequest>, I>>(object: I): WalCheckpointRequest {
     const message = createBaseWalCheckpointRequest();
     message.graph = object.graph ?? "";
+    message.sessionId = object.sessionId ?? "";
     return message;
   },
 };
@@ -5800,13 +6173,16 @@ export const WalCheckpointResponse: MessageFns<WalCheckpointResponse> = {
 };
 
 function createBaseValidateRequest(): ValidateRequest {
-  return { graph: "" };
+  return { graph: "", sessionId: "" };
 }
 
 export const ValidateRequest: MessageFns<ValidateRequest> = {
   encode(message: ValidateRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.graph !== "") {
       writer.uint32(10).string(message.graph);
+    }
+    if (message.sessionId !== "") {
+      writer.uint32(122).string(message.sessionId);
     }
     return writer;
   },
@@ -5826,6 +6202,14 @@ export const ValidateRequest: MessageFns<ValidateRequest> = {
           message.graph = reader.string();
           continue;
         }
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.sessionId = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -5836,13 +6220,23 @@ export const ValidateRequest: MessageFns<ValidateRequest> = {
   },
 
   fromJSON(object: any): ValidateRequest {
-    return { graph: isSet(object.graph) ? globalThis.String(object.graph) : "" };
+    return {
+      graph: isSet(object.graph) ? globalThis.String(object.graph) : "",
+      sessionId: isSet(object.sessionId)
+        ? globalThis.String(object.sessionId)
+        : isSet(object.session_id)
+        ? globalThis.String(object.session_id)
+        : "",
+    };
   },
 
   toJSON(message: ValidateRequest): unknown {
     const obj: any = {};
     if (message.graph !== "") {
       obj.graph = message.graph;
+    }
+    if (message.sessionId !== "") {
+      obj.sessionId = message.sessionId;
     }
     return obj;
   },
@@ -5853,6 +6247,7 @@ export const ValidateRequest: MessageFns<ValidateRequest> = {
   fromPartial<I extends Exact<DeepPartial<ValidateRequest>, I>>(object: I): ValidateRequest {
     const message = createBaseValidateRequest();
     message.graph = object.graph ?? "";
+    message.sessionId = object.sessionId ?? "";
     return message;
   },
 };
@@ -6138,7 +6533,7 @@ export const ValidationWarning: MessageFns<ValidationWarning> = {
 };
 
 function createBaseCreateIndexRequest(): CreateIndexRequest {
-  return { graph: "", propertyIndex: undefined, vectorIndex: undefined, textIndex: undefined };
+  return { graph: "", propertyIndex: undefined, vectorIndex: undefined, textIndex: undefined, sessionId: "" };
 }
 
 export const CreateIndexRequest: MessageFns<CreateIndexRequest> = {
@@ -6154,6 +6549,9 @@ export const CreateIndexRequest: MessageFns<CreateIndexRequest> = {
     }
     if (message.textIndex !== undefined) {
       TextIndexDef.encode(message.textIndex, writer.uint32(34).fork()).join();
+    }
+    if (message.sessionId !== "") {
+      writer.uint32(122).string(message.sessionId);
     }
     return writer;
   },
@@ -6197,6 +6595,14 @@ export const CreateIndexRequest: MessageFns<CreateIndexRequest> = {
           message.textIndex = TextIndexDef.decode(reader, reader.uint32());
           continue;
         }
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.sessionId = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -6224,6 +6630,11 @@ export const CreateIndexRequest: MessageFns<CreateIndexRequest> = {
         : isSet(object.text_index)
         ? TextIndexDef.fromJSON(object.text_index)
         : undefined,
+      sessionId: isSet(object.sessionId)
+        ? globalThis.String(object.sessionId)
+        : isSet(object.session_id)
+        ? globalThis.String(object.session_id)
+        : "",
     };
   },
 
@@ -6240,6 +6651,9 @@ export const CreateIndexRequest: MessageFns<CreateIndexRequest> = {
     }
     if (message.textIndex !== undefined) {
       obj.textIndex = TextIndexDef.toJSON(message.textIndex);
+    }
+    if (message.sessionId !== "") {
+      obj.sessionId = message.sessionId;
     }
     return obj;
   },
@@ -6259,6 +6673,7 @@ export const CreateIndexRequest: MessageFns<CreateIndexRequest> = {
     message.textIndex = (object.textIndex !== undefined && object.textIndex !== null)
       ? TextIndexDef.fromPartial(object.textIndex)
       : undefined;
+    message.sessionId = object.sessionId ?? "";
     return message;
   },
 };
@@ -6585,7 +7000,7 @@ export const CreateIndexResponse: MessageFns<CreateIndexResponse> = {
 };
 
 function createBaseDropIndexRequest(): DropIndexRequest {
-  return { graph: "", propertyIndex: undefined, vectorIndex: undefined, textIndex: undefined };
+  return { graph: "", propertyIndex: undefined, vectorIndex: undefined, textIndex: undefined, sessionId: "" };
 }
 
 export const DropIndexRequest: MessageFns<DropIndexRequest> = {
@@ -6601,6 +7016,9 @@ export const DropIndexRequest: MessageFns<DropIndexRequest> = {
     }
     if (message.textIndex !== undefined) {
       TextIndexDef.encode(message.textIndex, writer.uint32(34).fork()).join();
+    }
+    if (message.sessionId !== "") {
+      writer.uint32(122).string(message.sessionId);
     }
     return writer;
   },
@@ -6644,6 +7062,14 @@ export const DropIndexRequest: MessageFns<DropIndexRequest> = {
           message.textIndex = TextIndexDef.decode(reader, reader.uint32());
           continue;
         }
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.sessionId = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -6671,6 +7097,11 @@ export const DropIndexRequest: MessageFns<DropIndexRequest> = {
         : isSet(object.text_index)
         ? TextIndexDef.fromJSON(object.text_index)
         : undefined,
+      sessionId: isSet(object.sessionId)
+        ? globalThis.String(object.sessionId)
+        : isSet(object.session_id)
+        ? globalThis.String(object.session_id)
+        : "",
     };
   },
 
@@ -6687,6 +7118,9 @@ export const DropIndexRequest: MessageFns<DropIndexRequest> = {
     }
     if (message.textIndex !== undefined) {
       obj.textIndex = TextIndexDef.toJSON(message.textIndex);
+    }
+    if (message.sessionId !== "") {
+      obj.sessionId = message.sessionId;
     }
     return obj;
   },
@@ -6706,6 +7140,7 @@ export const DropIndexRequest: MessageFns<DropIndexRequest> = {
     message.textIndex = (object.textIndex !== undefined && object.textIndex !== null)
       ? TextIndexDef.fromPartial(object.textIndex)
       : undefined;
+    message.sessionId = object.sessionId ?? "";
     return message;
   },
 };
@@ -6769,7 +7204,7 @@ export const DropIndexResponse: MessageFns<DropIndexResponse> = {
 };
 
 function createBaseVectorSearchRequest(): VectorSearchRequest {
-  return { graph: "", label: "", property: "", queryVector: [], k: 0, ef: undefined, filters: {} };
+  return { graph: "", label: "", property: "", queryVector: [], k: 0, ef: undefined, filters: {}, sessionId: "" };
 }
 
 export const VectorSearchRequest: MessageFns<VectorSearchRequest> = {
@@ -6797,6 +7232,9 @@ export const VectorSearchRequest: MessageFns<VectorSearchRequest> = {
     globalThis.Object.entries(message.filters).forEach(([key, value]: [string, Value]) => {
       VectorSearchRequest_FiltersEntry.encode({ key: key as any, value }, writer.uint32(58).fork()).join();
     });
+    if (message.sessionId !== "") {
+      writer.uint32(122).string(message.sessionId);
+    }
     return writer;
   },
 
@@ -6876,6 +7314,14 @@ export const VectorSearchRequest: MessageFns<VectorSearchRequest> = {
           }
           continue;
         }
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.sessionId = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -6906,6 +7352,11 @@ export const VectorSearchRequest: MessageFns<VectorSearchRequest> = {
           {},
         )
         : {},
+      sessionId: isSet(object.sessionId)
+        ? globalThis.String(object.sessionId)
+        : isSet(object.session_id)
+        ? globalThis.String(object.session_id)
+        : "",
     };
   },
 
@@ -6938,6 +7389,9 @@ export const VectorSearchRequest: MessageFns<VectorSearchRequest> = {
         });
       }
     }
+    if (message.sessionId !== "") {
+      obj.sessionId = message.sessionId;
+    }
     return obj;
   },
 
@@ -6961,6 +7415,7 @@ export const VectorSearchRequest: MessageFns<VectorSearchRequest> = {
       },
       {},
     );
+    message.sessionId = object.sessionId ?? "";
     return message;
   },
 };
@@ -7046,7 +7501,7 @@ export const VectorSearchRequest_FiltersEntry: MessageFns<VectorSearchRequest_Fi
 };
 
 function createBaseTextSearchRequest(): TextSearchRequest {
-  return { graph: "", label: "", property: "", query: "", k: 0 };
+  return { graph: "", label: "", property: "", query: "", k: 0, sessionId: "" };
 }
 
 export const TextSearchRequest: MessageFns<TextSearchRequest> = {
@@ -7065,6 +7520,9 @@ export const TextSearchRequest: MessageFns<TextSearchRequest> = {
     }
     if (message.k !== 0) {
       writer.uint32(40).uint32(message.k);
+    }
+    if (message.sessionId !== "") {
+      writer.uint32(122).string(message.sessionId);
     }
     return writer;
   },
@@ -7116,6 +7574,14 @@ export const TextSearchRequest: MessageFns<TextSearchRequest> = {
           message.k = reader.uint32();
           continue;
         }
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.sessionId = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -7132,6 +7598,11 @@ export const TextSearchRequest: MessageFns<TextSearchRequest> = {
       property: isSet(object.property) ? globalThis.String(object.property) : "",
       query: isSet(object.query) ? globalThis.String(object.query) : "",
       k: isSet(object.k) ? globalThis.Number(object.k) : 0,
+      sessionId: isSet(object.sessionId)
+        ? globalThis.String(object.sessionId)
+        : isSet(object.session_id)
+        ? globalThis.String(object.session_id)
+        : "",
     };
   },
 
@@ -7152,6 +7623,9 @@ export const TextSearchRequest: MessageFns<TextSearchRequest> = {
     if (message.k !== 0) {
       obj.k = Math.round(message.k);
     }
+    if (message.sessionId !== "") {
+      obj.sessionId = message.sessionId;
+    }
     return obj;
   },
 
@@ -7165,12 +7639,22 @@ export const TextSearchRequest: MessageFns<TextSearchRequest> = {
     message.property = object.property ?? "";
     message.query = object.query ?? "";
     message.k = object.k ?? 0;
+    message.sessionId = object.sessionId ?? "";
     return message;
   },
 };
 
 function createBaseHybridSearchRequest(): HybridSearchRequest {
-  return { graph: "", label: "", textProperty: "", vectorProperty: "", queryText: "", queryVector: [], k: 0 };
+  return {
+    graph: "",
+    label: "",
+    textProperty: "",
+    vectorProperty: "",
+    queryText: "",
+    queryVector: [],
+    k: 0,
+    sessionId: "",
+  };
 }
 
 export const HybridSearchRequest: MessageFns<HybridSearchRequest> = {
@@ -7197,6 +7681,9 @@ export const HybridSearchRequest: MessageFns<HybridSearchRequest> = {
     writer.join();
     if (message.k !== 0) {
       writer.uint32(56).uint32(message.k);
+    }
+    if (message.sessionId !== "") {
+      writer.uint32(122).string(message.sessionId);
     }
     return writer;
   },
@@ -7274,6 +7761,14 @@ export const HybridSearchRequest: MessageFns<HybridSearchRequest> = {
           message.k = reader.uint32();
           continue;
         }
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.sessionId = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -7308,6 +7803,11 @@ export const HybridSearchRequest: MessageFns<HybridSearchRequest> = {
         ? object.query_vector.map((e: any) => globalThis.Number(e))
         : [],
       k: isSet(object.k) ? globalThis.Number(object.k) : 0,
+      sessionId: isSet(object.sessionId)
+        ? globalThis.String(object.sessionId)
+        : isSet(object.session_id)
+        ? globalThis.String(object.session_id)
+        : "",
     };
   },
 
@@ -7334,6 +7834,9 @@ export const HybridSearchRequest: MessageFns<HybridSearchRequest> = {
     if (message.k !== 0) {
       obj.k = Math.round(message.k);
     }
+    if (message.sessionId !== "") {
+      obj.sessionId = message.sessionId;
+    }
     return obj;
   },
 
@@ -7349,6 +7852,7 @@ export const HybridSearchRequest: MessageFns<HybridSearchRequest> = {
     message.queryText = object.queryText ?? "";
     message.queryVector = object.queryVector?.map((e) => e) || [];
     message.k = object.k ?? 0;
+    message.sessionId = object.sessionId ?? "";
     return message;
   },
 };

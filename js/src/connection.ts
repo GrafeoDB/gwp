@@ -41,10 +41,21 @@ export class GqlConnection {
 
   /** Perform handshake and return a session. */
   async createSession(): Promise<GqlSession> {
-    return GqlSession.create(this.sessionClient, this.gqlClient);
+    return GqlSession.create(
+      this.sessionClient,
+      this.gqlClient,
+      this._endpoint,
+      this._creds,
+    );
   }
 
-  /** Create a catalog management client for schemas, graphs, and graph types. */
+  /**
+   * Create a catalog management client for schemas, graphs, and graph types.
+   *
+   * Its requests name no session. A server with authentication refuses
+   * catalog requests without a live session; use `GqlSession.catalog()`
+   * there.
+   */
   createCatalogClient(): CatalogClient {
     return new CatalogClient(this._endpoint, this._creds);
   }

@@ -28,8 +28,12 @@ async fn start_server() -> SocketAddr {
             transactions.clone(),
             None,
         );
-        let gql_svc = GqlServiceImpl::new(std::sync::Arc::clone(&backend), sessions, transactions);
-        let catalog_svc = CatalogServiceImpl::new(std::sync::Arc::clone(&backend));
+        let gql_svc = GqlServiceImpl::new(
+            std::sync::Arc::clone(&backend),
+            sessions.clone(),
+            transactions,
+        );
+        let catalog_svc = CatalogServiceImpl::new(std::sync::Arc::clone(&backend), sessions);
 
         let incoming = tokio_stream::wrappers::TcpListenerStream::new(listener);
 

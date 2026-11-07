@@ -222,6 +222,9 @@ enum TransactionMode {
 // Manages the catalog hierarchy: schemas, graphs, and graph types.
 // Replaces DatabaseService with spec-aligned catalog model (sec 12).
 // Errors are returned as gRPC Status codes.
+// Every request names its session in `session_id` (field 15). When the
+// server requires authentication, a request without one is refused with
+// UNAUTHENTICATED and one naming an unknown session with NOT_FOUND.
 // ============================================================================
 
 service CatalogService {
@@ -247,7 +250,8 @@ service CatalogService {
 // ============================================================================
 
 message ListSchemasRequest {
-  // Session whose catalog to use; empty for none.
+  // Session whose catalog to use; empty for none. A server with
+  // authentication refuses a request without a live session.
   string session_id = 15;
 }
 
@@ -264,7 +268,8 @@ message ListSchemasResponse {
 message CreateSchemaRequest {
   string name = 1;
   bool if_not_exists = 2;
-  // Session whose catalog to use; empty for none.
+  // Session whose catalog to use; empty for none. A server with
+  // authentication refuses a request without a live session.
   string session_id = 15;
 }
 
@@ -273,7 +278,8 @@ message CreateSchemaResponse {}
 message DropSchemaRequest {
   string name = 1;
   bool if_exists = 2;
-  // Session whose catalog to use; empty for none.
+  // Session whose catalog to use; empty for none. A server with
+  // authentication refuses a request without a live session.
   string session_id = 15;
 }
 
@@ -287,7 +293,8 @@ message DropSchemaResponse {
 
 message ListGraphsRequest {
   string schema = 1;  // Schema to list graphs from
-  // Session whose catalog to use; empty for none.
+  // Session whose catalog to use; empty for none. A server with
+  // authentication refuses a request without a live session.
   string session_id = 15;
 }
 
@@ -322,7 +329,8 @@ message CreateGraphRequest {
   string storage_mode = 10;      // "InMemory" or "Persistent"
   GraphOptions options = 11;
 
-  // Session whose catalog to use; empty for none.
+  // Session whose catalog to use; empty for none. A server with
+  // authentication refuses a request without a live session.
   string session_id = 15;
 }
 
@@ -342,7 +350,8 @@ message DropGraphRequest {
   string schema = 1;
   string name = 2;
   bool if_exists = 3;
-  // Session whose catalog to use; empty for none.
+  // Session whose catalog to use; empty for none. A server with
+  // authentication refuses a request without a live session.
   string session_id = 15;
 }
 
@@ -353,7 +362,8 @@ message DropGraphResponse {
 message GetGraphInfoRequest {
   string schema = 1;
   string name = 2;
-  // Session whose catalog to use; empty for none.
+  // Session whose catalog to use; empty for none. A server with
+  // authentication refuses a request without a live session.
   string session_id = 15;
 }
 
@@ -375,7 +385,8 @@ message GetGraphInfoResponse {
 
 message ListGraphTypesRequest {
   string schema = 1;
-  // Session whose catalog to use; empty for none.
+  // Session whose catalog to use; empty for none. A server with
+  // authentication refuses a request without a live session.
   string session_id = 15;
 }
 
@@ -393,7 +404,8 @@ message CreateGraphTypeRequest {
   string name = 2;
   bool if_not_exists = 3;
   bool or_replace = 4;
-  // Session whose catalog to use; empty for none.
+  // Session whose catalog to use; empty for none. A server with
+  // authentication refuses a request without a live session.
   string session_id = 15;
 }
 
@@ -403,7 +415,8 @@ message DropGraphTypeRequest {
   string schema = 1;
   string name = 2;
   bool if_exists = 3;
-  // Session whose catalog to use; empty for none.
+  // Session whose catalog to use; empty for none. A server with
+  // authentication refuses a request without a live session.
   string session_id = 15;
 }
 
@@ -415,6 +428,9 @@ message DropGraphTypeResponse {
 // AdminService
 // Graph introspection, maintenance, and index management.
 // Errors are returned as gRPC Status codes.
+// Every request names its session in `session_id` (field 15). When the
+// server requires authentication, a request without one is refused with
+// UNAUTHENTICATED and one naming an unknown session with NOT_FOUND.
 // ============================================================================
 
 service AdminService {
@@ -441,6 +457,9 @@ service AdminService {
 // SearchService
 // Vector, text, and hybrid search operations.
 // Errors are returned as gRPC Status codes.
+// Every request names its session in `session_id` (field 15). When the
+// server requires authentication, a request without one is refused with
+// UNAUTHENTICATED and one naming an unknown session with NOT_FOUND.
 // ============================================================================
 
 service SearchService {
@@ -460,6 +479,9 @@ service SearchService {
 
 message GetGraphStatsRequest {
   string graph = 1;
+  // Session the call runs in; empty for none. A server with
+  // authentication refuses a request without a live session.
+  string session_id = 15;
 }
 
 message GetGraphStatsResponse {
@@ -475,6 +497,9 @@ message GetGraphStatsResponse {
 
 message WalStatusRequest {
   string graph = 1;
+  // Session the call runs in; empty for none. A server with
+  // authentication refuses a request without a live session.
+  string session_id = 15;
 }
 
 message WalStatusResponse {
@@ -488,12 +513,18 @@ message WalStatusResponse {
 
 message WalCheckpointRequest {
   string graph = 1;
+  // Session the call runs in; empty for none. A server with
+  // authentication refuses a request without a live session.
+  string session_id = 15;
 }
 
 message WalCheckpointResponse {}
 
 message ValidateRequest {
   string graph = 1;
+  // Session the call runs in; empty for none. A server with
+  // authentication refuses a request without a live session.
+  string session_id = 15;
 }
 
 message ValidateResponse {
@@ -521,6 +552,9 @@ message CreateIndexRequest {
     VectorIndexDef vector_index = 3;
     TextIndexDef text_index = 4;
   }
+  // Session the call runs in; empty for none. A server with
+  // authentication refuses a request without a live session.
+  string session_id = 15;
 }
 
 message PropertyIndexDef {
@@ -550,6 +584,9 @@ message DropIndexRequest {
     VectorIndexDef vector_index = 3;
     TextIndexDef text_index = 4;
   }
+  // Session the call runs in; empty for none. A server with
+  // authentication refuses a request without a live session.
+  string session_id = 15;
 }
 
 message DropIndexResponse {
@@ -568,6 +605,9 @@ message VectorSearchRequest {
   uint32 k = 5;
   optional uint32 ef = 6;
   map<string, Value> filters = 7;
+  // Session the call runs in; empty for none. A server with
+  // authentication refuses a request without a live session.
+  string session_id = 15;
 }
 
 message TextSearchRequest {
@@ -576,6 +616,9 @@ message TextSearchRequest {
   string property = 3;
   string query = 4;
   uint32 k = 5;
+  // Session the call runs in; empty for none. A server with
+  // authentication refuses a request without a live session.
+  string session_id = 15;
 }
 
 message HybridSearchRequest {
@@ -586,6 +629,9 @@ message HybridSearchRequest {
   string query_text = 5;
   repeated float query_vector = 6;
   uint32 k = 7;
+  // Session the call runs in; empty for none. A server with
+  // authentication refuses a request without a live session.
+  string session_id = 15;
 }
 
 // A single search result. node_id is an internal numeric identifier

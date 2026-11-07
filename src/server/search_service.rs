@@ -2,6 +2,11 @@
 //!
 //! Vector, text, and hybrid search operations.
 //! All errors are returned as gRPC status codes.
+//!
+//! A request may name the session it runs in (`session_id`); the backend
+//! then gets that session in the [`RequestContext`] of the `*_in` search
+//! methods. When the server requires authentication, a request must name a
+//! live session.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -12,17 +17,28 @@ use crate::proto;
 use crate::proto::search_service_server::SearchService;
 use crate::types::Value;
 
-use super::backend::{GqlBackend, HybridSearchParams, TextSearchParams, VectorSearchParams};
+use super::SessionManager;
+use super::backend::{
+    GqlBackend, HybridSearchParams, RequestContext, TextSearchParams, VectorSearchParams,
+};
 
 /// Implementation of the `SearchService` gRPC service.
 pub struct SearchServiceImpl<B: GqlBackend> {
     backend: Arc<B>,
+    sessions: SessionManager,
 }
 
 impl<B: GqlBackend> SearchServiceImpl<B> {
-    /// Create a new search service.
-    pub fn new(backend: Arc<B>) -> Self {
-        Self { backend }
+    /// Create a new search service that checks the sessions requests name
+    /// against `sessions`, the manager the session service registers them
+    /// in.
+    pub fn new(backend: Arc<B>, sessions: SessionManager) -> Self {
+        Self { backend, sessions }
+    }
+
+    /// The context of a request that names `session_id` (empty for none).
+    async fn context(&self, session_id: &str) -> Result<RequestContext, Status> {
+        self.sessions.request_context(session_id).await
     }
 }
 
@@ -41,12 +57,13 @@ fn to_proto_hit(hit: &super::backend::SearchHit) -> proto::SearchHit {
 
 #[tonic::async_trait]
 impl<B: GqlBackend> SearchService for SearchServiceImpl<B> {
-    #[tracing::instrument(skip(self, request), fields(graph, label, property))]
+    #[tracing::instrument(skip(self, request), fields(session_id, graph, label, property))]
     async fn vector_search(
         &self,
         request: Request<proto::VectorSearchRequest>,
     ) -> Result<Response<proto::VectorSearchResponse>, Status> {
         let req = request.into_inner();
+        let ctx = self.context(&req.session_id).await?;
         let span = tracing::Span::current();
         span.record("graph", &req.graph);
         span.record("label", &req.label);
@@ -67,15 +84,18 @@ impl<B: GqlBackend> SearchService for SearchServiceImpl<B> {
 
         let hits = self
             .backend
-            .vector_search(VectorSearchParams {
-                graph: req.graph,
-                label: req.label,
-                property: req.property,
-                query_vector: req.query_vector,
-                k: req.k,
-                ef: req.ef,
-                filters,
-            })
+            .vector_search_in(
+                &ctx,
+                VectorSearchParams {
+                    graph: req.graph,
+                    label: req.label,
+                    property: req.property,
+                    query_vector: req.query_vector,
+                    k: req.k,
+                    ef: req.ef,
+                    filters,
+                },
+            )
             .await
             .map_err(|e| e.to_optional_service_status())?;
 
@@ -84,12 +104,13 @@ impl<B: GqlBackend> SearchService for SearchServiceImpl<B> {
         }))
     }
 
-    #[tracing::instrument(skip(self, request), fields(graph, label, property))]
+    #[tracing::instrument(skip(self, request), fields(session_id, graph, label, property))]
     async fn text_search(
         &self,
         request: Request<proto::TextSearchRequest>,
     ) -> Result<Response<proto::TextSearchResponse>, Status> {
         let req = request.into_inner();
+        let ctx = self.context(&req.session_id).await?;
         let span = tracing::Span::current();
         span.record("graph", &req.graph);
         span.record("label", &req.label);
@@ -104,13 +125,16 @@ impl<B: GqlBackend> SearchService for SearchServiceImpl<B> {
 
         let hits = self
             .backend
-            .text_search(TextSearchParams {
-                graph: req.graph,
-                label: req.label,
-                property: req.property,
-                query: req.query,
-                k: req.k,
-            })
+            .text_search_in(
+                &ctx,
+                TextSearchParams {
+                    graph: req.graph,
+                    label: req.label,
+                    property: req.property,
+                    query: req.query,
+                    k: req.k,
+                },
+            )
             .await
             .map_err(|e| e.to_optional_service_status())?;
 
@@ -119,12 +143,13 @@ impl<B: GqlBackend> SearchService for SearchServiceImpl<B> {
         }))
     }
 
-    #[tracing::instrument(skip(self, request), fields(graph, label))]
+    #[tracing::instrument(skip(self, request), fields(session_id, graph, label))]
     async fn hybrid_search(
         &self,
         request: Request<proto::HybridSearchRequest>,
     ) -> Result<Response<proto::HybridSearchResponse>, Status> {
         let req = request.into_inner();
+        let ctx = self.context(&req.session_id).await?;
         let span = tracing::Span::current();
         span.record("graph", &req.graph);
         span.record("label", &req.label);
@@ -138,15 +163,18 @@ impl<B: GqlBackend> SearchService for SearchServiceImpl<B> {
 
         let hits = self
             .backend
-            .hybrid_search(HybridSearchParams {
-                graph: req.graph,
-                label: req.label,
-                text_property: req.text_property,
-                vector_property: req.vector_property,
-                query_text: req.query_text,
-                query_vector: req.query_vector,
-                k: req.k,
-            })
+            .hybrid_search_in(
+                &ctx,
+                HybridSearchParams {
+                    graph: req.graph,
+                    label: req.label,
+                    text_property: req.text_property,
+                    vector_property: req.vector_property,
+                    query_text: req.query_text,
+                    query_vector: req.query_vector,
+                    k: req.k,
+                },
+            )
             .await
             .map_err(|e| e.to_optional_service_status())?;
 

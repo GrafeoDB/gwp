@@ -116,10 +116,11 @@ async fn full_client_flow() {
     catalog.create_graph(config).await.unwrap();
     assert_eq!(catalog.list_graphs("e2e").await.unwrap().len(), 1);
 
-    // Admin and search are optional: this backend does not implement them.
+    // Admin and search are optional: this backend implements only stats
+    // and vector search.
     let mut admin = conn.create_admin_client();
     assert_eq!(
-        grpc_code(admin.get_stats("g").await.unwrap_err()),
+        grpc_code(admin.wal_status("g").await.unwrap_err()),
         tonic::Code::Unimplemented
     );
 
@@ -404,5 +405,35 @@ async fn credentials_are_checked_and_passed_to_the_backend() {
             .unwrap()
             .code,
         status::SUCCESS
+    );
+}
+
+/// The builder with `auth` serves catalog, admin and search calls only in
+/// an authenticated session.
+#[tokio::test]
+async fn with_auth_the_builder_requires_a_session_on_catalog_admin_and_search() {
+    let backend = TestBackend::new();
+    let addr = serve(GqlServer::builder(backend.clone()).auth(TokenValidator)).await;
+    let conn = GqlConnection::connect(&format!("http://{addr}"))
+        .await
+        .unwrap();
+
+    let refused = conn.create_catalog_client().list_schemas().await.err();
+    assert_eq!(grpc_code(refused.unwrap()), tonic::Code::Unauthenticated);
+    let refused = conn.create_admin_client().get_stats("g").await.err();
+    assert_eq!(grpc_code(refused.unwrap()), tonic::Code::Unauthenticated);
+    assert_eq!(backend.events_with("stats"), Vec::<String>::new());
+
+    let session = conn
+        .create_session_with_credentials(proto::AuthCredentials {
+            method: Some(Method::BearerToken("secret".to_owned())),
+        })
+        .await
+        .unwrap();
+    session.catalog().list_schemas().await.unwrap();
+    session.admin().get_stats("g").await.unwrap();
+    assert_eq!(
+        backend.events_with("stats"),
+        vec![format!("stats g session={}", session.session_id())]
     );
 }

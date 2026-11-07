@@ -266,8 +266,10 @@ class RollbackResponse(_message.Message):
     def __init__(self, status: _Optional[_Union[_gql_types_pb2.GqlStatus, _Mapping]] = ...) -> None: ...
 
 class ListSchemasRequest(_message.Message):
-    __slots__ = ()
-    def __init__(self) -> None: ...
+    __slots__ = ("session_id",)
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
+    session_id: str
+    def __init__(self, session_id: _Optional[str] = ...) -> None: ...
 
 class SchemaInfo(_message.Message):
     __slots__ = ("name", "graph_count", "graph_type_count")
@@ -286,24 +288,28 @@ class ListSchemasResponse(_message.Message):
     def __init__(self, schemas: _Optional[_Iterable[_Union[SchemaInfo, _Mapping]]] = ...) -> None: ...
 
 class CreateSchemaRequest(_message.Message):
-    __slots__ = ("name", "if_not_exists")
+    __slots__ = ("name", "if_not_exists", "session_id")
     NAME_FIELD_NUMBER: _ClassVar[int]
     IF_NOT_EXISTS_FIELD_NUMBER: _ClassVar[int]
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     name: str
     if_not_exists: bool
-    def __init__(self, name: _Optional[str] = ..., if_not_exists: bool = ...) -> None: ...
+    session_id: str
+    def __init__(self, name: _Optional[str] = ..., if_not_exists: bool = ..., session_id: _Optional[str] = ...) -> None: ...
 
 class CreateSchemaResponse(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...
 
 class DropSchemaRequest(_message.Message):
-    __slots__ = ("name", "if_exists")
+    __slots__ = ("name", "if_exists", "session_id")
     NAME_FIELD_NUMBER: _ClassVar[int]
     IF_EXISTS_FIELD_NUMBER: _ClassVar[int]
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     name: str
     if_exists: bool
-    def __init__(self, name: _Optional[str] = ..., if_exists: bool = ...) -> None: ...
+    session_id: str
+    def __init__(self, name: _Optional[str] = ..., if_exists: bool = ..., session_id: _Optional[str] = ...) -> None: ...
 
 class DropSchemaResponse(_message.Message):
     __slots__ = ("existed",)
@@ -312,10 +318,12 @@ class DropSchemaResponse(_message.Message):
     def __init__(self, existed: bool = ...) -> None: ...
 
 class ListGraphsRequest(_message.Message):
-    __slots__ = ("schema",)
+    __slots__ = ("schema", "session_id")
     SCHEMA_FIELD_NUMBER: _ClassVar[int]
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     schema: str
-    def __init__(self, schema: _Optional[str] = ...) -> None: ...
+    session_id: str
+    def __init__(self, schema: _Optional[str] = ..., session_id: _Optional[str] = ...) -> None: ...
 
 class GraphSummary(_message.Message):
     __slots__ = ("schema", "name", "node_count", "edge_count", "graph_type")
@@ -338,7 +346,7 @@ class ListGraphsResponse(_message.Message):
     def __init__(self, graphs: _Optional[_Iterable[_Union[GraphSummary, _Mapping]]] = ...) -> None: ...
 
 class CreateGraphRequest(_message.Message):
-    __slots__ = ("schema", "name", "if_not_exists", "or_replace", "open_type", "graph_type_ref", "copy_of", "storage_mode", "options")
+    __slots__ = ("schema", "name", "if_not_exists", "or_replace", "open_type", "graph_type_ref", "copy_of", "storage_mode", "options", "session_id")
     SCHEMA_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
     IF_NOT_EXISTS_FIELD_NUMBER: _ClassVar[int]
@@ -348,6 +356,7 @@ class CreateGraphRequest(_message.Message):
     COPY_OF_FIELD_NUMBER: _ClassVar[int]
     STORAGE_MODE_FIELD_NUMBER: _ClassVar[int]
     OPTIONS_FIELD_NUMBER: _ClassVar[int]
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     schema: str
     name: str
     if_not_exists: bool
@@ -357,7 +366,8 @@ class CreateGraphRequest(_message.Message):
     copy_of: str
     storage_mode: str
     options: GraphOptions
-    def __init__(self, schema: _Optional[str] = ..., name: _Optional[str] = ..., if_not_exists: bool = ..., or_replace: bool = ..., open_type: bool = ..., graph_type_ref: _Optional[str] = ..., copy_of: _Optional[str] = ..., storage_mode: _Optional[str] = ..., options: _Optional[_Union[GraphOptions, _Mapping]] = ...) -> None: ...
+    session_id: str
+    def __init__(self, schema: _Optional[str] = ..., name: _Optional[str] = ..., if_not_exists: bool = ..., or_replace: bool = ..., open_type: bool = ..., graph_type_ref: _Optional[str] = ..., copy_of: _Optional[str] = ..., storage_mode: _Optional[str] = ..., options: _Optional[_Union[GraphOptions, _Mapping]] = ..., session_id: _Optional[str] = ...) -> None: ...
 
 class GraphOptions(_message.Message):
     __slots__ = ("memory_limit_bytes", "backward_edges", "threads", "wal_enabled", "wal_durability")
@@ -380,14 +390,16 @@ class CreateGraphResponse(_message.Message):
     def __init__(self, graph: _Optional[_Union[GraphSummary, _Mapping]] = ...) -> None: ...
 
 class DropGraphRequest(_message.Message):
-    __slots__ = ("schema", "name", "if_exists")
+    __slots__ = ("schema", "name", "if_exists", "session_id")
     SCHEMA_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
     IF_EXISTS_FIELD_NUMBER: _ClassVar[int]
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     schema: str
     name: str
     if_exists: bool
-    def __init__(self, schema: _Optional[str] = ..., name: _Optional[str] = ..., if_exists: bool = ...) -> None: ...
+    session_id: str
+    def __init__(self, schema: _Optional[str] = ..., name: _Optional[str] = ..., if_exists: bool = ..., session_id: _Optional[str] = ...) -> None: ...
 
 class DropGraphResponse(_message.Message):
     __slots__ = ("existed",)
@@ -396,12 +408,14 @@ class DropGraphResponse(_message.Message):
     def __init__(self, existed: bool = ...) -> None: ...
 
 class GetGraphInfoRequest(_message.Message):
-    __slots__ = ("schema", "name")
+    __slots__ = ("schema", "name", "session_id")
     SCHEMA_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     schema: str
     name: str
-    def __init__(self, schema: _Optional[str] = ..., name: _Optional[str] = ...) -> None: ...
+    session_id: str
+    def __init__(self, schema: _Optional[str] = ..., name: _Optional[str] = ..., session_id: _Optional[str] = ...) -> None: ...
 
 class GetGraphInfoResponse(_message.Message):
     __slots__ = ("schema", "name", "node_count", "edge_count", "graph_type", "storage_mode", "memory_limit_bytes", "backward_edges", "threads")
@@ -426,10 +440,12 @@ class GetGraphInfoResponse(_message.Message):
     def __init__(self, schema: _Optional[str] = ..., name: _Optional[str] = ..., node_count: _Optional[int] = ..., edge_count: _Optional[int] = ..., graph_type: _Optional[str] = ..., storage_mode: _Optional[str] = ..., memory_limit_bytes: _Optional[int] = ..., backward_edges: bool = ..., threads: _Optional[int] = ...) -> None: ...
 
 class ListGraphTypesRequest(_message.Message):
-    __slots__ = ("schema",)
+    __slots__ = ("schema", "session_id")
     SCHEMA_FIELD_NUMBER: _ClassVar[int]
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     schema: str
-    def __init__(self, schema: _Optional[str] = ...) -> None: ...
+    session_id: str
+    def __init__(self, schema: _Optional[str] = ..., session_id: _Optional[str] = ...) -> None: ...
 
 class GraphTypeInfo(_message.Message):
     __slots__ = ("schema", "name")
@@ -446,30 +462,34 @@ class ListGraphTypesResponse(_message.Message):
     def __init__(self, graph_types: _Optional[_Iterable[_Union[GraphTypeInfo, _Mapping]]] = ...) -> None: ...
 
 class CreateGraphTypeRequest(_message.Message):
-    __slots__ = ("schema", "name", "if_not_exists", "or_replace")
+    __slots__ = ("schema", "name", "if_not_exists", "or_replace", "session_id")
     SCHEMA_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
     IF_NOT_EXISTS_FIELD_NUMBER: _ClassVar[int]
     OR_REPLACE_FIELD_NUMBER: _ClassVar[int]
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     schema: str
     name: str
     if_not_exists: bool
     or_replace: bool
-    def __init__(self, schema: _Optional[str] = ..., name: _Optional[str] = ..., if_not_exists: bool = ..., or_replace: bool = ...) -> None: ...
+    session_id: str
+    def __init__(self, schema: _Optional[str] = ..., name: _Optional[str] = ..., if_not_exists: bool = ..., or_replace: bool = ..., session_id: _Optional[str] = ...) -> None: ...
 
 class CreateGraphTypeResponse(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...
 
 class DropGraphTypeRequest(_message.Message):
-    __slots__ = ("schema", "name", "if_exists")
+    __slots__ = ("schema", "name", "if_exists", "session_id")
     SCHEMA_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
     IF_EXISTS_FIELD_NUMBER: _ClassVar[int]
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     schema: str
     name: str
     if_exists: bool
-    def __init__(self, schema: _Optional[str] = ..., name: _Optional[str] = ..., if_exists: bool = ...) -> None: ...
+    session_id: str
+    def __init__(self, schema: _Optional[str] = ..., name: _Optional[str] = ..., if_exists: bool = ..., session_id: _Optional[str] = ...) -> None: ...
 
 class DropGraphTypeResponse(_message.Message):
     __slots__ = ("existed",)
@@ -478,10 +498,12 @@ class DropGraphTypeResponse(_message.Message):
     def __init__(self, existed: bool = ...) -> None: ...
 
 class GetGraphStatsRequest(_message.Message):
-    __slots__ = ("graph",)
+    __slots__ = ("graph", "session_id")
     GRAPH_FIELD_NUMBER: _ClassVar[int]
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     graph: str
-    def __init__(self, graph: _Optional[str] = ...) -> None: ...
+    session_id: str
+    def __init__(self, graph: _Optional[str] = ..., session_id: _Optional[str] = ...) -> None: ...
 
 class GetGraphStatsResponse(_message.Message):
     __slots__ = ("node_count", "edge_count", "label_count", "edge_type_count", "property_key_count", "index_count", "memory_bytes", "disk_bytes")
@@ -504,10 +526,12 @@ class GetGraphStatsResponse(_message.Message):
     def __init__(self, node_count: _Optional[int] = ..., edge_count: _Optional[int] = ..., label_count: _Optional[int] = ..., edge_type_count: _Optional[int] = ..., property_key_count: _Optional[int] = ..., index_count: _Optional[int] = ..., memory_bytes: _Optional[int] = ..., disk_bytes: _Optional[int] = ...) -> None: ...
 
 class WalStatusRequest(_message.Message):
-    __slots__ = ("graph",)
+    __slots__ = ("graph", "session_id")
     GRAPH_FIELD_NUMBER: _ClassVar[int]
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     graph: str
-    def __init__(self, graph: _Optional[str] = ...) -> None: ...
+    session_id: str
+    def __init__(self, graph: _Optional[str] = ..., session_id: _Optional[str] = ...) -> None: ...
 
 class WalStatusResponse(_message.Message):
     __slots__ = ("enabled", "path", "size_bytes", "record_count", "last_checkpoint", "current_epoch")
@@ -526,20 +550,24 @@ class WalStatusResponse(_message.Message):
     def __init__(self, enabled: bool = ..., path: _Optional[str] = ..., size_bytes: _Optional[int] = ..., record_count: _Optional[int] = ..., last_checkpoint: _Optional[int] = ..., current_epoch: _Optional[int] = ...) -> None: ...
 
 class WalCheckpointRequest(_message.Message):
-    __slots__ = ("graph",)
+    __slots__ = ("graph", "session_id")
     GRAPH_FIELD_NUMBER: _ClassVar[int]
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     graph: str
-    def __init__(self, graph: _Optional[str] = ...) -> None: ...
+    session_id: str
+    def __init__(self, graph: _Optional[str] = ..., session_id: _Optional[str] = ...) -> None: ...
 
 class WalCheckpointResponse(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...
 
 class ValidateRequest(_message.Message):
-    __slots__ = ("graph",)
+    __slots__ = ("graph", "session_id")
     GRAPH_FIELD_NUMBER: _ClassVar[int]
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     graph: str
-    def __init__(self, graph: _Optional[str] = ...) -> None: ...
+    session_id: str
+    def __init__(self, graph: _Optional[str] = ..., session_id: _Optional[str] = ...) -> None: ...
 
 class ValidateResponse(_message.Message):
     __slots__ = ("valid", "errors", "warnings")
@@ -572,16 +600,18 @@ class ValidationWarning(_message.Message):
     def __init__(self, code: _Optional[str] = ..., message: _Optional[str] = ..., context: _Optional[str] = ...) -> None: ...
 
 class CreateIndexRequest(_message.Message):
-    __slots__ = ("graph", "property_index", "vector_index", "text_index")
+    __slots__ = ("graph", "property_index", "vector_index", "text_index", "session_id")
     GRAPH_FIELD_NUMBER: _ClassVar[int]
     PROPERTY_INDEX_FIELD_NUMBER: _ClassVar[int]
     VECTOR_INDEX_FIELD_NUMBER: _ClassVar[int]
     TEXT_INDEX_FIELD_NUMBER: _ClassVar[int]
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     graph: str
     property_index: PropertyIndexDef
     vector_index: VectorIndexDef
     text_index: TextIndexDef
-    def __init__(self, graph: _Optional[str] = ..., property_index: _Optional[_Union[PropertyIndexDef, _Mapping]] = ..., vector_index: _Optional[_Union[VectorIndexDef, _Mapping]] = ..., text_index: _Optional[_Union[TextIndexDef, _Mapping]] = ...) -> None: ...
+    session_id: str
+    def __init__(self, graph: _Optional[str] = ..., property_index: _Optional[_Union[PropertyIndexDef, _Mapping]] = ..., vector_index: _Optional[_Union[VectorIndexDef, _Mapping]] = ..., text_index: _Optional[_Union[TextIndexDef, _Mapping]] = ..., session_id: _Optional[str] = ...) -> None: ...
 
 class PropertyIndexDef(_message.Message):
     __slots__ = ("property",)
@@ -618,16 +648,18 @@ class CreateIndexResponse(_message.Message):
     def __init__(self) -> None: ...
 
 class DropIndexRequest(_message.Message):
-    __slots__ = ("graph", "property_index", "vector_index", "text_index")
+    __slots__ = ("graph", "property_index", "vector_index", "text_index", "session_id")
     GRAPH_FIELD_NUMBER: _ClassVar[int]
     PROPERTY_INDEX_FIELD_NUMBER: _ClassVar[int]
     VECTOR_INDEX_FIELD_NUMBER: _ClassVar[int]
     TEXT_INDEX_FIELD_NUMBER: _ClassVar[int]
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     graph: str
     property_index: PropertyIndexDef
     vector_index: VectorIndexDef
     text_index: TextIndexDef
-    def __init__(self, graph: _Optional[str] = ..., property_index: _Optional[_Union[PropertyIndexDef, _Mapping]] = ..., vector_index: _Optional[_Union[VectorIndexDef, _Mapping]] = ..., text_index: _Optional[_Union[TextIndexDef, _Mapping]] = ...) -> None: ...
+    session_id: str
+    def __init__(self, graph: _Optional[str] = ..., property_index: _Optional[_Union[PropertyIndexDef, _Mapping]] = ..., vector_index: _Optional[_Union[VectorIndexDef, _Mapping]] = ..., text_index: _Optional[_Union[TextIndexDef, _Mapping]] = ..., session_id: _Optional[str] = ...) -> None: ...
 
 class DropIndexResponse(_message.Message):
     __slots__ = ("existed",)
@@ -636,7 +668,7 @@ class DropIndexResponse(_message.Message):
     def __init__(self, existed: bool = ...) -> None: ...
 
 class VectorSearchRequest(_message.Message):
-    __slots__ = ("graph", "label", "property", "query_vector", "k", "ef", "filters")
+    __slots__ = ("graph", "label", "property", "query_vector", "k", "ef", "filters", "session_id")
     class FiltersEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -651,6 +683,7 @@ class VectorSearchRequest(_message.Message):
     K_FIELD_NUMBER: _ClassVar[int]
     EF_FIELD_NUMBER: _ClassVar[int]
     FILTERS_FIELD_NUMBER: _ClassVar[int]
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     graph: str
     label: str
     property: str
@@ -658,24 +691,27 @@ class VectorSearchRequest(_message.Message):
     k: int
     ef: int
     filters: _containers.MessageMap[str, _gql_types_pb2.Value]
-    def __init__(self, graph: _Optional[str] = ..., label: _Optional[str] = ..., property: _Optional[str] = ..., query_vector: _Optional[_Iterable[float]] = ..., k: _Optional[int] = ..., ef: _Optional[int] = ..., filters: _Optional[_Mapping[str, _gql_types_pb2.Value]] = ...) -> None: ...
+    session_id: str
+    def __init__(self, graph: _Optional[str] = ..., label: _Optional[str] = ..., property: _Optional[str] = ..., query_vector: _Optional[_Iterable[float]] = ..., k: _Optional[int] = ..., ef: _Optional[int] = ..., filters: _Optional[_Mapping[str, _gql_types_pb2.Value]] = ..., session_id: _Optional[str] = ...) -> None: ...
 
 class TextSearchRequest(_message.Message):
-    __slots__ = ("graph", "label", "property", "query", "k")
+    __slots__ = ("graph", "label", "property", "query", "k", "session_id")
     GRAPH_FIELD_NUMBER: _ClassVar[int]
     LABEL_FIELD_NUMBER: _ClassVar[int]
     PROPERTY_FIELD_NUMBER: _ClassVar[int]
     QUERY_FIELD_NUMBER: _ClassVar[int]
     K_FIELD_NUMBER: _ClassVar[int]
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     graph: str
     label: str
     property: str
     query: str
     k: int
-    def __init__(self, graph: _Optional[str] = ..., label: _Optional[str] = ..., property: _Optional[str] = ..., query: _Optional[str] = ..., k: _Optional[int] = ...) -> None: ...
+    session_id: str
+    def __init__(self, graph: _Optional[str] = ..., label: _Optional[str] = ..., property: _Optional[str] = ..., query: _Optional[str] = ..., k: _Optional[int] = ..., session_id: _Optional[str] = ...) -> None: ...
 
 class HybridSearchRequest(_message.Message):
-    __slots__ = ("graph", "label", "text_property", "vector_property", "query_text", "query_vector", "k")
+    __slots__ = ("graph", "label", "text_property", "vector_property", "query_text", "query_vector", "k", "session_id")
     GRAPH_FIELD_NUMBER: _ClassVar[int]
     LABEL_FIELD_NUMBER: _ClassVar[int]
     TEXT_PROPERTY_FIELD_NUMBER: _ClassVar[int]
@@ -683,6 +719,7 @@ class HybridSearchRequest(_message.Message):
     QUERY_TEXT_FIELD_NUMBER: _ClassVar[int]
     QUERY_VECTOR_FIELD_NUMBER: _ClassVar[int]
     K_FIELD_NUMBER: _ClassVar[int]
+    SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     graph: str
     label: str
     text_property: str
@@ -690,7 +727,8 @@ class HybridSearchRequest(_message.Message):
     query_text: str
     query_vector: _containers.RepeatedScalarFieldContainer[float]
     k: int
-    def __init__(self, graph: _Optional[str] = ..., label: _Optional[str] = ..., text_property: _Optional[str] = ..., vector_property: _Optional[str] = ..., query_text: _Optional[str] = ..., query_vector: _Optional[_Iterable[float]] = ..., k: _Optional[int] = ...) -> None: ...
+    session_id: str
+    def __init__(self, graph: _Optional[str] = ..., label: _Optional[str] = ..., text_property: _Optional[str] = ..., vector_property: _Optional[str] = ..., query_text: _Optional[str] = ..., query_vector: _Optional[_Iterable[float]] = ..., k: _Optional[int] = ..., session_id: _Optional[str] = ...) -> None: ...
 
 class SearchHit(_message.Message):
     __slots__ = ("node_id", "score", "properties")

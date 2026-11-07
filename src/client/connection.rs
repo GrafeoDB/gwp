@@ -91,18 +91,30 @@ impl GqlConnection {
     }
 
     /// Create a catalog management client (schemas, graphs, graph types).
+    ///
+    /// Its requests name no session, which a server that requires
+    /// authentication refuses; use
+    /// [`GqlSession::catalog`](super::GqlSession::catalog) there.
     #[must_use]
     pub fn create_catalog_client(&self) -> CatalogClient {
         CatalogClient::new(self.channel.clone())
     }
 
     /// Create an admin client (stats, WAL, validation, indexes).
+    ///
+    /// Its requests name no session, which a server that requires
+    /// authentication refuses; use
+    /// [`GqlSession::admin`](super::GqlSession::admin) there.
     #[must_use]
     pub fn create_admin_client(&self) -> AdminClient {
         AdminClient::new(self.channel.clone())
     }
 
     /// Create a search client (vector, text, hybrid).
+    ///
+    /// Its requests name no session, which a server that requires
+    /// authentication refuses; use
+    /// [`GqlSession::search`](super::GqlSession::search) there.
     #[must_use]
     pub fn create_search_client(&self) -> SearchClient {
         SearchClient::new(self.channel.clone())

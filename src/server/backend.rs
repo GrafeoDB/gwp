@@ -99,25 +99,27 @@ pub trait ResultStream: Send + 'static {
 // Catalog types
 // ============================================================================
 
-/// Context of a catalog request, passed to the `*_in` catalog methods of
-/// [`GqlBackend`].
+/// Context of a catalog, admin or search request, passed to the `*_in`
+/// methods of [`GqlBackend`].
 ///
-/// A catalog request may name the session it runs in; the server checks
-/// that the session exists before the backend sees it. A backend that keeps
-/// one catalog per session (ISO/IEC 39075 sec 4.3.5: a session works in one
-/// GQL-catalog) reads [`session`](Self::session) to pick it.
+/// A request may name the session it runs in; the server checks that the
+/// session exists before the backend sees it, and when it requires
+/// authentication it refuses a request that names none. A backend reads
+/// [`session`](Self::session) to find the caller's identity, scope and
+/// database, or to pick the session's catalog (ISO/IEC 39075 sec 4.3.5: a
+/// session works in one GQL-catalog).
 ///
 /// More fields may be added in later releases, so the struct is
 /// non-exhaustive: build it with [`Default`] (no session) or
 /// [`for_session`](Self::for_session).
 #[derive(Debug, Clone, Default)]
 #[non_exhaustive]
-pub struct CatalogContext {
+pub struct RequestContext {
     /// The calling session, when the request named one.
     pub session: Option<SessionHandle>,
 }
 
-impl CatalogContext {
+impl RequestContext {
     /// A context for a request made in `session`.
     #[must_use]
     pub fn for_session(session: SessionHandle) -> Self {
@@ -367,18 +369,18 @@ pub trait GqlBackend: Send + Sync + 'static {
     //
     // The `CatalogService` calls these. Each default ignores the context and
     // calls the method above, so a backend with one catalog for every session
-    // implements only those; a backend with a catalog per session overrides
-    // these instead.
+    // implements only those; a backend with a catalog per session, or one
+    // that checks the caller's identity, overrides these instead.
 
     /// List all schemas, in the catalog of `ctx`.
-    async fn list_schemas_in(&self, _ctx: &CatalogContext) -> Result<Vec<SchemaInfo>, GqlError> {
+    async fn list_schemas_in(&self, _ctx: &RequestContext) -> Result<Vec<SchemaInfo>, GqlError> {
         self.list_schemas().await
     }
 
     /// Create a schema, in the catalog of `ctx`.
     async fn create_schema_in(
         &self,
-        _ctx: &CatalogContext,
+        _ctx: &RequestContext,
         name: &str,
         if_not_exists: bool,
     ) -> Result<(), GqlError> {
@@ -388,7 +390,7 @@ pub trait GqlBackend: Send + Sync + 'static {
     /// Drop a schema, in the catalog of `ctx`. Returns whether it existed.
     async fn drop_schema_in(
         &self,
-        _ctx: &CatalogContext,
+        _ctx: &RequestContext,
         name: &str,
         if_exists: bool,
     ) -> Result<bool, GqlError> {
@@ -398,7 +400,7 @@ pub trait GqlBackend: Send + Sync + 'static {
     /// List all graphs in a schema, in the catalog of `ctx`.
     async fn list_graphs_in(
         &self,
-        _ctx: &CatalogContext,
+        _ctx: &RequestContext,
         schema: &str,
     ) -> Result<Vec<GraphInfo>, GqlError> {
         self.list_graphs(schema).await
@@ -407,7 +409,7 @@ pub trait GqlBackend: Send + Sync + 'static {
     /// Create a graph, in the catalog of `ctx`. Returns the new graph info.
     async fn create_graph_in(
         &self,
-        _ctx: &CatalogContext,
+        _ctx: &RequestContext,
         config: CreateGraphConfig,
     ) -> Result<GraphInfo, GqlError> {
         self.create_graph(config).await
@@ -416,7 +418,7 @@ pub trait GqlBackend: Send + Sync + 'static {
     /// Drop a graph, in the catalog of `ctx`. Returns whether it existed.
     async fn drop_graph_in(
         &self,
-        _ctx: &CatalogContext,
+        _ctx: &RequestContext,
         schema: &str,
         name: &str,
         if_exists: bool,
@@ -427,7 +429,7 @@ pub trait GqlBackend: Send + Sync + 'static {
     /// Get detailed information about a graph, in the catalog of `ctx`.
     async fn get_graph_info_in(
         &self,
-        _ctx: &CatalogContext,
+        _ctx: &RequestContext,
         schema: &str,
         name: &str,
     ) -> Result<GraphInfo, GqlError> {
@@ -437,7 +439,7 @@ pub trait GqlBackend: Send + Sync + 'static {
     /// List graph types in a schema, in the catalog of `ctx`.
     async fn list_graph_types_in(
         &self,
-        _ctx: &CatalogContext,
+        _ctx: &RequestContext,
         schema: &str,
     ) -> Result<Vec<GraphTypeInfo>, GqlError> {
         self.list_graph_types(schema).await
@@ -446,7 +448,7 @@ pub trait GqlBackend: Send + Sync + 'static {
     /// Create a graph type, in the catalog of `ctx`.
     async fn create_graph_type_in(
         &self,
-        _ctx: &CatalogContext,
+        _ctx: &RequestContext,
         schema: &str,
         name: &str,
         if_not_exists: bool,
@@ -460,7 +462,7 @@ pub trait GqlBackend: Send + Sync + 'static {
     /// existed.
     async fn drop_graph_type_in(
         &self,
-        _ctx: &CatalogContext,
+        _ctx: &RequestContext,
         schema: &str,
         name: &str,
         if_exists: bool,
@@ -519,6 +521,95 @@ pub trait GqlBackend: Send + Sync + 'static {
     /// Hybrid search (vector + text with rank fusion).
     async fn hybrid_search(&self, _req: HybridSearchParams) -> Result<Vec<SearchHit>, GqlError> {
         Err(GqlError::Protocol("search not supported".into()))
+    }
+
+    // =========================================================================
+    // Admin and search operations with a request context
+    // =========================================================================
+    //
+    // The `AdminService` and `SearchService` call these. Each default ignores
+    // the context and calls the method above; a backend that checks who may
+    // read, maintain or search a graph overrides these instead and finds the
+    // caller through the context's session.
+
+    /// Get detailed graph statistics, for the caller in `ctx`.
+    async fn get_graph_stats_in(
+        &self,
+        _ctx: &RequestContext,
+        graph: &str,
+    ) -> Result<AdminStats, GqlError> {
+        self.get_graph_stats(graph).await
+    }
+
+    /// Get WAL status for a graph, for the caller in `ctx`.
+    async fn wal_status_in(
+        &self,
+        _ctx: &RequestContext,
+        graph: &str,
+    ) -> Result<AdminWalStatus, GqlError> {
+        self.wal_status(graph).await
+    }
+
+    /// Force a WAL checkpoint on a graph, for the caller in `ctx`.
+    async fn wal_checkpoint_in(&self, _ctx: &RequestContext, graph: &str) -> Result<(), GqlError> {
+        self.wal_checkpoint(graph).await
+    }
+
+    /// Validate graph integrity, for the caller in `ctx`.
+    async fn validate_in(
+        &self,
+        _ctx: &RequestContext,
+        graph: &str,
+    ) -> Result<AdminValidationResult, GqlError> {
+        self.validate(graph).await
+    }
+
+    /// Create an index on a graph, for the caller in `ctx`.
+    async fn create_index_in(
+        &self,
+        _ctx: &RequestContext,
+        graph: &str,
+        index: IndexDefinition,
+    ) -> Result<(), GqlError> {
+        self.create_index(graph, index).await
+    }
+
+    /// Drop an index from a graph, for the caller in `ctx`.
+    async fn drop_index_in(
+        &self,
+        _ctx: &RequestContext,
+        graph: &str,
+        index: IndexDefinition,
+    ) -> Result<bool, GqlError> {
+        self.drop_index(graph, index).await
+    }
+
+    /// Vector similarity search (KNN), for the caller in `ctx`.
+    async fn vector_search_in(
+        &self,
+        _ctx: &RequestContext,
+        req: VectorSearchParams,
+    ) -> Result<Vec<SearchHit>, GqlError> {
+        self.vector_search(req).await
+    }
+
+    /// Full-text search (BM25), for the caller in `ctx`.
+    async fn text_search_in(
+        &self,
+        _ctx: &RequestContext,
+        req: TextSearchParams,
+    ) -> Result<Vec<SearchHit>, GqlError> {
+        self.text_search(req).await
+    }
+
+    /// Hybrid search (vector + text with rank fusion), for the caller in
+    /// `ctx`.
+    async fn hybrid_search_in(
+        &self,
+        _ctx: &RequestContext,
+        req: HybridSearchParams,
+    ) -> Result<Vec<SearchHit>, GqlError> {
+        self.hybrid_search(req).await
     }
 }
 

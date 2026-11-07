@@ -50,7 +50,11 @@ class GqlConnection:
         return await GqlSession.create(self._channel)
 
     def create_catalog_client(self) -> CatalogClient:
-        """Create a catalog management client for schemas, graphs, and graph types."""
+        """Create a catalog management client for schemas, graphs, and graph types.
+
+        Its requests name no session. A server with authentication refuses
+        them; use `GqlSession.catalog()` for a client bound to a session.
+        """
         return CatalogClient(self._channel)
 
     async def close(self) -> None:

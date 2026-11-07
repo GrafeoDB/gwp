@@ -81,6 +81,9 @@ public class GqlConnection implements AutoCloseable {
     /**
      * Create a catalog management client for schemas, graphs, and graph types.
      *
+     * <p>Its requests name no session. A server with authentication refuses
+     * those; use {@link GqlSession#catalog()} there.</p>
+     *
      * @return a new CatalogClient
      */
     public CatalogClient createCatalogClient() {

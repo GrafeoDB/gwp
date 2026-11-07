@@ -1,9 +1,11 @@
 /** GQL session management. */
 
+import type { ChannelCredentials } from "@grpc/grpc-js";
 import type {
   SessionServiceClient,
   GqlServiceClient,
 } from "./generated/gql_service";
+import { CatalogClient } from "./catalog";
 import { promisifyUnary } from "./util";
 import { SessionError } from "./errors";
 import { ResultCursor } from "./result";
@@ -16,6 +18,8 @@ export class GqlSession {
   private readonly _sessionId: string;
   private readonly sessionClient: SessionServiceClient;
   private readonly gqlClient: GqlServiceClient;
+  private readonly endpoint: string;
+  private readonly creds: ChannelCredentials;
   private closed = false;
 
   /** @internal */
@@ -23,16 +27,22 @@ export class GqlSession {
     sessionId: string,
     sessionClient: SessionServiceClient,
     gqlClient: GqlServiceClient,
+    endpoint: string,
+    creds: ChannelCredentials,
   ) {
     this._sessionId = sessionId;
     this.sessionClient = sessionClient;
     this.gqlClient = gqlClient;
+    this.endpoint = endpoint;
+    this.creds = creds;
   }
 
   /** Create a new session via handshake. */
   static async create(
     sessionClient: SessionServiceClient,
     gqlClient: GqlServiceClient,
+    endpoint: string,
+    creds: ChannelCredentials,
   ): Promise<GqlSession> {
     const resp = await promisifyUnary(sessionClient, "handshake", {
       protocolVersion: 1,
@@ -44,12 +54,31 @@ export class GqlSession {
       throw new SessionError("server returned empty session ID");
     }
 
-    return new GqlSession(resp.sessionId, sessionClient, gqlClient);
+    return new GqlSession(
+      resp.sessionId,
+      sessionClient,
+      gqlClient,
+      endpoint,
+      creds,
+    );
   }
 
   /** The session identifier. */
   get sessionId(): string {
     return this._sessionId;
+  }
+
+  /**
+   * A catalog client that works in this session's catalog.
+   *
+   * Its requests name this session, so a server that keeps one catalog per
+   * session shows this session's schemas and graphs. A server with
+   * authentication refuses catalog requests without a live session, so use
+   * this client there; `GqlConnection.createCatalogClient()` gives one that
+   * names no session. Close the returned client when done.
+   */
+  catalog(): CatalogClient {
+    return new CatalogClient(this.endpoint, this.creds, this._sessionId);
   }
 
   /** Execute a GQL statement. */

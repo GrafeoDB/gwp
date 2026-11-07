@@ -1,6 +1,6 @@
 [package]
 name = "gwp"
-version = "0.3.2"
+version = "0.4.0"
 edition = "2024"
 rust-version = "1.88.0"
 description = "A standalone, pure Rust gRPC wire protocol for GQL (ISO/IEC 39075)"
@@ -30,6 +30,8 @@ prost-build = "0.14.3"
 tonic-prost-build = "0.14.4"
 
 [dev-dependencies]
+bytes = "1"
+prost-types = "0.14.3"
 tokio = { version = "1.44.2", features = ["rt-multi-thread", "macros", "test-util"] }
 
 [lints.clippy]

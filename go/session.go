@@ -12,12 +12,24 @@ type GqlSession struct {
 	sessionID     string
 	sessionClient pb.SessionServiceClient
 	gqlClient     pb.GqlServiceClient
+	catalogClient pb.CatalogServiceClient
 	closed        bool
 }
 
 // SessionID returns the session identifier.
 func (s *GqlSession) SessionID() string {
 	return s.sessionID
+}
+
+// Catalog returns a catalog client that works in this session's catalog.
+//
+// Its requests name this session, so a server that keeps one catalog per
+// session shows this session's schemas and graphs. A server with
+// authentication refuses catalog requests that name no live session, so use
+// this client there. GqlConnection.CreateCatalogClient gives one that names
+// no session.
+func (s *GqlSession) Catalog() *CatalogClient {
+	return newSessionCatalogClient(s.catalogClient, s.sessionID)
 }
 
 // Execute executes a GQL statement and returns a result cursor.

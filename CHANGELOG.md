@@ -4,7 +4,7 @@ All notable changes to gwp, a pure Rust gRPC wire protocol for GQL (ISO/IEC 3907
 
 ## [0.4.0] - 2026-11-07
 
-Sessions release: catalog, admin and search requests name the session they run in, a server with authentication requires one, and every binding can name its session. Breaking for code that wires the services by hand (the constructors take the `SessionManager`) or builds admin and search requests as struct literals, and for builds below Rust 1.99; servers built with `GqlServer` need no change. Against a server with authentication, the Rust client uses `session.catalog()`, `session.admin()` and `session.search()`; the Python, JavaScript, Go and Java clients send no handshake credentials yet, so they cannot authenticate.
+Sessions release: catalog, admin and search requests name the session they run in, a server with authentication requires one, and every binding can name its session on catalog calls. Breaking for code that wires the services by hand (the constructors take the `SessionManager`) or builds admin and search requests as struct literals, and for builds below Rust 1.99; servers built with `GqlServer` need no change. Against a server with authentication, the Rust client uses `session.catalog()`, `session.admin()` and `session.search()`; the Python, JavaScript, Go and Java clients send no handshake credentials yet, so they cannot authenticate.
 
 ### Added
 

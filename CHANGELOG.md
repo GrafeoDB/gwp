@@ -2,9 +2,9 @@
 
 All notable changes to gwp, a pure Rust gRPC wire protocol for GQL (ISO/IEC 39075) with clients in Rust, Python, JavaScript, Go and Java.
 
-## [0.4.0] - Unreleased
+## [0.4.0] - 2026-11-07
 
-Security release: with authentication on, the catalog, admin and search services serve only requests that name a live session, and every binding can name one. Breaking for code that wires the services by hand (the constructors take the `SessionManager`) or builds admin and search requests as struct literals; servers built with `GqlServer` need no change. Clients of a server with authentication use the session-bound clients (`session.catalog()`, and in Rust `session.admin()` and `session.search()`).
+Sessions release: catalog, admin and search requests name the session they run in, a server with authentication requires one, and every binding can send it. Breaking for code that wires the services by hand (the constructors take the `SessionManager`) or builds admin and search requests as struct literals; servers built with `GqlServer` need no change. Clients of a server with authentication use the session-bound clients (`session.catalog()`, and in Rust `session.admin()` and `session.search()`); the minimum Rust is 1.99.
 
 ### Added
 
@@ -17,6 +17,8 @@ Security release: with authentication on, the catalog, admin and search services
 
 Code and requests that worked with 0.3.2 and now fail.
 
+- **Rust 1.99 is the minimum** (was 1.88), as for grafeo and grafeo-server; CI checks the crate on Rust 1.99.
+- **Go 1.26 is the minimum for the Go module** (was 1.25), as the updated grpc and `golang.org/x` modules need; `go.mod` names `toolchain go1.26.10`, whose standard library has the current security fixes.
 - **Service constructors take the session manager**: `CatalogServiceImpl::new(backend, sessions)`, `AdminServiceImpl::new(backend, sessions)` and `SearchServiceImpl::new(backend, sessions)`. Pass the `SessionManager` the `SessionServiceImpl` uses; `GqlServer` does this already.
 - **Admin and search request messages** have the new `session_id` field: Rust code that builds them as struct literals needs it, for example with `..Default::default()`.
 - **An admin or search call that names an unknown session** gets `NOT_FOUND`, as on the catalog and `GqlService`, before its arguments are checked; the session was ignored.
@@ -32,7 +34,19 @@ Code and requests that worked with 0.3.2 and now fail.
 
 ### Security
 
-- **With authentication, catalog, admin and search calls need a session**: on a server with an `AuthValidator` (`GqlServer::builder(...).auth(...)`), a `CatalogService`, `AdminService` or `SearchService` request that names no session is refused with `UNAUTHENTICATED`, and one naming an unknown session with `NOT_FOUND`, before the backend sees it. Before, credentials were checked only at the handshake, so these services answered any caller who could reach the port.
+- **With authentication, catalog, admin and search calls need a session**: on a server with an `AuthValidator` (`GqlServer::builder(...).auth(...)`), a `CatalogService`, `AdminService` or `SearchService` request that names no session is refused with `UNAUTHENTICATED`, and one naming an unknown session with `NOT_FOUND`, before the backend sees it.
+- **pulldown-cmark 0.13.6** (from 0.13.4), a build dependency through `prost-build`: [RUSTSEC-2026-0414](https://rustsec.org/advisories/RUSTSEC-2026-0414.html) and [RUSTSEC-2026-0433](https://rustsec.org/advisories/RUSTSEC-2026-0433.html), exponential and quadratic parsing with `ENABLE_WIKILINKS`. gwp does not parse Markdown at run time.
+- **Go: `golang.org/x/net` 0.62.0** (from 0.58.0): GO-2026-6617, GO-2026-6612, GO-2026-6611 and GO-2026-6603 (HTTP/2 crash, flow control, CPU and memory exhaustion), GO-2026-6610, GO-2026-6866 and GO-2026-6860.
+- **JavaScript: `@grpc/grpc-js` `^1.14.7`** (was `^1.12.0`, which allowed affected versions): GHSA-5375-pq7m-f5r2 and GHSA-99f4-grh7-6pcq (a malformed message crashes a client or server), GHSA-m9gg-hp2v-232j (`getAuthContext` reports unauthorized certificates as authorized) and GHSA-f596-whhp-79r4.
+- **Java: grpc-java 1.85.1** (from 1.68.1): its bundled netty 4.2.17 clears GHSA-prj3-ccx8-p6x4 (the MadeYouReset HTTP/2 denial of service) and 36 advisories against the netty 4.1.110 it bundled. Guava is pinned to 33.8.0-android, above the 33.6.0 grpc brings, for GHSA-xxph-c9ww-hj94.
+- **Python: `protobuf>=6.33.5`** (was `>=6.31.1`): GHSA-7gcm-g887-7qv7, JSON parsing past the recursion depth limit.
+
+### Dependencies
+
+- **tonic 0.14.9** (requires `>=0.14.9`, with `tonic-health`, `tonic-prost` and `tonic-prost-build`): an HTTP/1 connection's header read timeout now applies.
+- **Go: `google.golang.org/grpc` 1.85.0** (from 1.84.0), with `golang.org/x/sys` 0.49.0 and `golang.org/x/text` 0.43.0.
+- **Java: protobuf-java and protoc 4.36.2** (from 4.28.3).
+- **Python: `grpcio>=1.84.0` on Python 3.15**, the first release with wheels for it; other versions keep `grpcio>=1.78.0`.
 
 ## [0.3.2] - 2026-10-24
 

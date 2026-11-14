@@ -714,7 +714,18 @@ pub enum IndexDefinition {
 // ============================================================================
 
 /// Vector search parameters.
+///
+/// Non-exhaustive, so a later field is not a breaking change: build it with
+/// [`VectorSearchParams::new`] and the `with_*` setters.
+///
+/// ```
+/// use gwp::server::VectorSearchParams;
+///
+/// let params = VectorSearchParams::new("g", "Doc", "embedding", vec![0.1, 0.9], 10).with_ef(128);
+/// assert_eq!(params.ef, Some(128));
+/// ```
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct VectorSearchParams {
     /// Graph name.
     pub graph: String,
@@ -732,8 +743,49 @@ pub struct VectorSearchParams {
     pub filters: std::collections::HashMap<String, Value>,
 }
 
+impl VectorSearchParams {
+    /// Search for the `k` nodes with `label` whose `property` is nearest to
+    /// `query_vector`, at the index's default beam width and without filters.
+    #[must_use]
+    pub fn new(
+        graph: impl Into<String>,
+        label: impl Into<String>,
+        property: impl Into<String>,
+        query_vector: Vec<f32>,
+        k: u32,
+    ) -> Self {
+        Self {
+            graph: graph.into(),
+            label: label.into(),
+            property: property.into(),
+            query_vector,
+            k,
+            ef: None,
+            filters: HashMap::new(),
+        }
+    }
+
+    /// Set the search beam width; `None` uses the index default.
+    #[must_use]
+    pub fn with_ef(mut self, ef: impl Into<Option<u32>>) -> Self {
+        self.ef = ef.into();
+        self
+    }
+
+    /// Keep only nodes whose properties equal these values.
+    #[must_use]
+    pub fn with_filters(mut self, filters: HashMap<String, Value>) -> Self {
+        self.filters = filters;
+        self
+    }
+}
+
 /// Text search parameters.
+///
+/// Non-exhaustive, so a later field is not a breaking change: build it with
+/// [`TextSearchParams::new`].
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct TextSearchParams {
     /// Graph name.
     pub graph: String,
@@ -747,8 +799,57 @@ pub struct TextSearchParams {
     pub k: u32,
 }
 
+impl TextSearchParams {
+    /// Search for the `k` nodes with `label` whose `property` best matches
+    /// `query` (BM25).
+    #[must_use]
+    pub fn new(
+        graph: impl Into<String>,
+        label: impl Into<String>,
+        property: impl Into<String>,
+        query: impl Into<String>,
+        k: u32,
+    ) -> Self {
+        Self {
+            graph: graph.into(),
+            label: label.into(),
+            property: property.into(),
+            query: query.into(),
+            k,
+        }
+    }
+}
+
 /// Hybrid search parameters.
+///
+/// Non-exhaustive, so a later field is not a breaking change: build it with
+/// [`HybridSearchParams::new`] and the `with_*` setters.
+///
+/// ```
+/// use gwp::server::HybridSearchParams;
+///
+/// let params = HybridSearchParams::new("g", "Doc", "body", "embedding", "graph databases", 10)
+///     .with_query_vector(vec![0.1, 0.9])
+///     .with_ef(256);
+/// assert_eq!(params.ef, Some(256));
+/// ```
+///
+/// A struct literal does not compile outside gwp:
+///
+/// ```compile_fail,E0639
+/// let params = gwp::server::HybridSearchParams {
+///     graph: "g".into(),
+///     label: "Doc".into(),
+///     text_property: "body".into(),
+///     vector_property: "embedding".into(),
+///     query_text: "q".into(),
+///     query_vector: Vec::new(),
+///     k: 10,
+///     ef: None,
+/// };
+/// ```
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct HybridSearchParams {
     /// Graph name.
     pub graph: String,
@@ -764,6 +865,49 @@ pub struct HybridSearchParams {
     pub query_vector: Vec<f32>,
     /// Number of results.
     pub k: u32,
+    /// Search beam width of the vector half; `None` uses the index default.
+    /// The text half has no beam.
+    pub ef: Option<u32>,
+}
+
+impl HybridSearchParams {
+    /// Search for the `k` nodes with `label` that best match `query_text` on
+    /// `text_property`, fused with a vector search on `vector_property` when
+    /// a query vector is set.
+    #[must_use]
+    pub fn new(
+        graph: impl Into<String>,
+        label: impl Into<String>,
+        text_property: impl Into<String>,
+        vector_property: impl Into<String>,
+        query_text: impl Into<String>,
+        k: u32,
+    ) -> Self {
+        Self {
+            graph: graph.into(),
+            label: label.into(),
+            text_property: text_property.into(),
+            vector_property: vector_property.into(),
+            query_text: query_text.into(),
+            query_vector: Vec::new(),
+            k,
+            ef: None,
+        }
+    }
+
+    /// Set the query vector of the vector half.
+    #[must_use]
+    pub fn with_query_vector(mut self, query_vector: Vec<f32>) -> Self {
+        self.query_vector = query_vector;
+        self
+    }
+
+    /// Set the vector half's search beam width; `None` uses the index default.
+    #[must_use]
+    pub fn with_ef(mut self, ef: impl Into<Option<u32>>) -> Self {
+        self.ef = ef.into();
+        self
+    }
 }
 
 /// A single search result hit.

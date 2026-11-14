@@ -629,6 +629,9 @@ message HybridSearchRequest {
   string query_text = 5;
   repeated float query_vector = 6;
   uint32 k = 7;
+  // Search beam width of the vector half, as in VectorSearchRequest;
+  // unset for the index default. The text half has no beam.
+  optional uint32 ef = 8;
   // Session the call runs in; empty for none. A server with
   // authentication refuses a request without a live session.
   string session_id = 15;

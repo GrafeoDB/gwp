@@ -23,7 +23,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-gwp = "0.4"
+gwp = "0.5"
 ```
 
 ### Implementing a Backend
@@ -184,8 +184,10 @@ All bindings include `GqlConnection`, `GqlSession`, `Transaction`, `ResultCursor
 
 ## Requirements
 
-- Rust 1.99.0+ (edition 2024)
+- Rust 1.100.0+ (edition 2024)
 - `protoc` (Protocol Buffers compiler) - required at build time
+
+An unused dependency fails the build (`cargo::unused_dependencies`). Cargo ignores crate versions published in the last 3 days (`.cargo/config.toml`), so a just-released version needs a few days before `cargo update` takes it.
 
 ## License
 

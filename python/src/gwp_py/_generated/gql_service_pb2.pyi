@@ -711,7 +711,7 @@ class TextSearchRequest(_message.Message):
     def __init__(self, graph: _Optional[str] = ..., label: _Optional[str] = ..., property: _Optional[str] = ..., query: _Optional[str] = ..., k: _Optional[int] = ..., session_id: _Optional[str] = ...) -> None: ...
 
 class HybridSearchRequest(_message.Message):
-    __slots__ = ("graph", "label", "text_property", "vector_property", "query_text", "query_vector", "k", "session_id")
+    __slots__ = ("graph", "label", "text_property", "vector_property", "query_text", "query_vector", "k", "ef", "session_id")
     GRAPH_FIELD_NUMBER: _ClassVar[int]
     LABEL_FIELD_NUMBER: _ClassVar[int]
     TEXT_PROPERTY_FIELD_NUMBER: _ClassVar[int]
@@ -719,6 +719,7 @@ class HybridSearchRequest(_message.Message):
     QUERY_TEXT_FIELD_NUMBER: _ClassVar[int]
     QUERY_VECTOR_FIELD_NUMBER: _ClassVar[int]
     K_FIELD_NUMBER: _ClassVar[int]
+    EF_FIELD_NUMBER: _ClassVar[int]
     SESSION_ID_FIELD_NUMBER: _ClassVar[int]
     graph: str
     label: str
@@ -727,8 +728,9 @@ class HybridSearchRequest(_message.Message):
     query_text: str
     query_vector: _containers.RepeatedScalarFieldContainer[float]
     k: int
+    ef: int
     session_id: str
-    def __init__(self, graph: _Optional[str] = ..., label: _Optional[str] = ..., text_property: _Optional[str] = ..., vector_property: _Optional[str] = ..., query_text: _Optional[str] = ..., query_vector: _Optional[_Iterable[float]] = ..., k: _Optional[int] = ..., session_id: _Optional[str] = ...) -> None: ...
+    def __init__(self, graph: _Optional[str] = ..., label: _Optional[str] = ..., text_property: _Optional[str] = ..., vector_property: _Optional[str] = ..., query_text: _Optional[str] = ..., query_vector: _Optional[_Iterable[float]] = ..., k: _Optional[int] = ..., ef: _Optional[int] = ..., session_id: _Optional[str] = ...) -> None: ...
 
 class SearchHit(_message.Message):
     __slots__ = ("node_id", "score", "properties")

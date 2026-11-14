@@ -257,7 +257,7 @@ async fn with_auth_an_authenticated_session_is_served() {
     );
     assert_eq!(
         server.backend.events_with("vector_search"),
-        vec![format!("vector_search g session={id}")]
+        vec![format!("vector_search g ef=None session={id}")]
     );
 }
 
@@ -266,15 +266,7 @@ async fn with_auth_an_authenticated_session_is_served() {
 // ============================================================================
 
 fn vector_search(graph: &str) -> VectorSearchParams {
-    VectorSearchParams {
-        graph: graph.to_owned(),
-        label: "Doc".to_owned(),
-        property: "embedding".to_owned(),
-        query_vector: vec![1.0, 0.0],
-        k: 3,
-        ef: None,
-        filters: HashMap::new(),
-    }
+    VectorSearchParams::new(graph, "Doc", "embedding", vec![1.0, 0.0], 3)
 }
 
 #[tokio::test]
@@ -295,7 +287,7 @@ async fn without_auth_admin_and_search_work_without_a_session() {
     );
     assert_eq!(
         server.backend.events_with("vector_search"),
-        vec!["vector_search g session=-"]
+        vec!["vector_search g ef=None session=-"]
     );
 }
 
@@ -319,7 +311,7 @@ async fn without_auth_a_session_bound_client_names_its_session() {
     );
     assert_eq!(
         server.backend.events_with("vector_search"),
-        vec![format!("vector_search g session={id}")]
+        vec![format!("vector_search g ef=None session={id}")]
     );
 }
 

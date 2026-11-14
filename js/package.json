@@ -1,6 +1,6 @@
 {
   "name": "gwp-js",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "JavaScript/TypeScript client for the GQL Wire Protocol (GWP)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -18,7 +18,9 @@
     "database"
   ],
   "files": [
-    "dist/"
+    "dist/",
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
   ],
   "scripts": {
     "generate": "bash scripts/generate-proto.sh",

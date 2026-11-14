@@ -2,7 +2,7 @@
 
 All notable changes to gwp, a pure Rust gRPC wire protocol for GQL (ISO/IEC 39075) with clients in Rust, Python, JavaScript, Go and Java.
 
-## [0.5.0] - Unreleased
+## [0.5.0] - 2026-11-15
 
 Search parameters release: hybrid search takes `ef`, the beam width of its vector half, and the search parameter structs get constructors so a later field is not a breaking change. Breaking for Rust code that builds `VectorSearchParams`, `TextSearchParams` or `HybridSearchParams` as struct literals (use `new()` and the `with_*` setters) or `proto::HybridSearchRequest` without `..Default::default()`. The wire format stays compatible: a 0.4 server ignores the new field, and a request from a 0.4 client arrives without `ef`.
 

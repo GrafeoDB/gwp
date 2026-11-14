@@ -724,6 +724,20 @@ pub enum IndexDefinition {
 /// let params = VectorSearchParams::new("g", "Doc", "embedding", vec![0.1, 0.9], 10).with_ef(128);
 /// assert_eq!(params.ef, Some(128));
 /// ```
+///
+/// A struct literal does not compile outside gwp:
+///
+/// ```compile_fail,E0639
+/// let params = gwp::server::VectorSearchParams {
+///     graph: "g".into(),
+///     label: "Doc".into(),
+///     property: "embedding".into(),
+///     query_vector: vec![0.1],
+///     k: 10,
+///     ef: None,
+///     filters: std::collections::HashMap::new(),
+/// };
+/// ```
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct VectorSearchParams {
@@ -783,7 +797,17 @@ impl VectorSearchParams {
 /// Text search parameters.
 ///
 /// Non-exhaustive, so a later field is not a breaking change: build it with
-/// [`TextSearchParams::new`].
+/// [`TextSearchParams::new`]. A struct literal does not compile outside gwp:
+///
+/// ```compile_fail,E0639
+/// let params = gwp::server::TextSearchParams {
+///     graph: "g".into(),
+///     label: "Doc".into(),
+///     property: "body".into(),
+///     query: "graph".into(),
+///     k: 10,
+/// };
+/// ```
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct TextSearchParams {

@@ -64,8 +64,8 @@ async fn hybrid_text_only_with_ef_is_accepted() {
     );
 }
 
-#[tokio::test]
-async fn hybrid_ef_set_to_none_clears_it() {
+#[test]
+fn hybrid_ef_set_to_none_clears_it() {
     let params = HybridSearchParams::new("g", "Doc", "body", "embedding", "q", 5)
         .with_ef(256)
         .with_ef(None);

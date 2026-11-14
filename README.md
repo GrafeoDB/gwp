@@ -187,7 +187,7 @@ All bindings include `GqlConnection`, `GqlSession`, `Transaction`, `ResultCursor
 - Rust 1.100.0+ (edition 2024)
 - `protoc` (Protocol Buffers compiler) - required at build time
 
-An unused dependency fails the build (`cargo::unused_dependencies`). Cargo ignores crate versions published in the last 3 days (`.cargo/config.toml`), so a just-released version needs a few days before `cargo update` takes it.
+When building gwp itself (not when depending on it): an unused dependency fails the build (`cargo::unused_dependencies`), and Cargo ignores crate versions published in the last 3 days (`.cargo/config.toml`), so a just-released version needs a few days before `cargo update` takes it.
 
 ## License
 

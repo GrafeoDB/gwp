@@ -4,12 +4,12 @@ All notable changes to gwp, a pure Rust gRPC wire protocol for GQL (ISO/IEC 3907
 
 ## [0.5.0] - 2026-11-15
 
-Search parameters release: hybrid search takes `ef`, the beam width of its vector half, and the search parameter structs get constructors so a later field is not a breaking change. Breaking for Rust code that builds `VectorSearchParams`, `TextSearchParams` or `HybridSearchParams` as struct literals (use `new()` and the `with_*` setters) or `proto::HybridSearchRequest` without `..Default::default()`. The wire format stays compatible: a 0.4 server ignores the new field, and a request from a 0.4 client arrives without `ef`.
+Search parameters release: hybrid search takes `ef`, the beam width of its vector half, and the search parameter structs get constructors so a later field is not a breaking change. Breaking for Rust code that builds `VectorSearchParams`, `TextSearchParams` or `HybridSearchParams` as struct literals (use `new()` and the `with_*` setters) or destructures them without `..`, for `proto::HybridSearchRequest` literals without `..Default::default()`, and for builds below Rust 1.100. The wire format stays compatible: a 0.4 server ignores the new field, and a request from a 0.4 client arrives without `ef`.
 
 ### Added
 
-- **Hybrid search takes `ef`**: `HybridSearchRequest` has `optional uint32 ef = 8`, `HybridSearchParams` has `ef` and `with_ef(..)`, and the Rust `SearchClient::hybrid_search` sends it. Unset uses the index default, as on vector search; the Python, JavaScript and Go generated stubs carry the field.
-- **Constructors for the search parameters**: `VectorSearchParams::new(graph, label, property, query_vector, k)` with `with_ef` and `with_filters`, `TextSearchParams::new(graph, label, property, query, k)`, and `HybridSearchParams::new(graph, label, text_property, vector_property, query_text, k)` with `with_query_vector` and `with_ef`.
+- **Hybrid search takes `ef`**: `HybridSearchRequest` has `optional uint32 ef = 8`, `HybridSearchParams` has `ef` and `with_ef(..)`, and the Rust `SearchClient::hybrid_search` sends it. Unset uses the index default, as on vector search; the generated stubs of every binding (Python, JavaScript, Go and Java) carry the field.
+- **The search parameters have constructors**: `VectorSearchParams::new(graph, label, property, query_vector, k)` with `with_ef` and `with_filters`, `TextSearchParams::new(graph, label, property, query, k)`, and `HybridSearchParams::new(graph, label, text_property, vector_property, query_text, k)` with `with_query_vector` and `with_ef`.
 
 ### Changed
 

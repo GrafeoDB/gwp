@@ -4,7 +4,7 @@ All notable changes to gwp, a pure Rust gRPC wire protocol for GQL (ISO/IEC 3907
 
 ## [0.4.1] - 2026-11-14
 
-Packaging release: the licence texts ship with the repository and every package, and the Go module is tagged with the same version as the other bindings. No code changes.
+Packaging release: the licence texts ship with the repository and every package, and the Go module is tagged with the same version as the other bindings. No behaviour changes.
 
 ### Added
 

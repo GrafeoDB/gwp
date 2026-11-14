@@ -2,6 +2,22 @@
 
 All notable changes to gwp, a pure Rust gRPC wire protocol for GQL (ISO/IEC 39075) with clients in Rust, Python, JavaScript, Go and Java.
 
+## [0.4.1] - 2026-11-14
+
+Packaging release: the licence texts ship with the repository and every package, and the Go module is tagged with the same version as the other bindings. No behaviour changes.
+
+### Added
+
+- **Licence files**: `LICENSE-APACHE` and `LICENSE-MIT` in the repository root and in the Go, Python and JavaScript packages; gwp stays `MIT OR Apache-2.0`.
+
+### Changed
+
+- **The Go module is tagged `go/v0.4.1`**: `go get github.com/GrafeoDB/gql-wire-protocol/go@latest` now resolves to the current client; the last Go tag was `go/v0.1.1`, so `@latest` installed a client without the 0.4.0 changes.
+
+### Fixed
+
+- **README install lines**: the Rust line asks for `gwp = "0.4"` (it said `0.1`) and the Go module path is `github.com/GrafeoDB/gql-wire-protocol/go`.
+
 ## [0.4.0] - 2026-11-07
 
 Sessions release: catalog, admin and search requests name the session they run in, a server with authentication requires one, and every binding can name its session on catalog calls. Breaking for code that wires the services by hand (the constructors take the `SessionManager`) or builds admin and search requests as struct literals, and for builds below Rust 1.99; servers built with `GqlServer` need no change. Against a server with authentication, the Rust client uses `session.catalog()`, `session.admin()` and `session.search()`; the Python, JavaScript, Go and Java clients send no handshake credentials yet, so they cannot authenticate.

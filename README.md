@@ -23,7 +23,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-gwp = "0.1"
+gwp = "0.4"
 ```
 
 ### Implementing a Backend
@@ -177,7 +177,7 @@ Application (GQL statements, parameters, results)
 | ---------- | ------- | ------- |
 | Python | [gwp-py](https://pypi.org/project/gwp-py/) | `uv add gwp-py` |
 | JavaScript/TypeScript | [gwp-js](https://www.npmjs.com/package/gwp-js) | `npm install gwp-js` |
-| Go | `github.com/GrafeoDB/gwp/go` | `go get github.com/GrafeoDB/gwp/go` |
+| Go | `github.com/GrafeoDB/gql-wire-protocol/go` | `go get github.com/GrafeoDB/gql-wire-protocol/go` |
 | Java | `dev.grafeo:gwp` | Maven Central |
 
 All bindings include `GqlConnection`, `GqlSession`, `Transaction`, `ResultCursor`, `CatalogClient`, and typed write counters (`Counters`).

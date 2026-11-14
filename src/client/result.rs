@@ -53,11 +53,9 @@ impl ResultCursor {
     /// Returns a transport error if the gRPC stream fails.
     pub async fn column_names(&mut self) -> Result<Vec<String>, GqlError> {
         self.header().await?;
-        Ok(self
-            .header
-            .as_ref()
-            .map(|h| h.columns.iter().map(|c| c.name.clone()).collect())
-            .unwrap_or_default())
+        Ok(self.header.as_ref().map_or_else(Vec::new, |h| {
+            h.columns.iter().map(|c| c.name.clone()).collect()
+        }))
     }
 
     /// Get the next row of results.

@@ -2,6 +2,14 @@
 
 All notable changes to gwp, a pure Rust gRPC wire protocol for GQL (ISO/IEC 39075) with clients in Rust, Python, JavaScript, Go and Java.
 
+## [0.4.2] - 2026-11-14
+
+Packaging release: the JavaScript package carries the licence texts that 0.4.1 added to the others. No behaviour changes.
+
+### Fixed
+
+- **`gwp-js` ships `LICENSE-APACHE` and `LICENSE-MIT`**: npm adds only files named `LICENSE` on its own, so `gwp-js` 0.4.1 went out without them; `package.json` now lists both under `files`.
+
 ## [0.4.1] - 2026-11-14
 
 Packaging release: the licence texts ship with the repository and every package, and the Go module is tagged with the same version as the other bindings. No behaviour changes.

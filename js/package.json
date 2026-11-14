@@ -1,6 +1,6 @@
 {
   "name": "gwp-js",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "JavaScript/TypeScript client for the GQL Wire Protocol (GWP)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,8 +10,16 @@
     "url": "git+https://github.com/GrafeoDB/gwp.git",
     "directory": "js"
   },
-  "keywords": ["gql", "graph", "grpc", "wire-protocol", "database"],
-  "files": ["dist/"],
+  "keywords": [
+    "gql",
+    "graph",
+    "grpc",
+    "wire-protocol",
+    "database"
+  ],
+  "files": [
+    "dist/"
+  ],
   "scripts": {
     "generate": "bash scripts/generate-proto.sh",
     "build": "tsc",

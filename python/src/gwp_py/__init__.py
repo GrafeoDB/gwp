@@ -35,7 +35,7 @@ from gwp_py.types import (
     Record,
 )
 
-__version__ = "0.4.1"
+__version__ = "0.4.2"
 
 __all__ = [
     "COUNTER_KEYS",

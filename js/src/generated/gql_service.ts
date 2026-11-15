@@ -684,6 +684,13 @@ export interface HybridSearchRequest {
   queryVector: number[];
   k: number;
   /**
+   * Search beam width of the vector half, as in VectorSearchRequest;
+   * unset for the index default. The text half has no beam.
+   */
+  ef?:
+    | number
+    | undefined;
+  /**
    * Session the call runs in; empty for none. A server with
    * authentication refuses a request without a live session.
    */
@@ -7653,6 +7660,7 @@ function createBaseHybridSearchRequest(): HybridSearchRequest {
     queryText: "",
     queryVector: [],
     k: 0,
+    ef: undefined,
     sessionId: "",
   };
 }
@@ -7681,6 +7689,9 @@ export const HybridSearchRequest: MessageFns<HybridSearchRequest> = {
     writer.join();
     if (message.k !== 0) {
       writer.uint32(56).uint32(message.k);
+    }
+    if (message.ef !== undefined) {
+      writer.uint32(64).uint32(message.ef);
     }
     if (message.sessionId !== "") {
       writer.uint32(122).string(message.sessionId);
@@ -7761,6 +7772,14 @@ export const HybridSearchRequest: MessageFns<HybridSearchRequest> = {
           message.k = reader.uint32();
           continue;
         }
+        case 8: {
+          if (tag !== 64) {
+            break;
+          }
+
+          message.ef = reader.uint32();
+          continue;
+        }
         case 15: {
           if (tag !== 122) {
             break;
@@ -7803,6 +7822,7 @@ export const HybridSearchRequest: MessageFns<HybridSearchRequest> = {
         ? object.query_vector.map((e: any) => globalThis.Number(e))
         : [],
       k: isSet(object.k) ? globalThis.Number(object.k) : 0,
+      ef: isSet(object.ef) ? globalThis.Number(object.ef) : undefined,
       sessionId: isSet(object.sessionId)
         ? globalThis.String(object.sessionId)
         : isSet(object.session_id)
@@ -7834,6 +7854,9 @@ export const HybridSearchRequest: MessageFns<HybridSearchRequest> = {
     if (message.k !== 0) {
       obj.k = Math.round(message.k);
     }
+    if (message.ef !== undefined) {
+      obj.ef = Math.round(message.ef);
+    }
     if (message.sessionId !== "") {
       obj.sessionId = message.sessionId;
     }
@@ -7852,6 +7875,7 @@ export const HybridSearchRequest: MessageFns<HybridSearchRequest> = {
     message.queryText = object.queryText ?? "";
     message.queryVector = object.queryVector?.map((e) => e) || [];
     message.k = object.k ?? 0;
+    message.ef = object.ef ?? undefined;
     message.sessionId = object.sessionId ?? "";
     return message;
   },

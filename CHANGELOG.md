@@ -2,6 +2,20 @@
 
 All notable changes to gwp, a pure Rust gRPC wire protocol for GQL (ISO/IEC 39075) with clients in Rust, Python, JavaScript, Go and Java.
 
+## [0.5.0] - 2026-11-15
+
+Search parameters release: hybrid search takes `ef`, the beam width of its vector half, and the search parameter structs get constructors so a later field is not a breaking change. Breaking for Rust code that builds `VectorSearchParams`, `TextSearchParams` or `HybridSearchParams` as struct literals (use `new()` and the `with_*` setters) or destructures them without `..`, for `proto::HybridSearchRequest` literals without `..Default::default()`, and for builds below Rust 1.100. The wire format stays compatible: a 0.4 server ignores the new field, and a request from a 0.4 client arrives without `ef`.
+
+### Added
+
+- **Hybrid search takes `ef`**: `HybridSearchRequest` has `optional uint32 ef = 8`, `HybridSearchParams` has `ef` and `with_ef(..)`, and the Rust `SearchClient::hybrid_search` sends it. Unset uses the index default, as on vector search; the generated stubs of every binding (Python, JavaScript, Go and Java) carry the field.
+- **The search parameters have constructors**: `VectorSearchParams::new(graph, label, property, query_vector, k)` with `with_ef` and `with_filters`, `TextSearchParams::new(graph, label, property, query, k)`, and `HybridSearchParams::new(graph, label, text_property, vector_property, query_text, k)` with `with_query_vector` and `with_ef`.
+
+### Changed
+
+- **The search parameter structs are `#[non_exhaustive]`**: outside gwp they are built with `new()` and the setters and read through their public fields as before, so adding a field no longer breaks a backend or client.
+- **Minimum Rust 1.100**: `rust-version` and the MSRV job move from 1.99.0 to 1.100.0.
+
 ## [0.4.2] - 2026-11-14
 
 Packaging release: the JavaScript package carries the licence texts that 0.4.1 added to the others. No behaviour changes.

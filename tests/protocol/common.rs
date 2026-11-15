@@ -34,10 +34,10 @@ use gwp::proto::gql_service_client::GqlServiceClient;
 use gwp::proto::session_service_client::SessionServiceClient;
 use gwp::server::{
     AdminServiceImpl, AdminStats, AuthInfo, AuthValidator, CatalogServiceImpl, CreateGraphConfig,
-    GqlBackend, GqlServiceImpl, GraphInfo, GraphTypeInfo, GraphTypeSpec, RequestContext,
-    ResetTarget, ResultFrame, ResultStream, SchemaInfo, SearchHit, SearchServiceImpl,
-    SessionConfig, SessionHandle, SessionManager, SessionProperty, SessionServiceImpl,
-    TransactionHandle, TransactionManager, VectorSearchParams,
+    GqlBackend, GqlServiceImpl, GraphInfo, GraphTypeInfo, GraphTypeSpec, HybridSearchParams,
+    RequestContext, ResetTarget, ResultFrame, ResultStream, SchemaInfo, SearchHit,
+    SearchServiceImpl, SessionConfig, SessionHandle, SessionManager, SessionProperty,
+    SessionServiceImpl, TransactionHandle, TransactionManager, VectorSearchParams,
 };
 use gwp::status;
 use gwp::types::Value;
@@ -684,8 +684,25 @@ impl GqlBackend for TestBackend {
         params: VectorSearchParams,
     ) -> Result<Vec<SearchHit>, GqlError> {
         self.record(format!(
-            "vector_search {} session={}",
+            "vector_search {} ef={:?} session={}",
             params.graph,
+            params.ef,
+            session_of(ctx)
+        ));
+        Ok(Vec::new())
+    }
+
+    async fn hybrid_search_in(
+        &self,
+        ctx: &RequestContext,
+        params: HybridSearchParams,
+    ) -> Result<Vec<SearchHit>, GqlError> {
+        self.record(format!(
+            "hybrid_search {} k={} ef={:?} vector={:?} session={}",
+            params.graph,
+            params.k,
+            params.ef,
+            params.query_vector,
             session_of(ctx)
         ));
         Ok(Vec::new())

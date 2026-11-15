@@ -126,6 +126,7 @@ impl SearchClient {
                 query_text: params.query_text,
                 query_vector: params.query_vector,
                 k: params.k,
+                ef: params.ef,
                 session_id: self.session_id.clone(),
             })
             .await?

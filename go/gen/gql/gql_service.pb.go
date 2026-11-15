@@ -4333,6 +4333,9 @@ type HybridSearchRequest struct {
 	QueryText      string                 `protobuf:"bytes,5,opt,name=query_text,json=queryText,proto3" json:"query_text,omitempty"`
 	QueryVector    []float32              `protobuf:"fixed32,6,rep,packed,name=query_vector,json=queryVector,proto3" json:"query_vector,omitempty"`
 	K              uint32                 `protobuf:"varint,7,opt,name=k,proto3" json:"k,omitempty"`
+	// Search beam width of the vector half, as in VectorSearchRequest;
+	// unset for the index default. The text half has no beam.
+	Ef *uint32 `protobuf:"varint,8,opt,name=ef,proto3,oneof" json:"ef,omitempty"`
 	// Session the call runs in; empty for none. A server with
 	// authentication refuses a request without a live session.
 	SessionId     string `protobuf:"bytes,15,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
@@ -4415,6 +4418,13 @@ func (x *HybridSearchRequest) GetQueryVector() []float32 {
 func (x *HybridSearchRequest) GetK() uint32 {
 	if x != nil {
 		return x.K
+	}
+	return 0
+}
+
+func (x *HybridSearchRequest) GetEf() uint32 {
+	if x != nil && x.Ef != nil {
+		return *x.Ef
 	}
 	return 0
 }
@@ -4977,7 +4987,7 @@ const file_gql_service_proto_rawDesc = "" +
 	"\x05query\x18\x04 \x01(\tR\x05query\x12\f\n" +
 	"\x01k\x18\x05 \x01(\rR\x01k\x12\x1d\n" +
 	"\n" +
-	"session_id\x18\x0f \x01(\tR\tsessionId\"\xfe\x01\n" +
+	"session_id\x18\x0f \x01(\tR\tsessionId\"\x9a\x02\n" +
 	"\x13HybridSearchRequest\x12\x14\n" +
 	"\x05graph\x18\x01 \x01(\tR\x05graph\x12\x14\n" +
 	"\x05label\x18\x02 \x01(\tR\x05label\x12#\n" +
@@ -4986,9 +4996,11 @@ const file_gql_service_proto_rawDesc = "" +
 	"\n" +
 	"query_text\x18\x05 \x01(\tR\tqueryText\x12!\n" +
 	"\fquery_vector\x18\x06 \x03(\x02R\vqueryVector\x12\f\n" +
-	"\x01k\x18\a \x01(\rR\x01k\x12\x1d\n" +
+	"\x01k\x18\a \x01(\rR\x01k\x12\x13\n" +
+	"\x02ef\x18\b \x01(\rH\x00R\x02ef\x88\x01\x01\x12\x1d\n" +
 	"\n" +
-	"session_id\x18\x0f \x01(\tR\tsessionId\"\xc5\x01\n" +
+	"session_id\x18\x0f \x01(\tR\tsessionIdB\x05\n" +
+	"\x03_ef\"\xc5\x01\n" +
 	"\tSearchHit\x12\x17\n" +
 	"\anode_id\x18\x01 \x01(\x04R\x06nodeId\x12\x14\n" +
 	"\x05score\x18\x02 \x01(\x01R\x05score\x12>\n" +
@@ -5307,6 +5319,7 @@ func file_gql_service_proto_init() {
 		(*DropIndexRequest_TextIndex)(nil),
 	}
 	file_gql_service_proto_msgTypes[66].OneofWrappers = []any{}
+	file_gql_service_proto_msgTypes[68].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

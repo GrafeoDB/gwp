@@ -1,8 +1,8 @@
 [package]
 name = "gwp"
-version = "0.4.2"
+version = "0.5.0"
 edition = "2024"
-rust-version = "1.99.0"
+rust-version = "1.100.0"
 description = "A standalone, pure Rust gRPC wire protocol for GQL (ISO/IEC 39075)"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/GrafeoDB/gql-wire-protocol"
@@ -33,6 +33,10 @@ tonic-prost-build = "0.14.9"
 bytes = "1"
 prost-types = "0.14.3"
 tokio = { version = "1.44.2", features = ["rt-multi-thread", "macros", "test-util"] }
+
+[lints.cargo]
+# Needs a build with all features to see every use (CI builds them all).
+unused_dependencies = "deny"
 
 [lints.clippy]
 all = { level = "warn", priority = -1 }

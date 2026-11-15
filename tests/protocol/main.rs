@@ -8,12 +8,15 @@
 //! - `session_required`: with authentication, no RPC is served without a
 //!   live session; without it, catalog, admin and search name their session
 //! - `end_to_end`: the `GqlServer` builder and the high-level client
+//! - `search_params`: search parameters (hybrid `ef` included) reach the
+//!   backend as sent; the parameter constructors from outside the crate
 
 mod common;
 
 mod catalog;
 mod end_to_end;
 mod robustness;
+mod search_params;
 mod session_required;
 mod sessions;
 mod transactions;

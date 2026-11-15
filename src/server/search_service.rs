@@ -173,6 +173,7 @@ impl<B: GqlBackend> SearchService for SearchServiceImpl<B> {
                     query_text: req.query_text,
                     query_vector: req.query_vector,
                     k: req.k,
+                    ef: req.ef,
                 },
             )
             .await
